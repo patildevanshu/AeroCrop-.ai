@@ -75,6 +75,7 @@ def main():
 
     # ── 2. Disease dataset (large — ~2.9 GB) ──────────────────────────
     disease_train = DATA_DIR / "New Plant Diseases Dataset(Augmented)" / "New Plant Diseases Dataset(Augmented)" / "train"
+    # Also accept the already-correct double-nested path (zip extracts this way)
     if disease_train.exists() and len(list(disease_train.iterdir())) == 38:
         print(f"\n  ✅ Disease dataset already extracted: {disease_train}")
     else:

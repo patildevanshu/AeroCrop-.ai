@@ -52,13 +52,13 @@ def parse_args():
     parser.add_argument(
         "--image_dir",
         type=str,
-        default=r"data\New Plant Diseases Dataset(Augmented)\train",
+        default=r"data\New Plant Diseases Dataset(Augmented)\New Plant Diseases Dataset(Augmented)\train",
         help="Path to PlantVillage training image directory",
     )
     parser.add_argument(
         "--val_dir",
         type=str,
-        default=r"data\New Plant Diseases Dataset(Augmented)\valid",
+        default=r"data\New Plant Diseases Dataset(Augmented)\New Plant Diseases Dataset(Augmented)\valid",
         help="Path to PlantVillage validation image directory",
     )
     parser.add_argument(
