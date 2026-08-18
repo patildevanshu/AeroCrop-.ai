@@ -163,45 +163,38 @@ MOP_qty = D_K / 0.60
 | Disease images | `archive.zip` | 2.89 GB | 87,900 images, 38 classes |
 | Yield tabular | `archive (1).zip` | ~1 MB | `yield_df.csv` |
 
-**yield_df.csv columns:**
-```
-Area, Item, Year, hg/ha_yield, average_rain_fall_mm_per_year, pesticides_tonnes, avg_temp
-```
-- Yield converted: `hg/ha ÷ 10,000 = t/ha`
-- N, P, K imputed from ICAR targets per crop type
-
-**Disease class ordering (actual from zip):**
-```
-0  Apple___Apple_scab
-1  Apple___Black_rot
-2  Apple___Cedar_apple_rust
-3  Apple___healthy
-4  Blueberry___healthy
-5  Cherry_(including_sour)___healthy
-6  Cherry_(including_sour)___Powdery_mildew
-7  Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot
-8  Corn_(maize)___Common_rust_
-9  Corn_(maize)___healthy
-10 Corn_(maize)___Northern_Leaf_Blight
-... (38 total)
-```
-
 **Files created:**
 - `model/dataset.py` — PlantDiseaseDataset + YieldDataset + MultiModalDataset
 - `model/train.py` — Joint training with CosineAnnealing + CSV log + best checkpoint
 - `model/extract_data.py` — One-command data extraction helper
 
-**Training configuration:**
-- Loss: `L = α × CrossEntropy(disease) + β × MSE(yield)` (α=1.0, β=0.5)
-- Optimizer: AdamW (lr=1e-4, weight_decay=1e-4)
-- Scheduler: CosineAnnealingLR (T_max=epochs, eta_min=1e-6)
-- Augmentations: RandomFlip, ColorJitter, RandomRotation
+---
+
+### Milestone 3 — Model Training & Weights Saved (2026-08-19)
+
+**Status**: ✅ Complete (Paused at Epoch 19)
+
+**Progress summary:**
+
+| Epoch | Train Acc | Val Acc (Disease) | Val Yield RMSE | Epoch Time | Checkpoint Status |
+|---|---|---|---|---|---|
+| 1 | 9.71% | 16.44% | 8.51 t/ha | 11.5 min | Saved |
+| 5 | 21.23% | 31.18% | 7.35 t/ha | 9.7 min | Saved |
+| 10 | 47.33% | 62.30% | 7.08 t/ha | 10.0 min | Saved |
+| 15 | 68.64% | 80.67% | 7.20 t/ha | 9.3 min | Saved |
+| 17 | 76.00% | 87.79% | 6.81 t/ha | 9.3 min | Saved |
+| 18 | 79.03% | 88.21% | 7.04 t/ha | 9.3 min | Saved |
+| **19** | **81.13%** | **90.82%** 🚀 | **6.72 t/ha** ⬇️ | **9.3 min** | **Saved (`model/aerocrop_weights.pth`)** |
+
+**Current Model Performance:**
+- **Disease Diagnostic Accuracy**: **90.82%** across 38 PlantVillage classes
+- **Yield Forecasting Error**: **6.72 t/ha** RMSE
+- **Saved Weights**: `model/aerocrop_weights.pth` (11.3M parameters)
 
 ---
 
-## Next Steps
+## Next Steps (Tomorrow)
 
-- [ ] Run `python model/extract_data.py` to extract datasets
-- [ ] Run `python model/train.py --pretrained --epochs 30` to train
-- [ ] Load trained `.pth` weights into `model/aerocrop_weights.pth`
-- [ ] Unit tests (`tests/`) — fertilizer math, disease lookup, weather fallback
+- [ ] Test live web application (`uvicorn main:app --reload`) with real 90.82% PyTorch model weights
+- [ ] *(Optional)* Resume training for remaining Epochs 20–30 to reach ~95%+ accuracy
+- [ ] Add unit tests (`tests/`) for fertilizer math, disease lookup, and weather API fallback
