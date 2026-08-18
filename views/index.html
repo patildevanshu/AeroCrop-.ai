@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AeroCrop.ai — Multi-Modal Crop Intelligence Platform</title>
+  <meta name="description" content="AI-powered crop disease diagnostics and yield forecasting for Maharashtra farmers. Upload a leaf image and get instant diagnosis, fertilizer recommendations, and yield predictions." />
+  <meta name="keywords" content="crop disease detection, yield forecasting, Maharashtra agriculture, plant disease AI, fertilizer calculator" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <!-- ── Animated Background ─────────────────────────────────────────── -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ── App Shell ────────────────────────────────────────────────────── -->
+  <div class="app-shell">
+
+    <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+      <div class="sidebar-logo">
+        <div class="logo-icon" aria-hidden="true">🌿</div>
+        <div class="logo-text">
+          <span class="logo-name">AeroCrop</span>
+          <span class="logo-ai">.ai</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#diagnose" class="nav-item active" id="nav-diagnose" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">🔬</span>
+          <span class="nav-label">Diagnose</span>
+        </a>
+        <a href="#dashboard" class="nav-item" id="nav-dashboard">
+          <span class="nav-icon" aria-hidden="true">📊</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="#diseases" class="nav-item" id="nav-diseases">
+          <span class="nav-icon" aria-hidden="true">🦠</span>
+          <span class="nav-label">Disease DB</span>
+        </a>
+        <a href="#about" class="nav-item" id="nav-about">
+          <span class="nav-icon" aria-hidden="true">ℹ️</span>
+          <span class="nav-label">About</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="model-badge">
+          <span class="badge-dot" aria-hidden="true"></span>
+          <span>ResNet-18 · MLP</span>
+        </div>
+        <p class="sidebar-ver">v1.0.0 — Maharashtra</p>
+      </div>
+    </aside>
+
+    <!-- ── Main Content ─────────────────────────────────────────────────── -->
+    <main class="main-content" role="main">
+
+      <!-- ──────────────────────── DIAGNOSE PAGE ──────────────────────── -->
+      <section class="page active" id="page-diagnose" aria-labelledby="heading-diagnose">
+        <header class="page-header">
+          <div>
+            <h1 id="heading-diagnose">Crop Disease Diagnostics</h1>
+            <p class="page-subtitle">Upload a leaf image to diagnose diseases, get fertilizer recommendations, and forecast your yield.</p>
+          </div>
+          <!-- Live Weather Strip -->
+          <div class="weather-strip glass" id="weather-strip" aria-live="polite" aria-label="Live weather information">
+            <div class="weather-item" id="w-temp">
+              <span class="weather-icon" aria-hidden="true">🌡️</span>
+              <span class="weather-val" id="val-temp">--°C</span>
+              <span class="weather-lbl">Temp</span>
+            </div>
+            <div class="weather-item" id="w-hum">
+              <span class="weather-icon" aria-hidden="true">💧</span>
+              <span class="weather-val" id="val-hum">--%</span>
+              <span class="weather-lbl">Humidity</span>
+            </div>
+            <div class="weather-item" id="w-rain">
+              <span class="weather-icon" aria-hidden="true">🌧️</span>
+              <span class="weather-val" id="val-rain">-- mm</span>
+              <span class="weather-lbl">Rainfall</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- ── Input Grid ──────────────────────────────────────────────── -->
+        <div class="input-grid">
+
+          <!-- Upload Card -->
+          <div class="card glass upload-card" id="upload-card">
+            <h2 class="card-title">
+              <span aria-hidden="true">📸</span> Leaf Image
+            </h2>
+            <div class="upload-zone" id="upload-zone" role="button" tabindex="0"
+                 aria-label="Upload leaf photograph. Click or drag and drop an image here."
+                 ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+              <div class="upload-placeholder" id="upload-placeholder">
+                <div class="upload-icon" aria-hidden="true">🍃</div>
+                <p class="upload-text">Drag &amp; drop leaf photo</p>
+                <p class="upload-hint">or click to browse</p>
+                <span class="upload-formats">JPG, PNG — max 10 MB</span>
+              </div>
+              <img id="preview-img" class="preview-img hidden" alt="Uploaded leaf image preview" />
+            </div>
+            <input type="file" id="file-input" accept="image/jpeg,image/png"
+                   aria-label="Select leaf image file" />
+            <label for="file-input" class="btn btn-secondary btn-sm mt-2" id="browse-btn">
+              Browse File
+            </label>
+          </div>
+
+          <!-- Parameters Card -->
+          <div class="card glass params-card">
+            <h2 class="card-title">
+              <span aria-hidden="true">🧪</span> Crop &amp; Soil Parameters
+            </h2>
+
+            <div class="form-group">
+              <label for="crop-select">Crop Type</label>
+              <select id="crop-select" aria-label="Select crop type">
+                <option value="cotton">🌱 Cotton</option>
+                <option value="wheat">🌾 Wheat</option>
+                <option value="maize">🌽 Maize</option>
+                <option value="rice">🍚 Rice</option>
+                <option value="potato">🥔 Potato</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="district-select">Maharashtra District</label>
+              <select id="district-select" aria-label="Select district for live weather">
+                <option value="">Loading districts…</option>
+              </select>
+            </div>
+
+            <div class="npk-grid">
+              <div class="form-group">
+                <label for="input-N">
+                  Nitrogen (N)
+                  <span class="unit">kg/ha</span>
+                </label>
+                <input type="number" id="input-N" min="0" max="300" step="1"
+                       value="60" aria-label="Soil Nitrogen in kg per hectare" />
+              </div>
+              <div class="form-group">
+                <label for="input-P">
+                  Phosphorus (P)
+                  <span class="unit">kg/ha</span>
+                </label>
+                <input type="number" id="input-P" min="0" max="200" step="1"
+                       value="30" aria-label="Soil Phosphorus in kg per hectare" />
+              </div>
+              <div class="form-group">
+                <label for="input-K">
+                  Potassium (K)
+                  <span class="unit">kg/ha</span>
+                </label>
+                <input type="number" id="input-K" min="0" max="200" step="1"
+                       value="30" aria-label="Soil Potassium in kg per hectare" />
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="analyze-btn"
+                    aria-label="Analyze crop — run disease detection and yield prediction">
+              <span class="btn-icon" aria-hidden="true">🚀</span>
+              <span class="btn-text">Analyze Crop</span>
+              <span class="btn-spinner hidden" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div><!-- /.input-grid -->
+
+        <!-- ── Results Area ─────────────────────────────────────────────── -->
+        <div id="results-area" class="results-area hidden" aria-live="polite" aria-label="Analysis results">
+
+          <!-- Mock Mode Banner -->
+          <div id="mock-banner" class="mock-banner hidden" role="alert">
+            <span aria-hidden="true">⚡</span>
+            Running in <strong>Smart Mock Mode</strong> — results are agronomically derived estimates.
+            Train and load weights for full neural inference.
+          </div>
+
+          <!-- Metrics Row -->
+          <div class="metrics-row">
+            <div class="metric-card glass" id="metric-disease">
+              <div class="metric-icon" aria-hidden="true">🦠</div>
+              <div class="metric-body">
+                <p class="metric-label">Detected Disease</p>
+                <p class="metric-value" id="res-disease-name">--</p>
+                <p class="metric-sub" id="res-disease-crop">--</p>
+              </div>
+            </div>
+            <div class="metric-card glass" id="metric-confidence">
+              <div class="metric-icon" aria-hidden="true">🎯</div>
+              <div class="metric-body">
+                <p class="metric-label">Confidence</p>
+                <p class="metric-value" id="res-confidence">--%</p>
+                <div class="confidence-bar" aria-hidden="true">
+                  <div class="confidence-fill" id="confidence-fill" style="width:0%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="metric-card glass" id="metric-yield">
+              <div class="metric-icon" aria-hidden="true">🌾</div>
+              <div class="metric-body">
+                <p class="metric-label">Predicted Yield</p>
+                <p class="metric-value" id="res-yield">-- t/ha</p>
+                <p class="metric-sub" id="res-yield-crop">--</p>
+              </div>
+            </div>
+            <div class="metric-card glass" id="metric-severity">
+              <div class="metric-icon" aria-hidden="true">⚠️</div>
+              <div class="metric-body">
+                <p class="metric-label">Severity</p>
+                <p class="metric-value" id="res-severity">--</p>
+                <p class="metric-sub" id="res-healthy-status">--</p>
+              </div>
+            </div>
+          </div><!-- /.metrics-row -->
+
+          <!-- Treatment + Fertilizer Row -->
+          <div class="detail-row">
+
+            <!-- Disease Treatment -->
+            <div class="card glass treatment-card">
+              <h2 class="card-title">
+                <span aria-hidden="true">💊</span> Treatment Prescription
+              </h2>
+              <p id="res-disease-desc" class="disease-desc">--</p>
+              <div class="treatment-section">
+                <h3>⚗️ Chemical Treatments</h3>
+                <ul id="res-chemical" class="treatment-list" aria-label="Chemical treatment recommendations"></ul>
+              </div>
+              <div class="treatment-section">
+                <h3>🌿 Organic / Bio Treatments</h3>
+                <ul id="res-organic" class="treatment-list" aria-label="Organic treatment recommendations"></ul>
+              </div>
+            </div>
+
+            <!-- Fertilizer Card -->
+            <div class="card glass fertilizer-card">
+              <h2 class="card-title">
+                <span aria-hidden="true">🧬</span> Fertilizer Dosage
+              </h2>
+              <p id="res-fert-interpretation" class="fert-interp">--</p>
+              <div class="fert-cards">
+                <div class="fert-item" id="fert-urea">
+                  <div class="fert-icon" aria-hidden="true">🟡</div>
+                  <div class="fert-body">
+                    <p class="fert-name">Urea</p>
+                    <p class="fert-qty" id="val-urea">-- kg/ha</p>
+                    <p class="fert-note">46% Nitrogen</p>
+                  </div>
+                </div>
+                <div class="fert-item" id="fert-dap">
+                  <div class="fert-icon" aria-hidden="true">🟤</div>
+                  <div class="fert-body">
+                    <p class="fert-name">DAP</p>
+                    <p class="fert-qty" id="val-dap">-- kg/ha</p>
+                    <p class="fert-note">18% N · 46% P</p>
+                  </div>
+                </div>
+                <div class="fert-item" id="fert-mop">
+                  <div class="fert-icon" aria-hidden="true">🔴</div>
+                  <div class="fert-body">
+                    <p class="fert-name">MOP</p>
+                    <p class="fert-qty" id="val-mop">-- kg/ha</p>
+                    <p class="fert-note">60% Potassium</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div><!-- /.detail-row -->
+
+          <!-- NPK Chart -->
+          <div class="card glass chart-card">
+            <h2 class="card-title">
+              <span aria-hidden="true">📈</span> Soil Nutrient Analysis — Current vs Target
+            </h2>
+            <div class="chart-wrapper" role="img" aria-label="Bar chart comparing current soil NPK levels against target levels">
+              <canvas id="npk-chart" aria-hidden="true"></canvas>
+            </div>
+          </div>
+
+        </div><!-- /#results-area -->
+      </section><!-- /#page-diagnose -->
+
+      <!-- ──────────────────────── DISEASE DB PAGE ─────────────────────── -->
+      <section class="page hidden" id="page-diseases" aria-labelledby="heading-diseases">
+        <header class="page-header">
+          <div>
+            <h1 id="heading-diseases">Disease Knowledge Base</h1>
+            <p class="page-subtitle">Complete 38-class PlantVillage disease taxonomy with treatments.</p>
+          </div>
+        </header>
+        <div class="search-row">
+          <input type="search" id="disease-search" placeholder="Search disease or crop…"
+                 aria-label="Search disease database" />
+        </div>
+        <div id="disease-db-grid" class="disease-db-grid" aria-label="Disease database cards"></div>
+      </section>
+
+      <!-- ──────────────────────── ABOUT PAGE ──────────────────────────── -->
+      <section class="page hidden" id="page-about" aria-labelledby="heading-about">
+        <header class="page-header">
+          <div>
+            <h1 id="heading-about">About AeroCrop.ai</h1>
+            <p class="page-subtitle">Multi-Modal Deep Learning for Maharashtra Agriculture</p>
+          </div>
+        </header>
+        <div class="about-grid">
+          <div class="card glass about-card">
+            <h2>🧠 Architecture</h2>
+            <div class="arch-diagram" aria-label="Model architecture diagram">
+              <div class="arch-block visual">📷 RGB Leaf Image<br/><small>3×224×224</small></div>
+              <div class="arch-arrow">▼</div>
+              <div class="arch-block encoder">ResNet-18 Visual Encoder<br/><small>512-dim vector</small></div>
+              <div class="arch-line">│</div>
+              <div class="arch-fusion">
+                <div class="arch-block tabular">🧪 Soil+Weather MLP<br/><small>64-dim vector</small></div>
+                <div class="arch-concat">⊕ Concat → 576-dim<br/>→ Linear → BN → ReLU → <strong>128-dim</strong></div>
+              </div>
+              <div class="arch-arrow">▼</div>
+              <div class="arch-heads">
+                <div class="arch-block head-a">🦠 Disease Head<br/><small>38 classes</small></div>
+                <div class="arch-block head-b">🌾 Yield Head<br/><small>t/ha regression</small></div>
+              </div>
+            </div>
+          </div>
+          <div class="card glass about-card">
+            <h2>📦 References</h2>
+            <ul class="about-list">
+              <li><strong>Dataset:</strong> New Plant Diseases Dataset — 87,900 images, 38 classes (Kaggle)</li>
+              <li><strong>Disease Model:</strong> Inspired by <code>mayur7garg/PlantLeafDiseaseDetection</code></li>
+              <li><strong>Yield Model:</strong> Inspired by <code>ShubhamKJ123/Crop-Yield-Prediction-using-Machine-Learning-Algorithms</code></li>
+              <li><strong>Weather:</strong> Open-Meteo API (free, no API key)</li>
+              <li><strong>Framework:</strong> PyTorch · FastAPI · Vanilla JS</li>
+            </ul>
+          </div>
+          <div class="card glass about-card">
+            <h2>🌾 Supported Crops</h2>
+            <div class="crop-badges">
+              <span class="crop-badge">🌱 Cotton</span>
+              <span class="crop-badge">🌾 Wheat</span>
+              <span class="crop-badge">🌽 Maize</span>
+              <span class="crop-badge">🍚 Rice</span>
+              <span class="crop-badge">🥔 Potato</span>
+            </div>
+          </div>
+          <div class="card glass about-card">
+            <h2>📍 Coverage</h2>
+            <p>All <strong>36 districts</strong> of Maharashtra with live Open-Meteo weather integration.</p>
+            <p class="about-note">Target districts include Jalgaon, Nagpur, Pune, Nashik, Aurangabad, Amravati and more.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div><!-- /.app-shell -->
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
