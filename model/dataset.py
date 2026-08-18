@@ -1,15 +1,15 @@
 """
-AeroCrop.ai — PyTorch Dataset Classes (Model Layer)
+AeroCrop.ai  PyTorch Dataset Classes (Model Layer)
 
 Two dataset implementations:
 
 1. PlantDiseaseDataset
-   - Source: New Plant Diseases Dataset (Augmented) — 87,900 images, 38 classes
+   - Source: New Plant Diseases Dataset (Augmented)  87,900 images, 38 classes
    - Root dir expected structure: train/<ClassName>/<image.jpg>
    - Returns: (image_tensor [3,224,224], class_index)
 
 2. YieldDataset
-   - Source: yield_df.csv — merged FAO yield + weather data
+   - Source: yield_df.csv  merged FAO yield + weather data
    - Columns: Area, Item, Year, hg/ha_yield, average_rain_fall_mm_per_year,
               pesticides_tonnes, avg_temp
    - Filters to crops matching CROP_NPK_TARGETS
@@ -38,7 +38,7 @@ from torchvision import transforms
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 
-# ── Folder name → class index mapping (alphabetical, matches PlantVillage) ──
+#  Folder name  class index mapping (alphabetical, matches PlantVillage) 
 DISEASE_CLASSES: list[str] = [
     "Apple___Apple_scab",                                         # 0
     "Apple___Black_rot",                                          # 1
@@ -82,7 +82,7 @@ DISEASE_CLASSES: list[str] = [
 
 CLASS_TO_IDX: dict[str, int] = {c: i for i, c in enumerate(DISEASE_CLASSES)}
 
-# ── Crop name mapping: PlantVillage folder prefix → yield crop name ─────────
+#  Crop name mapping: PlantVillage folder prefix  yield crop name 
 FOLDER_TO_CROP: dict[str, str] = {
     "Corn_(maize)": "maize",
     "Potato":       "potato",
@@ -100,7 +100,7 @@ FOLDER_TO_CROP: dict[str, str] = {
     "Orange":       "orange",
 }
 
-# ── Image transforms ─────────────────────────────────────────────────────────
+#  Image transforms 
 TRAIN_TRANSFORM = transforms.Compose([
     transforms.Resize((config.IMAGE_SIZE, config.IMAGE_SIZE)),
     transforms.RandomHorizontalFlip(p=0.5),
@@ -118,9 +118,9 @@ VAL_TRANSFORM = transforms.Compose([
 ])
 
 
-# ╔══════════════════════════════════════════════════════════════════════════╗
-# ║  1. PlantDiseaseDataset                                                  ║
-# ╚══════════════════════════════════════════════════════════════════════════╝
+# 
+#   1. PlantDiseaseDataset                                                  
+# 
 
 class PlantDiseaseDataset(Dataset):
     """
@@ -134,7 +134,7 @@ class PlantDiseaseDataset(Dataset):
 
     Returns per item:
         image  : FloatTensor (3, 224, 224)
-        label  : int — class index (0–37)
+        label  : int  class index (037)
     """
 
     def __init__(self, root_dir: str, transform=None, max_per_class: int = None):
@@ -153,7 +153,7 @@ class PlantDiseaseDataset(Dataset):
                 normalized = folder.name.replace(" ", "_")
                 class_idx = CLASS_TO_IDX.get(normalized)
             if class_idx is None:
-                print(f"  [Dataset] Warning: unknown class folder '{folder.name}' — skipped.")
+                print(f"  [Dataset] Warning: unknown class folder '{folder.name}'  skipped.")
                 continue
 
             images = sorted(
@@ -178,11 +178,11 @@ class PlantDiseaseDataset(Dataset):
         return img, label
 
 
-# ╔══════════════════════════════════════════════════════════════════════════╗
-# ║  2. YieldDataset                                                         ║
-# ╚══════════════════════════════════════════════════════════════════════════╝
+# 
+#   2. YieldDataset                                                         
+# 
 
-# Crop names in yield_df.csv → our internal keys
+# Crop names in yield_df.csv  our internal keys
 YIELD_CROP_MAP: dict[str, str] = {
     "Maize":     "maize",
     "Potatoes":  "potato",
@@ -200,21 +200,21 @@ class YieldDataset(Dataset):
     Tabular dataset for yield regression from yield_df.csv.
 
     Features (6 after selecting relevant columns):
-        N, P, K  ← imputed from ICAR targets (no per-sample soil data)
+        N, P, K   imputed from ICAR targets (no per-sample soil data)
         avg_temp, average_rain_fall_mm_per_year, pesticides_tonnes
 
     Target:
         hg/ha_yield converted to t/ha (divide by 10000)
 
     Returns per item:
-        features : FloatTensor (6,)  — normalised [N, P, K, temp, rain, pest]
-        yield    : FloatTensor (1,)  — tons per hectare
+        features : FloatTensor (6,)   normalised [N, P, K, temp, rain, pest]
+        yield    : FloatTensor (1,)   tons per hectare
     """
 
     def __init__(self, csv_path: str, split: str = "train", val_fraction: float = 0.15):
         df = pd.read_csv(csv_path)
 
-        # ── Column clean-up ───────────────────────────────────────────────
+        #  Column clean-up 
         df.columns = [c.strip() for c in df.columns]
         if df.columns[0] == "" or df.columns[0].startswith("Unnamed"):
             df = df.iloc[:, 1:]   # drop unnamed index column
@@ -240,7 +240,7 @@ class YieldDataset(Dataset):
         df["P"] = df["crop_key"].apply(lambda c: targets.get(c, default_npk)["P"])
         df["K"] = df["crop_key"].apply(lambda c: targets.get(c, default_npk)["K"])
 
-        # ── Train / Val split ─────────────────────────────────────────────
+        #  Train / Val split 
         df = df.sample(frac=1.0, random_state=42).reset_index(drop=True)
         n_val = int(len(df) * val_fraction)
         if split == "val":
@@ -248,7 +248,7 @@ class YieldDataset(Dataset):
         else:
             df = df.iloc[n_val:]
 
-        # ── Feature normalisation ─────────────────────────────────────────
+        #  Feature normalisation 
         norm = config.TABULAR_NORM
 
         def z(col, key):
@@ -267,7 +267,7 @@ class YieldDataset(Dataset):
         self.crops  = df["crop_key"].values
 
         print(f"  [YieldDataset] {split}: {len(self.features)} rows | yield range: "
-              f"{self.labels.min():.2f}–{self.labels.max():.2f} t/ha")
+              f"{self.labels.min():.2f}{self.labels.max():.2f} t/ha")
 
     def __len__(self) -> int:
         return len(self.features)
@@ -278,9 +278,9 @@ class YieldDataset(Dataset):
         return feat, label
 
 
-# ╔══════════════════════════════════════════════════════════════════════════╗
-# ║  3. MultiModalDataset  (joint training)                                  ║
-# ╚══════════════════════════════════════════════════════════════════════════╝
+# 
+#   3. MultiModalDataset  (joint training)                                  
+# 
 
 class MultiModalDataset(Dataset):
     """
@@ -304,7 +304,7 @@ class MultiModalDataset(Dataset):
         self.img_dataset   = PlantDiseaseDataset(image_root, transform=transform)
         self.yield_dataset = YieldDataset(yield_csv, split=split)
 
-        # Build crop → [tabular_indices] lookup
+        # Build crop  [tabular_indices] lookup
         self._build_crop_index()
 
     def _build_crop_index(self):

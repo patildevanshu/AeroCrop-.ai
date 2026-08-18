@@ -1,13 +1,13 @@
 """
-AeroCrop.ai — Model Training Pipeline (Model Layer)
+AeroCrop.ai -- Model Training Pipeline (Model Layer)
 
 Trains MultiModalAeroCropNet using:
-  - Disease images:  New Plant Diseases Dataset (Augmented) — 87,900 images, 38 classes
-  - Yield tabular:   yield_df.csv — FAO yield + weather data
+  - Disease images:  New Plant Diseases Dataset (Augmented) -- 87,900 images, 38 classes
+  - Yield tabular:   yield_df.csv -- FAO yield + weather data
 
 Joint Loss:
-    L_total = α × CrossEntropyLoss(disease) + β × MSELoss(yield)
-    Default: α = 1.0, β = 0.5
+    L_total = alpha  CrossEntropyLoss(disease) + beta  MSELoss(yield)
+    Default: alpha = 1.0, beta = 0.5
 
 Usage:
     python model/train.py \
@@ -19,8 +19,8 @@ Usage:
         --lr          1e-4
 
 Output:
-    model/aerocrop_weights.pth       — best checkpoint (by val disease accuracy)
-    model/training_log.csv           — per-epoch metrics log
+    model/aerocrop_weights.pth       -- best checkpoint (by val disease accuracy)
+    model/training_log.csv           -- per-epoch metrics log
 """
 
 import argparse
@@ -44,7 +44,7 @@ from model.dataset import (
 )
 
 
-# ── Argument Parser ────────────────────────────────────────────────────────
+# -- Argument Parser --------------------------------------------------------
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Train AeroCrop.ai MultiModalAeroCropNet"
@@ -83,7 +83,7 @@ def parse_args():
     return parser.parse_args()
 
 
-# ── Metrics Tracking ───────────────────────────────────────────────────────
+# -- Metrics Tracking -------------------------------------------------------
 class MetricsTracker:
     def __init__(self):
         self.reset()
@@ -116,7 +116,7 @@ class MetricsTracker:
         return mse ** 0.5
 
 
-# ── Training Loop ─────────────────────────────────────────────────────────
+# -- Training Loop ---------------------------------------------------------
 def train_one_epoch(model, loader, optimizer, criterion_cls, criterion_reg,
                     device, alpha, beta):
     model.train()
@@ -185,23 +185,23 @@ def validate(model, loader, criterion_cls, criterion_reg, device, alpha, beta):
     return tracker
 
 
-# ── Main ───────────────────────────────────────────────────────────────────
+# -- Main -------------------------------------------------------------------
 def main():
     args   = parse_args()
     device = torch.device(config.DEVICE)
 
     print("\n" + "=" * 65)
-    print("  🌿  AeroCrop.ai — Model Training")
+    print("  AeroCrop.ai -- Model Training")
     print("=" * 65)
     print(f"  Device      : {device}")
     print(f"  Epochs      : {args.epochs}")
     print(f"  Batch size  : {args.batch_size}")
     print(f"  LR          : {args.lr}")
-    print(f"  α (cls)     : {args.alpha}   β (reg) : {args.beta}")
+    print(f"  alpha (cls) : {args.alpha}   beta (reg) : {args.beta}")
     print(f"  Pretrained  : {args.pretrained}")
     print("=" * 65 + "\n")
 
-    # ── Dataset Setup ────────────────────────────────────────────────────
+    # -- Dataset Setup ----------------------------------------------------
     yield_csv_abs = os.path.join(config.BASE_DIR, args.yield_csv)
     img_train_abs = os.path.join(config.BASE_DIR, args.image_dir)
     img_val_abs   = os.path.join(config.BASE_DIR, args.val_dir)
@@ -258,7 +258,7 @@ def main():
     print(f"  Val   samples : {len(val_dataset):,}")
     print(f"  Train batches : {len(train_loader):,}")
 
-    # ── Model ────────────────────────────────────────────────────────────
+    # -- Model ------------------------------------------------------------
     model = MultiModalAeroCropNet(
         num_classes=config.NUM_DISEASE_CLASSES,
         tabular_input_dim=config.TABULAR_INPUT_DIM,
@@ -268,7 +268,7 @@ def main():
     total_params = sum(p.numel() for p in model.parameters())
     print(f"\n  Model params  : {total_params:,}")
 
-    # ── Optimizer & Scheduler ────────────────────────────────────────────
+    # -- Optimizer & Scheduler --------------------------------------------
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=args.lr, weight_decay=1e-4
     )
@@ -279,7 +279,7 @@ def main():
     criterion_cls = nn.CrossEntropyLoss(label_smoothing=0.1)
     criterion_reg = nn.MSELoss()
 
-    # ── CSV Log ──────────────────────────────────────────────────────────
+    # -- CSV Log ----------------------------------------------------------
     log_path = os.path.join(config.MODEL_DIR, "training_log.csv")
     log_file = open(log_path, "w", newline="")
     log_writer = csv.writer(log_file)
@@ -329,7 +329,7 @@ def main():
         if va.accuracy > best_val_acc:
             best_val_acc = va.accuracy
             torch.save(model.state_dict(), config.WEIGHTS_PATH)
-            print(f"       ✅  New best val acc: {best_val_acc:.2f}% → saved to {config.WEIGHTS_PATH}")
+            print(f"         [BEST] New best val acc: {best_val_acc:.2f}% -- saved to {config.WEIGHTS_PATH}")
 
     total_time = time.time() - t0
     log_file.close()
