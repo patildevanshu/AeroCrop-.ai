@@ -137,13 +137,11 @@ MOP_qty = D_K / 0.60
 **Status**: ✅ Complete
 
 **Files created:**
-- `config.py` — Central configuration
-- `requirements.txt` — Dependencies
+- `config.py`, `requirements.txt`, `main.py`, `.gitignore`
 - `model/__init__.py`, `model/architecture.py`, `model/inference.py`
 - `services/__init__.py`, `services/disease_service.py`, `services/fertilizer_service.py`, `services/weather_service.py`
 - `controllers/__init__.py`, `controllers/predict_controller.py`, `controllers/weather_controller.py`
 - `views/index.html`, `views/static/css/style.css`, `views/static/js/app.js`
-- `main.py`
 - `README.md`, `documentation.md`
 
 **Architecture decisions:**
@@ -154,10 +152,56 @@ MOP_qty = D_K / 0.60
 
 ---
 
+### Milestone 2 — Dataset Integration & Training Pipeline (2026-08-18)
+
+**Status**: ✅ Complete
+
+**Datasets confirmed:**
+
+| Dataset | File | Size | Records |
+|---------|------|------|--------|
+| Disease images | `archive.zip` | 2.89 GB | 87,900 images, 38 classes |
+| Yield tabular | `archive (1).zip` | ~1 MB | `yield_df.csv` |
+
+**yield_df.csv columns:**
+```
+Area, Item, Year, hg/ha_yield, average_rain_fall_mm_per_year, pesticides_tonnes, avg_temp
+```
+- Yield converted: `hg/ha ÷ 10,000 = t/ha`
+- N, P, K imputed from ICAR targets per crop type
+
+**Disease class ordering (actual from zip):**
+```
+0  Apple___Apple_scab
+1  Apple___Black_rot
+2  Apple___Cedar_apple_rust
+3  Apple___healthy
+4  Blueberry___healthy
+5  Cherry_(including_sour)___healthy
+6  Cherry_(including_sour)___Powdery_mildew
+7  Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot
+8  Corn_(maize)___Common_rust_
+9  Corn_(maize)___healthy
+10 Corn_(maize)___Northern_Leaf_Blight
+... (38 total)
+```
+
+**Files created:**
+- `model/dataset.py` — PlantDiseaseDataset + YieldDataset + MultiModalDataset
+- `model/train.py` — Joint training with CosineAnnealing + CSV log + best checkpoint
+- `model/extract_data.py` — One-command data extraction helper
+
+**Training configuration:**
+- Loss: `L = α × CrossEntropy(disease) + β × MSE(yield)` (α=1.0, β=0.5)
+- Optimizer: AdamW (lr=1e-4, weight_decay=1e-4)
+- Scheduler: CosineAnnealingLR (T_max=epochs, eta_min=1e-6)
+- Augmentations: RandomFlip, ColorJitter, RandomRotation
+
+---
+
 ## Next Steps
 
-- [ ] `model/train.py` — Training pipeline with synthetic + real dataset support
-- [ ] `model/dataset.py` — PyTorch Dataset class for PlantVillage images
-- [ ] Unit tests (`tests/`) — fertilizer math, disease lookup, weather fallback
-- [ ] Model training on PlantVillage 87K dataset (Kaggle download required)
+- [ ] Run `python model/extract_data.py` to extract datasets
+- [ ] Run `python model/train.py --pretrained --epochs 30` to train
 - [ ] Load trained `.pth` weights into `model/aerocrop_weights.pth`
+- [ ] Unit tests (`tests/`) — fertilizer math, disease lookup, weather fallback
