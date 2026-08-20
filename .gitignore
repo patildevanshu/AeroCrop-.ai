@@ -17,7 +17,7 @@ env/
 .env/
 
 # Model weights (large binary files — store separately)
-model/*.pth
+# model/*.pth
 model/*.pt
 model/*.ckpt
 
