@@ -43,6 +43,22 @@ Thumbs.db
 *.log
 logs/
 
-# Data
+# Data & Uploads
 data/
 datasets/
+uploads/*
+!uploads/.gitkeep
+*.db
+*.sqlite
+*.sqlite3
+
+# Node & Frontend
+node_modules/
+frontend/node_modules/
+.npm/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+

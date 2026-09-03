@@ -72,14 +72,16 @@ def parse_args():
     parser.add_argument("--lr",         type=float, default=1e-4)
     parser.add_argument("--alpha",      type=float, default=1.0,
                         help="Weight for disease classification loss")
-    parser.add_argument("--beta",       type=float, default=0.5,
-                        help="Weight for yield regression loss")
+    parser.add_argument("--beta",       type=float, default=0.05,
+                        help="Balanced weight for yield regression loss (MSE scale)")
     parser.add_argument("--workers",    type=int,   default=4,
                         help="DataLoader num_workers (set 0 on Windows if errors)")
     parser.add_argument("--pretrained", action="store_true",
                         help="Use ImageNet pretrained ResNet-18 backbone")
     parser.add_argument("--max_per_class", type=int, default=None,
                         help="Limit images per class (for quick experiments)")
+    parser.add_argument("--resume", type=str, default=None,
+                        help="Path to checkpoint .pth to resume training from (e.g. model/aerocrop_weights.pth)")
     return parser.parse_args()
 
 
@@ -112,7 +114,9 @@ class MetricsTracker:
 
     @property
     def avg_yield_rmse(self):
-        mse = self.yield_mse_sum / self.n_batches if self.n_batches else 0
+        if self.n_batches == 0 or self.yield_mse_sum == 0.0:
+            return None  # No yield data available (disease-only training)
+        mse = self.yield_mse_sum / self.n_batches
         return mse ** 0.5
 
 
@@ -265,6 +269,15 @@ def main():
         pretrained=args.pretrained,
     ).to(device)
 
+    # ── Resume from checkpoint ────────────────────────────────────────────
+    resume_path = args.resume or (config.WEIGHTS_PATH if args.pretrained else None)
+    if args.resume and os.path.exists(args.resume):
+        state = torch.load(args.resume, map_location=device, weights_only=True)
+        model.load_state_dict(state)
+        print(f"\n  [Resume] Loaded checkpoint from: {args.resume}")
+    elif args.resume:
+        print(f"\n  [Resume] WARNING: checkpoint not found at {args.resume} — starting from scratch.")
+
     total_params = sum(p.numel() for p in model.parameters())
     print(f"\n  Model params  : {total_params:,}")
 
@@ -312,15 +325,16 @@ def main():
         elapsed = time.time() - ep_start
         lr_now  = scheduler.get_last_lr()[0]
 
+        rmse_str = f"{va.avg_yield_rmse:>7.4f}" if va.avg_yield_rmse is not None else "    N/A"
         print(f"  {epoch:>3} | {tr.avg_loss:>8.4f} | {tr.accuracy:>6.2f}% | "
               f"{va.avg_loss:>8.4f} | {va.accuracy:>6.2f}% | "
-              f"{va.avg_yield_rmse:>7.4f} | {lr_now:>9.2e}")
+              f"{rmse_str} | {lr_now:>9.2e}")
 
         log_writer.writerow([
             epoch, round(tr.avg_loss, 5), round(tr.accuracy, 3),
-            round(tr.avg_yield_rmse, 4),
+            round(tr.avg_yield_rmse, 4) if tr.avg_yield_rmse is not None else "",
             round(va.avg_loss, 5), round(va.accuracy, 3),
-            round(va.avg_yield_rmse, 4),
+            round(va.avg_yield_rmse, 4) if va.avg_yield_rmse is not None else "",
             f"{lr_now:.2e}", round(elapsed, 1),
         ])
         log_file.flush()

@@ -72,7 +72,11 @@ class InferenceService:
 
         if os.path.exists(config.WEIGHTS_PATH):
             try:
-                state = torch.load(config.WEIGHTS_PATH, map_location=self.device)
+                state = torch.load(
+                    config.WEIGHTS_PATH,
+                    map_location=self.device,
+                    weights_only=True,
+                )
                 self.model.load_state_dict(state)
                 self.model.eval()
                 self.mock_mode = False
@@ -142,11 +146,12 @@ class InferenceService:
         yield_val = float(yield_raw.squeeze().item())
 
         return {
-            "disease_class": cls_idx,
-            "probabilities": probs,
-            "confidence":    conf,
-            "yield_t_ha":    round(yield_val, 2),
-            "mock":          False,
+            "disease_class":  cls_idx,
+            "probabilities":  probs,
+            "confidence":     conf,
+            "yield_t_ha":     round(yield_val, 2),
+            "mock":           False,
+            "low_confidence": conf < 0.35,
         }
 
     @staticmethod
@@ -178,9 +183,10 @@ class InferenceService:
         yield_val    = round(base * soil_score * weather_pen, 2)
 
         return {
-            "disease_class": seed_val,
-            "probabilities": probs,
-            "confidence":    round(conf, 4),
-            "yield_t_ha":    yield_val,
-            "mock":          True,
+            "disease_class":  seed_val,
+            "probabilities":  probs,
+            "confidence":     round(conf, 4),
+            "yield_t_ha":     yield_val,
+            "mock":           True,
+            "low_confidence": conf < 0.35,
         }

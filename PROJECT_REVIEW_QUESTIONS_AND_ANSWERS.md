@@ -356,3 +356,45 @@ The software strictly follows the **MVC (Model-View-Controller)** and **Service-
 | **Loss Function** | $\mathcal{L}_{\text{total}} = 1.0 \times \text{CrossEntropy}(\text{smooth}=0.1) + 0.5 \times \text{MSE}$ |
 | **Backend Framework** | FastAPI + Uvicorn (ASGI) |
 | **Weather API** | Open-Meteo REST API |
+| **Market Intelligence** | APMC Mandi Service + GoI MSP Benchmarks |
+| **Voice Advisory** | Web Speech API (`mr-IN`, `hi-IN`, `en-IN`) |
+| **Field Safety** | Real-time Spray Window Decision Engine |
+
+---
+
+## 11. Farmer-Centric Extensions & Practical Field Operations (Viva Q&A)
+
+### Q11.1: "Most precision ag apps fail on the ground because farmers don't buy chemicals in kg/ha. How does your system bridge this?"
+**Answer:**  
+> *"That is a fundamental usability barrier. Farmers purchase straight fertilizers in standardized **50 kg commercial bags** sold under Government of India (GoI) Nutrient Based Subsidy (NBS) prices.  
+> AeroCrop.ai implements practical commercial stoichiometry:  
+> 1. It converts chemical deficits into integer 50 kg bags: $\text{Bags} = \lceil \text{Deficit} / 50 \rceil$.  
+> 2. It incorporates statutory subsidized prices (Urea: ₹267/bag, DAP: ₹1,350/bag, MOP: ₹1,700/bag).  
+> 3. It provides a real-time area scaler converting between **Hectares, Acres (एकर), and Gunthas (गुंठा)** so a 2.5-acre farmer immediately knows their exact purchase cost in ₹."*
+
+---
+
+### Q11.2: "How does the system prevent farmers from wasting expensive chemical sprays right before rainfall or during high winds?"
+**Answer:**  
+> *"AeroCrop.ai features a real-time **Foliar Spraying Safety Decision Engine**. By querying Open-Meteo hourly telemetry for rainfall and $10\text{m}$ wind speed:  
+> - If **Rainfall $> 1.0\text{ mm}$**: A critical danger alert instructs the farmer to halt spraying because chemical wash-off will occur immediately, wasting money and causing environmental contamination.  
+> - If **Wind Speed $> 15.0\text{ km/h}$**: A high-drift warning triggers, preventing toxic drift to non-target adjacent plots.  
+> - If **Humidity $> 85\%$ or Temperature $> 36^\circ\text{C}$**: Sub-optimal alerts warn against delayed drying or chemical leaf burn.  
+> Alerts are rendered with clear visual badges and translated into Marathi and Hindi."*
+
+---
+
+### Q11.3: "Why did you integrate APMC Mandi rates and revenue forecasting?"
+**Answer:**  
+> *"A yield forecast in $t/\text{ha}$ is meaningless without economic context. Farmers need to know: *'What will I earn from this harvest at current market prices?'*  
+> We engineered `MandiService` covering major Maharashtra APMC markets (e.g. Lasalgaon, Jalgaon, Pune, Nagpur, Latur). The system maps forecasted yield into quintals per acre and multiplies by the live APMC modal price, projecting gross harvest revenue and comparing it against the GoI Minimum Support Price (MSP) benchmark."*
+
+---
+
+### Q11.4: "How does AeroCrop.ai address farmers who cannot read complex technical English?"
+**Answer:**  
+> *"We implemented a three-tier vernacular accessibility strategy:  
+> 1. **Complete Multilingual UI**: Dynamic state-driven translation in Marathi, Hindi, and English.  
+> 2. **Vernacular Voice Advisory (Text-to-Speech)**: Integrated native browser Web Speech API (`mr-IN`, `hi-IN`). A single tap on the 🔊 button reads aloud the full disease diagnosis and spray instructions in fluent Marathi or Hindi.  
+> 3. **Actionable WhatsApp & PMFBY Sharing**: 1-click sharing of diagnoses to WhatsApp, and formal PDF generation for Pradhan Mantri Fasal Bima Yojana (PMFBY) insurance loss verification."*
+

@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AeroCrop.ai — Multi-Modal Crop Intelligence Platform</title>
-  <meta name="description" content="AI-powered crop disease diagnostics and yield forecasting for Maharashtra farmers. Upload a leaf image and get instant diagnosis, fertilizer recommendations, and yield predictions." />
-  <meta name="keywords" content="crop disease detection, yield forecasting, Maharashtra agriculture, plant disease AI, fertilizer calculator" />
+  <meta name="description" content="AI-powered crop disease diagnostics, multi-crop management, and yield forecasting for Maharashtra farmers." />
+  <meta name="keywords" content="crop disease detection, yield forecasting, Maharashtra agriculture, plant disease AI, fertilizer calculator, farmer crop management" />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -38,31 +38,61 @@
         </div>
       </div>
 
+      <!-- Language Toggle -->
+      <div class="lang-toggle" role="group" aria-label="Language selection">
+        <button class="lang-btn active" id="lang-en"  onclick="setLanguage('en')"  aria-pressed="true">EN</button>
+        <button class="lang-btn"        id="lang-mr"  onclick="setLanguage('mr')"  aria-pressed="false">मराठी</button>
+        <button class="lang-btn"        id="lang-hi"  onclick="setLanguage('hi')"  aria-pressed="false">हिंदी</button>
+      </div>
+
+      <!-- User Auth Section in Sidebar -->
+      <div class="sidebar-auth" id="sidebar-auth">
+        <div id="auth-logged-out">
+          <button class="btn btn-primary btn-sm btn-full" onclick="openAuthModal('login')">
+            <span>👤</span> <span data-i18n="btn_login_register">Farmer Sign In</span>
+          </button>
+        </div>
+        <div id="auth-logged-in" class="hidden">
+          <div class="user-card glass">
+            <div class="user-avatar" id="user-avatar">🌾</div>
+            <div class="user-info">
+              <p class="user-name" id="user-display-name">Farmer Name</p>
+              <p class="user-location" id="user-display-district">📍 Pune</p>
+            </div>
+            <button class="btn-icon-sm" onclick="logoutFarmer()" title="Log out" aria-label="Log out">🚪</button>
+          </div>
+        </div>
+      </div>
+
       <nav class="sidebar-nav">
         <a href="#diagnose" class="nav-item active" id="nav-diagnose" aria-current="page">
           <span class="nav-icon" aria-hidden="true">🔬</span>
-          <span class="nav-label">Diagnose</span>
+          <span class="nav-label" data-i18n="nav_diagnose">Diagnose</span>
+        </a>
+        <a href="#crops" class="nav-item" id="nav-crops">
+          <span class="nav-icon" aria-hidden="true">🌱</span>
+          <span class="nav-label" data-i18n="nav_my_crops">My Crops &amp; Plots</span>
         </a>
         <a href="#dashboard" class="nav-item" id="nav-dashboard">
           <span class="nav-icon" aria-hidden="true">📊</span>
-          <span class="nav-label">Dashboard</span>
+          <span class="nav-label" data-i18n="nav_dashboard">Dashboard</span>
         </a>
         <a href="#diseases" class="nav-item" id="nav-diseases">
           <span class="nav-icon" aria-hidden="true">🦠</span>
-          <span class="nav-label">Disease DB</span>
+          <span class="nav-label" data-i18n="nav_diseases">Disease DB</span>
         </a>
         <a href="#about" class="nav-item" id="nav-about">
           <span class="nav-icon" aria-hidden="true">ℹ️</span>
-          <span class="nav-label">About</span>
+          <span class="nav-label" data-i18n="nav_about">About</span>
         </a>
       </nav>
 
       <div class="sidebar-footer">
         <div class="model-badge">
           <span class="badge-dot" aria-hidden="true"></span>
-          <span>ResNet-18 · MLP</span>
+          <span>ResNet-18 · Multi-Crop</span>
         </div>
-        <p class="sidebar-ver">v1.0.0 — Maharashtra</p>
+        <p class="sidebar-ver">v2.0.0 — Maharashtra Multi-Tenant</p>
       </div>
     </aside>
 
@@ -73,25 +103,34 @@
       <section class="page active" id="page-diagnose" aria-labelledby="heading-diagnose">
         <header class="page-header">
           <div>
-            <h1 id="heading-diagnose">Crop Disease Diagnostics</h1>
-            <p class="page-subtitle">Upload a leaf image to diagnose diseases, get fertilizer recommendations, and forecast your yield.</p>
+            <h1 id="heading-diagnose" data-i18n="diagnose_title">Crop Disease Diagnostics</h1>
+            <p class="page-subtitle" data-i18n="diagnose_subtitle">Upload a leaf image to diagnose diseases, get fertilizer recommendations, and forecast your yield.</p>
           </div>
           <!-- Live Weather Strip -->
           <div class="weather-strip glass" id="weather-strip" aria-live="polite" aria-label="Live weather information">
             <div class="weather-item" id="w-temp">
               <span class="weather-icon" aria-hidden="true">🌡️</span>
               <span class="weather-val" id="val-temp">--°C</span>
-              <span class="weather-lbl">Temp</span>
+              <span class="weather-lbl" data-i18n="weather_temp">Temp</span>
             </div>
             <div class="weather-item" id="w-hum">
               <span class="weather-icon" aria-hidden="true">💧</span>
               <span class="weather-val" id="val-hum">--%</span>
-              <span class="weather-lbl">Humidity</span>
+              <span class="weather-lbl" data-i18n="weather_hum">Humidity</span>
             </div>
             <div class="weather-item" id="w-rain">
               <span class="weather-icon" aria-hidden="true">🌧️</span>
               <span class="weather-val" id="val-rain">-- mm</span>
-              <span class="weather-lbl">Rainfall</span>
+              <span class="weather-lbl" data-i18n="weather_rain">Rainfall</span>
+            </div>
+            <div class="weather-item" id="w-wind">
+              <span class="weather-icon" aria-hidden="true">💨</span>
+              <span class="weather-val" id="val-wind">-- km/h</span>
+              <span class="weather-lbl">Wind</span>
+            </div>
+            <div class="weather-item" id="w-spray-status" style="border-left:1px solid rgba(255,255,255,0.1);padding-left:0.6rem;">
+              <span class="weather-val" id="val-quick-spray" style="font-size:0.82rem;font-weight:700;">--</span>
+              <span class="weather-lbl" data-i18n="spray_advisory">Spray Status</span>
             </div>
           </div>
         </header>
@@ -102,22 +141,22 @@
           <!-- Upload Card -->
           <div class="card glass upload-card" id="upload-card">
             <h2 class="card-title">
-              <span aria-hidden="true">📸</span> Leaf Image
+              <span aria-hidden="true">📸</span> <span data-i18n="leaf_image">Leaf Image</span>
             </h2>
             <div class="upload-zone" id="upload-zone" role="button" tabindex="0"
                  aria-label="Upload leaf photograph. Click or drag and drop an image here."
                  ondragover="event.preventDefault()" ondrop="handleDrop(event)">
               <div class="upload-placeholder" id="upload-placeholder">
                 <div class="upload-icon" aria-hidden="true">🍃</div>
-                <p class="upload-text">Drag &amp; drop leaf photo</p>
-                <p class="upload-hint">or click to browse</p>
+                <p class="upload-text" data-i18n="upload_text">Drag &amp; drop leaf photo</p>
+                <p class="upload-hint" data-i18n="upload_hint">or click to browse</p>
                 <span class="upload-formats">JPG, PNG — max 10 MB</span>
               </div>
               <img id="preview-img" class="preview-img hidden" alt="Uploaded leaf image preview" />
             </div>
             <input type="file" id="file-input" accept="image/jpeg,image/png"
                    aria-label="Select leaf image file" />
-            <label for="file-input" class="btn btn-secondary btn-sm mt-2" id="browse-btn">
+            <label for="file-input" class="btn btn-secondary btn-sm mt-2" id="browse-btn" data-i18n="browse_file">
               Browse File
             </label>
           </div>
@@ -125,22 +164,51 @@
           <!-- Parameters Card -->
           <div class="card glass params-card">
             <h2 class="card-title">
-              <span aria-hidden="true">🧪</span> Crop &amp; Soil Parameters
+              <span aria-hidden="true">🧪</span> <span data-i18n="params_title">Crop &amp; Soil Parameters</span>
             </h2>
 
-            <div class="form-group">
-              <label for="crop-select">Crop Type</label>
-              <select id="crop-select" aria-label="Select crop type">
-                <option value="cotton">🌱 Cotton</option>
-                <option value="wheat">🌾 Wheat</option>
-                <option value="maize">🌽 Maize</option>
-                <option value="rice">🍚 Rice</option>
-                <option value="potato">🥔 Potato</option>
+            <!-- Plot Quick-Selector (For logged-in farmers) -->
+            <div class="form-group" id="plot-select-container">
+              <label for="plot-select">
+                <span data-i18n="link_plot">Link to My Farm Plot</span>
+                <span class="badge-optional" data-i18n="optional">Optional</span>
+              </label>
+              <select id="plot-select" aria-label="Select farm plot to prefill and record diagnosis">
+                <option value="">-- No plot linked (General diagnosis) --</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label for="district-select">Maharashtra District</label>
+              <label for="crop-select" data-i18n="crop_type">Crop Type</label>
+              <select id="crop-select" aria-label="Select crop type">
+                <optgroup label="── Primary Cash Crops ──">
+                  <option value="cotton">🌱 Cotton</option>
+                  <option value="wheat">🌾 Wheat</option>
+                  <option value="maize">🌽 Maize</option>
+                  <option value="rice">🍚 Rice</option>
+                  <option value="potato">🥔 Potato</option>
+                  <option value="soybean">🫘 Soybean</option>
+                </optgroup>
+                <optgroup label="── Vegetables ──">
+                  <option value="tomato">🍅 Tomato</option>
+                  <option value="pepper">🌶️ Pepper (Bell)</option>
+                  <option value="squash">🎃 Squash</option>
+                </optgroup>
+                <optgroup label="── Fruits ──">
+                  <option value="apple">🍎 Apple</option>
+                  <option value="grape">🍇 Grape</option>
+                  <option value="orange">🍊 Orange</option>
+                  <option value="peach">🍑 Peach</option>
+                  <option value="strawberry">🍓 Strawberry</option>
+                  <option value="cherry">🍒 Cherry</option>
+                  <option value="blueberry">🫐 Blueberry</option>
+                  <option value="raspberry">🫐 Raspberry</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="district-select" data-i18n="district_label">Maharashtra District</label>
               <select id="district-select" aria-label="Select district for live weather">
                 <option value="">Loading districts…</option>
               </select>
@@ -149,7 +217,7 @@
             <div class="npk-grid">
               <div class="form-group">
                 <label for="input-N">
-                  Nitrogen (N)
+                  <span data-i18n="nitrogen">Nitrogen (N)</span>
                   <span class="unit">kg/ha</span>
                 </label>
                 <input type="number" id="input-N" min="0" max="300" step="1"
@@ -157,7 +225,7 @@
               </div>
               <div class="form-group">
                 <label for="input-P">
-                  Phosphorus (P)
+                  <span data-i18n="phosphorus">Phosphorus (P)</span>
                   <span class="unit">kg/ha</span>
                 </label>
                 <input type="number" id="input-P" min="0" max="200" step="1"
@@ -165,7 +233,7 @@
               </div>
               <div class="form-group">
                 <label for="input-K">
-                  Potassium (K)
+                  <span data-i18n="potassium">Potassium (K)</span>
                   <span class="unit">kg/ha</span>
                 </label>
                 <input type="number" id="input-K" min="0" max="200" step="1"
@@ -176,7 +244,7 @@
             <button class="btn btn-primary" id="analyze-btn"
                     aria-label="Analyze crop — run disease detection and yield prediction">
               <span class="btn-icon" aria-hidden="true">🚀</span>
-              <span class="btn-text">Analyze Crop</span>
+              <span class="btn-text" data-i18n="analyze_btn">Analyze Crop</span>
               <span class="btn-spinner hidden" aria-hidden="true"></span>
             </button>
           </div>
@@ -192,12 +260,24 @@
             Train and load weights for full neural inference.
           </div>
 
+          <!-- Saved to History Badge -->
+          <div id="saved-history-banner" class="saved-history-banner hidden" role="status">
+            <span aria-hidden="true">💾</span>
+            <strong>Saved to Your Farm Records</strong> — Linked to your account history.
+          </div>
+
+          <!-- Low Confidence Warning -->
+          <div id="low-conf-banner" class="low-conf-banner hidden" role="alert">
+            <span aria-hidden="true">⚠️</span>
+            <strong>Low Confidence</strong> — The model is uncertain about this image. Ensure the leaf is clearly photographed against a plain background.
+          </div>
+
           <!-- Metrics Row -->
           <div class="metrics-row">
             <div class="metric-card glass" id="metric-disease">
               <div class="metric-icon" aria-hidden="true">🦠</div>
               <div class="metric-body">
-                <p class="metric-label">Detected Disease</p>
+                <p class="metric-label" data-i18n="detected_disease">Detected Disease</p>
                 <p class="metric-value" id="res-disease-name">--</p>
                 <p class="metric-sub" id="res-disease-crop">--</p>
               </div>
@@ -205,7 +285,7 @@
             <div class="metric-card glass" id="metric-confidence">
               <div class="metric-icon" aria-hidden="true">🎯</div>
               <div class="metric-body">
-                <p class="metric-label">Confidence</p>
+                <p class="metric-label" data-i18n="confidence">Confidence</p>
                 <p class="metric-value" id="res-confidence">--%</p>
                 <div class="confidence-bar" aria-hidden="true">
                   <div class="confidence-fill" id="confidence-fill" style="width:0%"></div>
@@ -215,7 +295,7 @@
             <div class="metric-card glass" id="metric-yield">
               <div class="metric-icon" aria-hidden="true">🌾</div>
               <div class="metric-body">
-                <p class="metric-label">Predicted Yield</p>
+                <p class="metric-label" data-i18n="predicted_yield">Predicted Yield</p>
                 <p class="metric-value" id="res-yield">-- t/ha</p>
                 <p class="metric-sub" id="res-yield-crop">--</p>
               </div>
@@ -223,71 +303,157 @@
             <div class="metric-card glass" id="metric-severity">
               <div class="metric-icon" aria-hidden="true">⚠️</div>
               <div class="metric-body">
-                <p class="metric-label">Severity</p>
+                <p class="metric-label" data-i18n="severity">Severity</p>
                 <p class="metric-value" id="res-severity">--</p>
                 <p class="metric-sub" id="res-healthy-status">--</p>
               </div>
             </div>
           </div><!-- /.metrics-row -->
 
+          <!-- Smart Spraying Window Weather Advisory Banner -->
+          <div id="spray-window-banner" class="spray-window-banner hidden" role="status" style="margin-bottom:1rem;padding:0.85rem 1.15rem;border-radius:8px;"></div>
+
           <!-- Treatment + Fertilizer Row -->
           <div class="detail-row">
 
             <!-- Disease Treatment -->
             <div class="card glass treatment-card">
-              <h2 class="card-title">
-                <span aria-hidden="true">💊</span> Treatment Prescription
-              </h2>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                <h2 class="card-title" style="margin:0;">
+                  <span aria-hidden="true">💊</span> <span data-i18n="treatment_title">Treatment Prescription</span>
+                </h2>
+                <button class="btn btn-secondary btn-sm" id="btn-voice-listen" onclick="window.toggleVoicePrescription()" style="display:inline-flex;align-items:center;gap:0.3rem;">
+                  <span>🔊</span> <span data-i18n="voice_listen">Listen Advisory</span>
+                </button>
+              </div>
               <p id="res-disease-desc" class="disease-desc">--</p>
               <div class="treatment-section">
-                <h3>⚗️ Chemical Treatments</h3>
+                <h3>⚗️ <span data-i18n="chemical_treatments">Chemical Treatments</span></h3>
                 <ul id="res-chemical" class="treatment-list" aria-label="Chemical treatment recommendations"></ul>
               </div>
               <div class="treatment-section">
-                <h3>🌿 Organic / Bio Treatments</h3>
+                <h3>🌿 <span data-i18n="organic_treatments">Organic / Bio Treatments</span></h3>
                 <ul id="res-organic" class="treatment-list" aria-label="Organic treatment recommendations"></ul>
               </div>
             </div>
 
             <!-- Fertilizer Card -->
             <div class="card glass fertilizer-card">
-              <h2 class="card-title">
-                <span aria-hidden="true">🧬</span> Fertilizer Dosage
-              </h2>
-              <p id="res-fert-interpretation" class="fert-interp">--</p>
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+                <h2 class="card-title" style="margin:0;">
+                  <span aria-hidden="true">🧬</span> <span data-i18n="fertilizer_title">Fertilizer Dosage</span>
+                </h2>
+                <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;">
+                  <input type="number" id="fert-calc-area" min="0.1" step="0.5" value="1.0" onchange="window.recalculateFertilizerBags()" style="width:54px;padding:0.2rem 0.4rem;border-radius:4px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.2);color:#fff;" />
+                  <select id="fert-calc-unit" onchange="window.recalculateFertilizerBags()" style="padding:0.2rem 0.4rem;border-radius:4px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.2);color:#fff;">
+                    <option value="acre">Acre</option>
+                    <option value="guntha">Guntha</option>
+                    <option value="ha">Hectare</option>
+                  </select>
+                </div>
+              </div>
+
+              <p id="res-fert-interpretation" class="fert-interp" style="margin-top:0.6rem;">--</p>
+              <div id="res-npk-surplus" class="surplus-warning hidden" role="alert"></div>
+
               <div class="fert-cards">
                 <div class="fert-item" id="fert-urea">
                   <div class="fert-icon" aria-hidden="true">🟡</div>
                   <div class="fert-body">
-                    <p class="fert-name">Urea</p>
+                    <p class="fert-name">Urea (46% N)</p>
                     <p class="fert-qty" id="val-urea">-- kg/ha</p>
-                    <p class="fert-note">46% Nitrogen</p>
+                    <p class="fert-note" id="note-urea">46% Nitrogen</p>
                   </div>
                 </div>
                 <div class="fert-item" id="fert-dap">
                   <div class="fert-icon" aria-hidden="true">🟤</div>
                   <div class="fert-body">
-                    <p class="fert-name">DAP</p>
+                    <p class="fert-name">DAP (18-46-0)</p>
                     <p class="fert-qty" id="val-dap">-- kg/ha</p>
-                    <p class="fert-note">18% N · 46% P</p>
+                    <p class="fert-note" id="note-dap">18% N · 46% P</p>
                   </div>
                 </div>
                 <div class="fert-item" id="fert-mop">
                   <div class="fert-icon" aria-hidden="true">🔴</div>
                   <div class="fert-body">
-                    <p class="fert-name">MOP</p>
+                    <p class="fert-name">MOP (60% K)</p>
                     <p class="fert-qty" id="val-mop">-- kg/ha</p>
-                    <p class="fert-note">60% Potassium</p>
+                    <p class="fert-note" id="note-mop">60% Potassium</p>
                   </div>
                 </div>
+              </div>
+
+              <!-- Estimated Cost Banner -->
+              <div id="fert-cost-banner" style="margin-top:0.75rem;padding:0.6rem 0.9rem;border-radius:6px;background:rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;font-size:0.9rem;">
+                <span>💰 <span data-i18n="est_cost">Estimated Fertilizer Cost</span>:</span>
+                <strong id="val-fert-total-cost" style="font-size:1.1rem;color:#10b981;">₹--</strong>
+              </div>
+
+              <!-- Action Buttons Row -->
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:1rem;">
+                <button class="btn btn-secondary btn-sm" onclick="window.printReport(false)" aria-label="Print or save prescription report">
+                  <span aria-hidden="true">🖨️</span>
+                  <span data-i18n="print_report">Print Report</span>
+                </button>
+                <button class="btn btn-sm" onclick="window.shareWhatsApp()" style="background:#25D366;color:#fff;border:none;display:inline-flex;align-items:center;gap:0.3rem;">
+                  <span aria-hidden="true">💬</span>
+                  <span data-i18n="share_whatsapp">WhatsApp</span>
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="window.printReport(true)" style="display:inline-flex;align-items:center;gap:0.3rem;">
+                  <span aria-hidden="true">📋</span>
+                  <span data-i18n="pmfby_report">PMFBY Claim</span>
+                </button>
               </div>
             </div>
           </div><!-- /.detail-row -->
 
+          <!-- Mandi Intelligence Card -->
+          <div class="card glass mandi-card hidden" id="mandi-card" style="margin-top:1.25rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+              <h2 class="card-title" style="margin:0;">
+                <span aria-hidden="true">🏛️</span>
+                <span data-i18n="mandi_rates">APMC Mandi Rates (Market Intelligence)</span>
+              </h2>
+              <span id="mandi-market-label" style="font-size:0.85rem;color:var(--text-muted, #94a3b8);font-weight:500;">
+                📍 APMC Hub
+              </span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:0.75rem;margin-bottom:1rem;">
+              <div class="metric-card glass" style="padding:0.85rem;">
+                <p style="margin:0;font-size:0.8rem;color:var(--text-muted, #94a3b8);" data-i18n="modal_price">Modal Price</p>
+                <p id="mandi-modal-val" style="margin:0.2rem 0;font-size:1.4rem;fontWeight:700;color:#38bdf8;">₹--</p>
+                <p id="mandi-trend-val" style="margin:0;font-size:0.75rem;color:#10b981;">▲ STEADY</p>
+              </div>
+              <div class="metric-card glass" style="padding:0.85rem;">
+                <p style="margin:0;font-size:0.8rem;color:var(--text-muted, #94a3b8);" data-i18n="min_max_price">Min / Max Price</p>
+                <p id="mandi-range-val" style="margin:0.2rem 0;font-size:1.1rem;font-weight:600;">₹-- – ₹--</p>
+                <p style="margin:0;font-size:0.75rem;color:var(--text-muted, #94a3b8);">₹ / Quintal (100 kg)</p>
+              </div>
+              <div class="metric-card glass" style="padding:0.85rem;">
+                <p style="margin:0;font-size:0.8rem;color:var(--text-muted, #94a3b8);" data-i18n="msp_inr">MSP Benchmark</p>
+                <p id="mandi-msp-val" style="margin:0.2rem 0;font-size:1.1rem;font-weight:600;color:#fbbf24;">₹--</p>
+                <p style="margin:0;font-size:0.75rem;color:var(--text-muted, #94a3b8);">GoI Minimum Support Price</p>
+              </div>
+            </div>
+
+            <!-- Revenue Projection Banner -->
+            <div id="mandi-revenue-banner" style="background:linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(56, 189, 248, 0.08));border:1px solid rgba(16, 185, 129, 0.3);border-radius:8px;padding:0.85rem 1.1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+              <div>
+                <span style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;color:#10b981;font-weight:600;">
+                  🌾 <span data-i18n="projected_revenue">Projected Revenue</span>
+                </span>
+                <div id="mandi-revenue-val" style="margin-top:0.2rem;font-size:1.25rem;font-weight:700;color:#f8fafc;">
+                  ₹-- / Acre | ₹-- / Hectare
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- NPK Chart -->
           <div class="card glass chart-card">
             <h2 class="card-title">
-              <span aria-hidden="true">📈</span> Soil Nutrient Analysis — Current vs Target
+              <span aria-hidden="true">📈</span> <span data-i18n="npk_chart_title">Soil Nutrient Analysis — Current vs Target</span>
             </h2>
             <div class="chart-wrapper" role="img" aria-label="Bar chart comparing current soil NPK levels against target levels">
               <canvas id="npk-chart" aria-hidden="true"></canvas>
@@ -297,12 +463,106 @@
         </div><!-- /#results-area -->
       </section><!-- /#page-diagnose -->
 
+      <!-- ──────────────────────── MY CROPS & PLOTS PAGE ───────────────── -->
+      <section class="page hidden" id="page-crops" aria-labelledby="heading-crops">
+        <header class="page-header">
+          <div>
+            <h1 id="heading-crops" data-i18n="my_crops_title">My Crops &amp; Farm Plots</h1>
+            <p class="page-subtitle" data-i18n="my_crops_subtitle">Manage your multiple agricultural fields, track acreages, and run quick diagnoses per plot.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openAddPlotModal()">
+            <span aria-hidden="true">➕</span>
+            <span data-i18n="add_plot_btn">Add New Crop Plot</span>
+          </button>
+        </header>
+
+        <!-- Plots Grid -->
+        <div id="plots-container" class="plots-grid">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </section><!-- /#page-crops -->
+
+      <!-- ──────────────────────── DASHBOARD PAGE ──────────────────────── -->
+      <section class="page hidden" id="page-dashboard" aria-labelledby="heading-dashboard">
+        <header class="page-header">
+          <div>
+            <h1 id="heading-dashboard" data-i18n="dashboard_title">Agricultural Dashboard</h1>
+            <p class="page-subtitle" data-i18n="dashboard_subtitle">Platform overview, recent diagnostics history, and multi-district weather telemetry.</p>
+          </div>
+        </header>
+
+        <!-- Platform & Farmer Stats Row -->
+        <div class="stats-row">
+          <div class="stat-card glass">
+            <div class="stat-icon" aria-hidden="true">🎯</div>
+            <div class="stat-body">
+              <p class="stat-value" id="stat-accuracy-val">90.82%</p>
+              <p class="stat-label" data-i18n="stat_accuracy">AI Accuracy</p>
+            </div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-icon" aria-hidden="true">🌱</div>
+            <div class="stat-body">
+              <p class="stat-value" id="stat-plots-val">--</p>
+              <p class="stat-label" data-i18n="stat_farmer_plots">My Active Plots</p>
+            </div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-icon" aria-hidden="true">📐</div>
+            <div class="stat-body">
+              <p class="stat-value" id="stat-acres-val">--</p>
+              <p class="stat-label" data-i18n="stat_farmer_acres">Monitored Acres</p>
+            </div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-icon" aria-hidden="true">🗺️</div>
+            <div class="stat-body">
+              <p class="stat-value">36</p>
+              <p class="stat-label" data-i18n="stat_districts">Districts Covered</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Body Grid -->
+        <div class="dashboard-grid">
+
+          <!-- Recent Diagnostics History -->
+          <div class="card glass dash-card" id="card-history">
+            <div class="dash-card-header">
+              <h2 class="card-title">
+                <span aria-hidden="true">📋</span> <span data-i18n="recent_diagnostics">Recent Diagnostics</span>
+              </h2>
+              <div class="dash-history-actions">
+                <select id="history-filter-crop" class="filter-select-sm" onchange="loadFarmerHistory()">
+                  <option value="">All Crops</option>
+                </select>
+                <button class="btn-clear" onclick="clearHistory()" aria-label="Clear history" data-i18n="clear_history">Clear</button>
+              </div>
+            </div>
+            <div id="history-list" class="history-list">
+              <p class="no-history" data-i18n="no_history">No diagnostics yet. Run your first analysis to see results here.</p>
+            </div>
+          </div>
+
+          <!-- Multi-District Weather Preview -->
+          <div class="card glass dash-card" id="card-weather-grid">
+            <h2 class="card-title">
+              <span aria-hidden="true">🗺️</span> <span data-i18n="weather_overview">Maharashtra Weather Overview</span>
+            </h2>
+            <div id="weather-radar" class="weather-radar">
+              <p class="loading-text" data-i18n="loading_weather">Loading district weather…</p>
+            </div>
+          </div>
+
+        </div><!-- /.dashboard-grid -->
+      </section><!-- /#page-dashboard -->
+
       <!-- ──────────────────────── DISEASE DB PAGE ─────────────────────── -->
       <section class="page hidden" id="page-diseases" aria-labelledby="heading-diseases">
         <header class="page-header">
           <div>
-            <h1 id="heading-diseases">Disease Knowledge Base</h1>
-            <p class="page-subtitle">Complete 38-class PlantVillage disease taxonomy with treatments.</p>
+            <h1 id="heading-diseases" data-i18n="disease_db_title">Disease Knowledge Base</h1>
+            <p class="page-subtitle" data-i18n="disease_db_subtitle">Complete 38-class PlantVillage disease taxonomy with treatments.</p>
           </div>
         </header>
         <div class="search-row">
@@ -316,8 +576,8 @@
       <section class="page hidden" id="page-about" aria-labelledby="heading-about">
         <header class="page-header">
           <div>
-            <h1 id="heading-about">About AeroCrop.ai</h1>
-            <p class="page-subtitle">Multi-Modal Deep Learning for Maharashtra Agriculture</p>
+            <h1 id="heading-about" data-i18n="about_title">About AeroCrop.ai</h1>
+            <p class="page-subtitle" data-i18n="about_subtitle">Multi-Modal Deep Learning for Maharashtra Agriculture</p>
           </div>
         </header>
         <div class="about-grid">
@@ -346,7 +606,7 @@
               <li><strong>Disease Model:</strong> Inspired by <code>mayur7garg/PlantLeafDiseaseDetection</code></li>
               <li><strong>Yield Model:</strong> Inspired by <code>ShubhamKJ123/Crop-Yield-Prediction-using-Machine-Learning-Algorithms</code></li>
               <li><strong>Weather:</strong> Open-Meteo API (free, no API key)</li>
-              <li><strong>Framework:</strong> PyTorch · FastAPI · Vanilla JS</li>
+              <li><strong>Framework:</strong> PyTorch · FastAPI · Vanilla JS · SQLAlchemy Async</li>
             </ul>
           </div>
           <div class="card glass about-card">
@@ -357,18 +617,174 @@
               <span class="crop-badge">🌽 Maize</span>
               <span class="crop-badge">🍚 Rice</span>
               <span class="crop-badge">🥔 Potato</span>
+              <span class="crop-badge">🍅 Tomato</span>
+              <span class="crop-badge">🌶️ Pepper</span>
+              <span class="crop-badge">🍎 Apple</span>
+              <span class="crop-badge">🍇 Grape</span>
+              <span class="crop-badge">🍊 Orange</span>
+              <span class="crop-badge">🍑 Peach</span>
+              <span class="crop-badge">🍓 Strawberry</span>
+              <span class="crop-badge">🫘 Soybean</span>
+              <span class="crop-badge">🫐 Blueberry</span>
+              <span class="crop-badge">🍒 Cherry</span>
+              <span class="crop-badge">🎃 Squash</span>
+              <span class="crop-badge">🫐 Raspberry</span>
             </div>
           </div>
           <div class="card glass about-card">
             <h2>📍 Coverage</h2>
             <p>All <strong>36 districts</strong> of Maharashtra with live Open-Meteo weather integration.</p>
-            <p class="about-note">Target districts include Jalgaon, Nagpur, Pune, Nashik, Aurangabad, Amravati and more.</p>
+            <p class="about-note">Target districts include Jalgaon, Nagpur, Pune, Nashik, Chhatrapati Sambhajinagar, Amravati and more.</p>
           </div>
         </div>
       </section>
 
     </main>
   </div><!-- /.app-shell -->
+
+  <!-- ── AUTH MODAL (Login / Register) ────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div class="modal-card glass">
+      <button class="modal-close" onclick="closeAuthModal()" aria-label="Close modal">✕</button>
+      
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Register Farmer</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="form-login" onsubmit="handleLoginSubmit(event)">
+        <div class="form-group">
+          <label for="login-id" data-i18n="login_id_label">Mobile Number or Email</label>
+          <input type="text" id="login-id" required placeholder="e.g. 9876543210 or farmer@gmail.com" />
+        </div>
+        <div class="form-group">
+          <label for="login-password" data-i18n="password">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full mt-2" id="btn-login-submit">
+          <span class="btn-text" data-i18n="sign_in_btn">Sign In</span>
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="form-register" class="hidden" onsubmit="handleRegisterSubmit(event)">
+        <div class="form-group">
+          <label for="reg-name" data-i18n="full_name">Full Name</label>
+          <input type="text" id="reg-name" required placeholder="e.g. Ramesh Patil" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="reg-phone" data-i18n="phone_number">Mobile Number</label>
+            <input type="tel" id="reg-phone" placeholder="10-digit number" />
+          </div>
+          <div class="form-group">
+            <label for="reg-email" data-i18n="email_optional">Email (Optional)</label>
+            <input type="email" id="reg-email" placeholder="name@domain.com" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reg-password" data-i18n="password_min6">Password (Min. 6 chars)</label>
+          <input type="password" id="reg-password" required minlength="6" placeholder="••••••••" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="reg-district" data-i18n="district_label">District</label>
+            <select id="reg-district"></select>
+          </div>
+          <div class="form-group">
+            <label for="reg-village" data-i18n="village_label">Taluka / Village</label>
+            <input type="text" id="reg-village" placeholder="e.g. Haveli" />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full mt-2" id="btn-reg-submit">
+          <span class="btn-text" data-i18n="create_account_btn">Create Farmer Account</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── ADD / EDIT PLOT MODAL ────────────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="plot-modal" role="dialog" aria-modal="true" aria-labelledby="plot-modal-title">
+    <div class="modal-card glass">
+      <button class="modal-close" onclick="closePlotModal()" aria-label="Close modal">✕</button>
+      <h2 id="plot-modal-title" class="card-title">🌱 <span data-i18n="register_plot_title">Register New Farm Plot</span></h2>
+
+      <form id="form-plot" onsubmit="handlePlotSubmit(event)">
+        <input type="hidden" id="plot-edit-id" value="" />
+        
+        <div class="form-group">
+          <label for="modal-plot-name" data-i18n="plot_name_label">Plot Identifier / Field Name</label>
+          <input type="text" id="modal-plot-name" required placeholder="e.g. North Canal Plot, Gat No. 42" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="modal-plot-crop" data-i18n="crop_type">Cultivated Crop</label>
+            <select id="modal-plot-crop" required>
+              <option value="cotton">🌱 Cotton</option>
+              <option value="wheat">🌾 Wheat</option>
+              <option value="maize">🌽 Maize</option>
+              <option value="rice">🍚 Rice</option>
+              <option value="potato">🥔 Potato</option>
+              <option value="tomato">🍅 Tomato</option>
+              <option value="pepper">🌶️ Pepper (Bell)</option>
+              <option value="apple">🍎 Apple</option>
+              <option value="grape">🍇 Grape</option>
+              <option value="orange">🍊 Orange</option>
+              <option value="strawberry">🍓 Strawberry</option>
+              <option value="soybean">🫘 Soybean</option>
+              <option value="peach">🍑 Peach</option>
+              <option value="cherry">🍒 Cherry</option>
+              <option value="blueberry">🫐 Blueberry</option>
+              <option value="squash">🎃 Squash</option>
+              <option value="raspberry">🫐 Raspberry</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="modal-plot-acres" data-i18n="area_acres_label">Area (Acres)</label>
+            <input type="number" id="modal-plot-acres" required min="0.1" step="0.1" value="2.5" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="modal-plot-soil" data-i18n="soil_type_label">Soil Type</label>
+            <select id="modal-plot-soil">
+              <option value="Medium Black">Medium Black Soil (काळी माती)</option>
+              <option value="Deep Black (Regur)">Deep Black / Regur (काळी कसदार)</option>
+              <option value="Alluvial">Alluvial (गाळाची माती)</option>
+              <option value="Red Sandy Loam">Red Sandy Loam (तांबडी माती)</option>
+              <option value="Laterite">Laterite (जांभी माती)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="modal-plot-sowing" data-i18n="sowing_date_label">Sowing Date</label>
+            <input type="date" id="modal-plot-sowing" />
+          </div>
+        </div>
+
+        <div class="npk-grid">
+          <div class="form-group">
+            <label for="modal-plot-N">Baseline N</label>
+            <input type="number" id="modal-plot-N" value="60" min="0" max="300" />
+          </div>
+          <div class="form-group">
+            <label for="modal-plot-P">Baseline P</label>
+            <input type="number" id="modal-plot-P" value="30" min="0" max="200" />
+          </div>
+          <div class="form-group">
+            <label for="modal-plot-K">Baseline K</label>
+            <input type="number" id="modal-plot-K" value="30" min="0" max="200" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full mt-2" id="btn-save-plot">
+          <span class="btn-text" data-i18n="save_plot_btn">Save Plot</span>
+        </button>
+      </form>
+    </div>
+  </div>
 
   <script src="/static/js/app.js"></script>
 </body>
