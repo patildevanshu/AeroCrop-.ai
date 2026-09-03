@@ -8,8 +8,7 @@ Architecture:
   Task Head 1     : Disease Classification (38 classes)
   Task Head 2     : Yield Regression (t/ha)
 
-Reference: mayur7garg/PlantLeafDiseaseDetection (PlantVillage 38-class dataset)
-         + ShubhamKJ123/Crop-Yield-Prediction-using-Machine-Learning-Algorithms
+Dataset Taxonomy: PlantVillage 38-class agricultural pathology dataset
 """
 
 import torch

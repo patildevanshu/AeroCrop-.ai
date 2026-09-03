@@ -80,10 +80,10 @@ export const AboutPage: React.FC = () => {
               <strong>Dataset:</strong> PlantVillage &amp; New Plant Diseases Dataset — 87,900 images across 38 classes (Kaggle).
             </li>
             <li>
-              <strong>Disease Model:</strong> Multi-Modal Dual-Head Deep CNN inspired by <code>mayur7garg/PlantLeafDiseaseDetection</code>.
+              <strong>Disease Model:</strong> Custom Multi-Modal Dual-Head Deep CNN (ResNet-18 + Tabular MLP Fusion).
             </li>
             <li>
-              <strong>Yield Forecasting:</strong> Agricultural regression model inspired by <code>ShubhamKJ123/Crop-Yield-Prediction</code>.
+              <strong>Yield Forecasting:</strong> Microclimate-conditioned regression network trained on soil NPK and meteorological telemetry.
             </li>
             <li>
               <strong>Live Telemetry:</strong> Open-Meteo REST API (real-time meteorological telemetry for 36 districts).

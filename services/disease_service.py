@@ -9,8 +9,7 @@ Provides:
 IMPORTANT: Class indices in DISEASES list MUST match model/dataset.py:DISEASE_CLASSES
            exactly (alphabetical folder ordering from the PlantVillage dataset).
 
-Reference dataset: Kaggle — New Plant Diseases Dataset
-GitHub: mayur7garg/PlantLeafDiseaseDetection
+Dataset: PlantVillage 38-class agricultural pathology taxonomy
 """
 
 from dataclasses import dataclass, field
