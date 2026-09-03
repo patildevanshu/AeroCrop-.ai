@@ -1,134 +1,48 @@
 # AeroCrop.ai 🌿
 
-> **Multi-Modal Deep Learning Platform for Crop Disease Diagnostics & Yield Forecasting**
-> *Maharashtra, India — Cotton · Wheat · Maize · Rice · Potato*
+> **Multi-Modal Deep Learning & Field Economics Platform for Maharashtra Agriculture**  
+> *Cotton · Soybean · Wheat · Maize · Potato · Tomato · Rice · Grape · Pepper*
 
 ---
 
-## Quick Start
+## Overview
 
-### 1. Prerequisites
+**AeroCrop.ai** is an end-to-end precision agriculture and field-intelligence platform built for smallholder and commercial farmers across Maharashtra's 36 districts. Combining computer vision, microclimatic telemetry, and commercial agronomics, the platform transforms a single leaf photograph and soil reading into immediate operational and financial guidance.
 
-| Requirement | Version |
-|---|---|
-| Python | ≥ 3.10 |
-| pip | Latest |
-| NVIDIA GPU *(optional)* | CUDA 12.1 (RTX 3050) |
+### Key Capabilities
 
-### 2. Clone & Install
+1. **🔬 Multi-Modal Disease Diagnosis (90.82% Accuracy)**:
+   - Vision backbone: **ResNet-18** extracting deep spatial disease patterns across 38 PlantVillage classes.
+   - Tabular backbone: **3-layer MLP** encoding soil nutrients ($N, P, K$) and Open-Meteo microclimate ($T, H, R$).
+   - Dual-head output: Simultaneous disease classification and non-negative harvest yield regression ($t/\text{ha}$).
 
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd final_year_project
+2. **💨 Smart Foliar Spraying Safety Window (हवामान फवारणी सल्ला)**:
+   - Real-time weather hazard engine evaluating rainfall ($>1\text{ mm}$ wash-off hazard) and wind speed ($>15\text{ km/h}$ chemical drift hazard).
+   - Instant visual badges (`🟢 Safe to Spray`, `🟡 Caution`, `🔴 Hold Spray`) and localized warnings in Marathi, Hindi, and English.
 
-# Create virtual environment (recommended)
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # macOS/Linux
+3. **🧬 Commercial 50kg Bags & Subsidized ₹ Cost Calculator (खत नियोजन)**:
+   - Converts elemental deficits into physical **50kg commercial bags of Urea, DAP, and MOP**.
+   - Subsidized statutory pricing under GoI Nutrient Based Subsidy (Urea ₹267, DAP ₹1,350, MOP ₹1,700).
+   - Dynamic area toggle for **Acres (एकर)**, **Gunthas (गुंठा)**, and **Hectares**.
 
-# Install dependencies
-pip install -r requirements.txt
-```
+4. **🏛️ APMC Mandi Rates & Harvest Gross Revenue Forecasting (बाजारभाव)**:
+   - Market intelligence across major Maharashtra APMC hubs (Lasalgaon, Jalgaon, Pune, Nagpur, Latur, Kolhapur).
+   - Maps predicted yield into expected quintals per acre and calculates **Gross Revenue (₹)** compared against official Minimum Support Price (MSP) benchmarks.
 
-### 3. Install PyTorch (GPU-accelerated)
+5. **🔊 Vernacular Voice Narration (बोलणारा कृषी सल्लागार)**:
+   - Browser-native Web Speech API (`mr-IN`, `hi-IN`, `en-IN`) speaks aloud the complete pathology and remedy advisory for hands-free field use.
 
-```bash
-# For NVIDIA GPU (CUDA 12.1 — RTX 3050)
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+6. **📋 PMFBY Insurance Loss Proof & WhatsApp 1-Click Sharing**:
+   - Generates legal PDF claim documentation for the **Pradhan Mantri Fasal Bima Yojana (PMFBY)** with surveyor signature blocks and leaf specimen imagery.
+   - 1-click sharing of diagnoses and fertilizer plans to WhatsApp.
 
-# CPU only (slower inference)
-pip install torch torchvision
-```
+7. **👨‍🌾 Farmer Plot Management & Persistent History**:
+   - Secure phone/password authentication with JWT cookies.
+   - Multi-plot cadastral registry (crop, district, survey number, area in acres, baseline soil NPK).
+   - Full chronological diagnosis history and yield trends.
 
-### 4. Run the Server
-
-```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Open your browser at **http://localhost:8000**
-
----
-
-## Project Structure (MVC Architecture)
-
-```
-final_year_project/
-│
-├── main.py                     # FastAPI application entry point
-├── config.py                   # Central configuration constants
-├── requirements.txt            # Python dependencies
-│
-├── model/                      # ── MODEL LAYER ──────────────────────────
-│   ├── __init__.py
-│   ├── architecture.py         # MultiModalAeroCropNet (ResNet-18 + MLP)
-│   ├── inference.py            # InferenceService (weights load / mock)
-│   └── aerocrop_weights.pth    # ← Place trained weights here (if available)
-│
-├── services/                   # ── SERVICE LAYER (Business Logic) ───────
-│   ├── __init__.py
-│   ├── disease_service.py      # 38-class disease DB + treatments
-│   ├── fertilizer_service.py   # NPK deficit & Urea/DAP/MOP calculations
-│   └── weather_service.py      # Open-Meteo API + district coordinates
-│
-├── controllers/                # ── CONTROLLER LAYER ──────────────────────
-│   ├── __init__.py
-│   ├── predict_controller.py   # POST /api/predict
-│   └── weather_controller.py   # GET  /api/weather/{district}
-│
-├── views/                      # ── VIEW LAYER (Frontend) ─────────────────
-│   ├── index.html              # Glassmorphic dashboard
-│   └── static/
-│       ├── css/style.css       # Premium dark/glass stylesheet
-│       └── js/app.js           # Frontend logic + Chart.js
-│
-├── README.md                   # ← You are here
-└── documentation.md            # Full technical documentation
-```
-
----
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/` | Serve frontend dashboard |
-| `GET` | `/api/health` | Server health + device info |
-| `POST` | `/api/predict` | Full multi-modal inference |
-| `GET` | `/api/disease/classes` | All 38 disease classes |
-| `GET` | `/api/weather/districts` | List Maharashtra districts |
-| `GET` | `/api/weather/{district}` | Live weather for a district |
-| `GET` | `/docs` | Swagger UI |
-| `GET` | `/redoc` | ReDoc UI |
-
-### POST `/api/predict` — Form Data
-
-| Field | Type | Description |
-|---|---|---|
-| `image` | File | Leaf photograph (JPG/PNG) |
-| `crop` | str | `cotton`, `wheat`, `maize`, `rice`, `potato` |
-| `district` | str | Maharashtra district name |
-| `N` | float | Soil Nitrogen (kg/ha) |
-| `P` | float | Soil Phosphorus (kg/ha) |
-| `K` | float | Soil Potassium (kg/ha) |
-
----
-
-## Using Model Weights
-
-If you have pre-trained weights (`.pth` file):
-
-1. Copy the weights file to `model/aerocrop_weights.pth`
-2. Restart the server — it will automatically detect and load them
-
-Without weights, the system runs in **Smart Mock Mode** — results are deterministically derived from soil/weather inputs.
-
----
-
-## Training the Model
-
-*(Coming soon — training pipeline with synthetic data generator)*
+8. **📞 ICAR Krishi Vigyan Kendra (KVK) Escalation Directory**:
+   - District-wise extension center phone directory for human expert second opinions on complex field pathology.
 
 ---
 
@@ -136,18 +50,166 @@ Without weights, the system runs in **Smart Mock Mode** — results are determin
 
 | Layer | Technology |
 |---|---|
-| **Deep Learning** | PyTorch · torchvision (ResNet-18) |
-| **Backend** | FastAPI · uvicorn |
-| **Frontend** | Vanilla HTML5 · CSS3 · JavaScript |
-| **Charts** | Chart.js v4 |
-| **Weather API** | Open-Meteo (free, no API key required) |
-| **Architecture** | MVC (Model · View · Controller) |
+| **Deep Learning** | PyTorch 2.x · torchvision (ResNet-18) · NumPy · Pillow |
+| **Backend API** | FastAPI · Uvicorn (ASGI) · Python 3.12 |
+| **Database** | SQLite · SQLAlchemy (Async `aiosqlite`) · Passlib (bcrypt) · PyJWT |
+| **Frontend** | React 18 · TypeScript · Vite · Lucide Icons · Chart.js |
+| **Legacy Fallback** | Vanilla HTML5 / CSS3 / JavaScript SPA |
+| **Microclimate** | Open-Meteo REST API (hourly temperature, humidity, rainfall, wind) |
+| **Market Data** | Maharashtra APMC Mandi Service + Agmarknet + GoI MSP benchmarks |
+| **Testing** | pytest · pytest-asyncio · httpx (146 passing tests) |
 
 ---
 
-## References
+## Quick Start
 
-- **Disease Dataset**: [New Plant Diseases Dataset (Kaggle)](https://www.kaggle.com/vipoooool/new-plant-diseases-dataset) — 87,900 images, 38 classes
-- **Disease Model**: Inspired by [PlantLeafDiseaseDetection](https://github.com/mayur7garg/PlantLeafDiseaseDetection)
-- **Yield Model**: Inspired by [Crop-Yield-Prediction-using-Machine-Learning-Algorithms](https://github.com/ShubhamKJ123/Crop-Yield-Prediction-using-Machine-Learning-Algorithms)
-- **NPK Targets**: ICAR recommendations for Maharashtra cash crops
+### 1. Prerequisites
+- Python $\ge 3.10$ (tested on Python 3.12)
+- Node.js $\ge 18$ & npm (for React/Vite frontend)
+
+### 2. Clone & Setup Backend
+
+```bash
+git clone <your-repo-url>
+cd final_year_project
+
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate      # On Windows
+# source venv/bin/activate # On Linux/macOS
+
+# Install backend dependencies
+pip install -r requirements.txt
+
+# (Optional) For GPU CUDA acceleration:
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+```
+
+### 3. Build Frontend
+
+```bash
+cd frontend
+npm install
+npm run build
+cd ..
+```
+
+*Note: FastAPI automatically serves `frontend/dist/` at `http://localhost:8000/`. If `dist/` is absent, it seamlessly falls back to `views/`.*
+
+### 4. Run Application Server
+
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Open **http://localhost:8000** in your browser.
+
+---
+
+## Project Structure
+
+```
+final_year_project/
+│
+├── main.py                     # FastAPI application entry point
+├── config.py                   # Central configuration, MSP, subsidized bag prices
+├── requirements.txt            # Python dependencies
+├── documentation.md            # In-depth technical architecture document
+├── PROJECT_REVIEW_QUESTIONS_AND_ANSWERS.md # Viva voce examination master guide
+│
+├── database/                   # ── DATABASE & ORM LAYER ────────────────────
+│   ├── connection.py           # Async SQLite engine & session factory
+│   └── models.py               # User, FarmerPlot, DiagnosisRecord schemas
+│
+├── model/                      # ── DEEP LEARNING MODEL LAYER ───────────────
+│   ├── architecture.py         # MultiModalAeroCropNet (ResNet-18 + MLP)
+│   ├── dataset.py              # Multi-modal PlantVillage PyTorch Dataset
+│   ├── train.py                # Multi-task training pipeline (CosineAnnealingLR)
+│   ├── inference.py            # Singleton InferenceService (90.82% weights / mock)
+│   └── aerocrop_weights.pth    # Trained weights checkpoint
+│
+├── services/                   # ── BUSINESS & DOMAIN SERVICES ─────────────
+│   ├── disease_service.py      # 38-class pathology database & dual prescriptions
+│   ├── fertilizer_service.py   # NPK deficits, 50kg commercial bags, retail costs
+│   ├── weather_service.py      # Open-Meteo telemetry & foliar spray decision tree
+│   ├── mandi_service.py        # APMC market rates, trends, and revenue forecasting
+│   ├── auth_service.py         # JWT tokens & bcrypt password hashing
+│   ├── plot_service.py         # Plot CRUD & ownership verification
+│   ├── history_service.py      # Diagnosis analytics & persistence
+│   └── storage_service.py      # Local file & leaf photo storage provider
+│
+├── controllers/                # ── REST API CONTROLLERS ───────────────────
+│   ├── predict_controller.py   # POST /api/predict
+│   ├── weather_controller.py   # GET  /api/weather/{district}
+│   ├── mandi_controller.py     # GET  /api/mandi/{district}/{crop}, overview
+│   ├── auth_controller.py      # POST /api/auth/register, login, me, logout
+│   ├── plot_controller.py      # CRUD /api/plots
+│   └── history_controller.py   # GET  /api/history
+│
+├── frontend/                   # ── MODERN REACT 18 + VITE FRONTEND ─────────
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── dashboard/      # Weather Radar, Mandi table, KVK directory
+│   │   │   ├── diagnose/       # Image upload, Spray alert, Mandi card, Bags
+│   │   │   ├── plots/          # Land plot management & cadastral cards
+│   │   │   └── auth/           # Login / Register modals
+│   │   ├── context/            # AuthContext, I18nContext (EN, MR, HI)
+│   │   ├── utils/speech.ts     # Vernacular Web Speech API synthesis
+│   │   └── types/index.ts      # TypeScript interfaces
+│   └── dist/                   # Production build artifact
+│
+├── views/                      # ── LEGACY VANILLA SPA FALLBACK ─────────────
+│   ├── index.html              # Glassmorphic HTML5 interface
+│   └── static/css & js/        # Stylesheets and app.js logic
+│
+└── tests/                      # ── AUTOMATED TEST SUITE (146 TESTS) ────────
+    ├── test_farmer_features.py # Spray windows, 50kg bags, APMC mandi, end-to-end
+    ├── test_model_inference.py # Neural network inference, tensor shapes
+    ├── test_fertilizer_service.py # Deficits, splits, SSP alternatives
+    ├── test_weather_service.py # Open-Meteo API, caching, mock fallbacks
+    ├── test_plots.py           # Multi-tenant plot isolation
+    ├── test_auth.py            # Authentication & JWT security
+    └── test_farmer_history.py  # Diagnosis analytics & pagination
+```
+
+---
+
+## API Reference Summary
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/predict` | Multi-modal inference (Leaf image + Soil NPK + District + Crop) |
+| `GET` | `/api/weather/{district}` | Real-time weather, wind speed, and spray safety status |
+| `GET` | `/api/mandi/{district}/{crop}` | APMC modal prices, min/max spread, MSP, and revenue |
+| `GET` | `/api/mandi/overview/{district}` | District-wide multi-crop APMC price summary |
+| `POST` | `/api/auth/register` | Register new farmer account |
+| `POST` | `/api/auth/login` | Authenticate farmer and receive secure HTTP-only JWT cookie |
+| `GET` | `/api/plots` | List logged-in farmer's land plots |
+| `POST` | `/api/plots` | Add new agricultural land plot |
+| `GET` | `/api/history` | List historical diagnoses with crop filters |
+| `GET` | `/api/disease/classes` | List all 38 supported disease classes |
+| `GET` | `/docs` | Interactive Swagger UI API documentation |
+
+---
+
+## Automated Test Suite
+
+AeroCrop.ai features a comprehensive automated test suite with **146 unit, integration, and security tests**:
+
+```bash
+# Run all tests
+pytest -v
+
+# Run dedicated farmer-centric feature tests
+pytest tests/test_farmer_features.py -v
+```
+
+---
+
+## Academic Verification & Model Performance
+
+- **Trained Model Accuracy**: **90.82%** validation accuracy across 38 PlantVillage classes.
+- **Yield Forecasting Error**: **6.72 t/ha** RMSE.
+- **Weights File**: `model/aerocrop_weights.pth` (11.3M parameters, 45.1 MB).
+- **Target Geography**: All 36 districts of Maharashtra, India.
+- **Exam / Viva Defense Guide**: Comprehensive technical Q&A covering model design, commercial stoichiometry, spray safety math, and rural deployment is documented in [PROJECT_REVIEW_QUESTIONS_AND_ANSWERS.md](file:///d:/Codes/final_year_project/PROJECT_REVIEW_QUESTIONS_AND_ANSWERS.md).

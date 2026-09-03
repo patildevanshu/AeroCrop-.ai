@@ -6,26 +6,30 @@
 
 ## Project Overview
 
-**AeroCrop.ai** is a Multi-Modal Multi-Task Deep Learning advisory platform for commercial agriculture in Maharashtra, India. It simultaneously performs four actions from a single leaf image + soil data submission:
+**AeroCrop.ai** is a Multi-Modal Multi-Task Deep Learning & Precision Agriculture Platform designed for commercial and smallholder farmers in Maharashtra, India. From a single leaf photograph, soil nutrient metrics, and microclimatic telemetry, it delivers six unified operational outputs:
 
-1. **Disease Diagnosis** — 38-class classification with confidence %
-2. **Treatment Prescription** — Chemical + organic recommendations
-3. **Fertilizer Dosage** — Exact Urea, DAP, MOP quantities (kg/ha)
-4. **Yield Forecast** — Expected harvest in tons/hectare (t/ha)
+1. **Pathology Diagnosis** — 38-class classification with probability distribution and confidence score
+2. **Vernacular Prescription (Audio & Visual)** — Chemical + organic remedies with native Web Speech text-to-speech (`mr-IN`, `hi-IN`, `en-IN`)
+3. **Commercial 50kg Bags & Subsidized Cost** — Deficit stoichiometry translated to 50kg Urea, DAP, MOP bags with Acre/Guntha scaling and GoI NBS pricing
+4. **Yield Forecasting** — Multi-modal regression predicting harvest in tons/hectare ($t/\text{ha}$) and quintals/acre
+5. **Smart Foliar Spray Window** — Real-time hazard assessment preventing chemical wash-off ($>1\text{ mm}$ rain) and drift ($>15\text{ km/h}$ wind)
+6. **APMC Mandi Intelligence & Revenue** — Live Maharashtra APMC modal prices, MSP benchmarks, and projected harvest cash revenue (₹)
 
 ---
 
 ## Architecture
 
-### MVC Structure
+### System Layers
 
 ```
-MVC Layer       | Directory          | Responsibility
-─────────────── | ────────────────── | ──────────────────────────────────────
-Model           | model/             | PyTorch neural network + inference service
-Service         | services/          | Business logic (disease DB, NPK math, weather)
-Controller      | controllers/       | FastAPI routes orchestrating model + services
-View            | views/             | HTML/CSS/JS glassmorphic frontend
+Layer           | Directory          | Technology & Responsibility
+─────────────── | ────────────────── | ─────────────────────────────────────────────────────────────
+Model           | model/             | PyTorch MultiModalAeroCropNet (ResNet-18 + MLP) + InferenceService
+Database        | database/          | Async SQLAlchemy + SQLite (`users`, `farmer_plots`, `diagnoses`)
+Service         | services/          | Core agronomics (Disease, Fertilizer, Weather, Mandi, Storage)
+Controller      | controllers/       | FastAPI routers (`auth`, `plots`, `history`, `predict`, `mandi`, `weather`)
+Frontend (Vite) | frontend/          | React 18 + Vite + TypeScript (Dashboard, Diagnose, Plots, Auth)
+Frontend (HTML) | views/             | Vanilla HTML5/CSS3/JS SPA with Chart.js fallback
 ```
 
 ### Neural Network: `MultiModalAeroCropNet`
@@ -170,31 +174,73 @@ MOP_qty = D_K / 0.60
 
 ---
 
-### Milestone 3 — Model Training & Weights Saved (2026-08-19)
+### Milestone 4 — Farmer-Centric Operational & Financial Platform (2026-09-03)
 
-**Status**: ✅ Complete (Paused at Epoch 19)
+**Status**: ✅ Complete
 
-**Progress summary:**
+**Motivation**:
+Transitioning AeroCrop.ai from a laboratory diagnostic research model into an all-in-one daily field operational companion addressing market economics, field safety, and low-tech vernacular accessibility.
 
-| Epoch | Train Acc | Val Acc (Disease) | Val Yield RMSE | Epoch Time | Checkpoint Status |
-|---|---|---|---|---|---|
-| 1 | 9.71% | 16.44% | 8.51 t/ha | 11.5 min | Saved |
-| 5 | 21.23% | 31.18% | 7.35 t/ha | 9.7 min | Saved |
-| 10 | 47.33% | 62.30% | 7.08 t/ha | 10.0 min | Saved |
-| 15 | 68.64% | 80.67% | 7.20 t/ha | 9.3 min | Saved |
-| 17 | 76.00% | 87.79% | 6.81 t/ha | 9.3 min | Saved |
-| 18 | 79.03% | 88.21% | 7.04 t/ha | 9.3 min | Saved |
-| **19** | **81.13%** | **90.82%** 🚀 | **6.72 t/ha** ⬇️ | **9.3 min** | **Saved (`model/aerocrop_weights.pth`)** |
+**Key Functional Additions:**
 
-**Current Model Performance:**
-- **Disease Diagnostic Accuracy**: **90.82%** across 38 PlantVillage classes
-- **Yield Forecasting Error**: **6.72 t/ha** RMSE
-- **Saved Weights**: `model/aerocrop_weights.pth` (11.3M parameters)
+1. **Vernacular Audio Narration (Web Speech Synthesis)**
+   - Integrated client-side SpeechSynthesis with BCP-47 language targeting (`mr-IN` Marathi, `hi-IN` Hindi, `en-IN` English).
+   - Speaks complete pathological diagnosis, chemical fungicides, and organic biological remedies out loud.
+
+2. **Smart Foliar Spraying Window (Agronomic Decision Tree)**
+   - Open-Meteo telemetry extended with real-time `wind_speed_10m`.
+   - Automated hazard assessment:
+     - 🔴 **Danger (Wash-Off Risk)**: Rainfall $> 1.0\text{ mm}$
+     - 🔴 **Danger (Spray Drift Risk)**: Wind speed $> 15.0\text{ km/h}$
+     - 🟡 **Warning (Delayed Evaporation)**: Humidity $> 85\%$
+     - 🟡 **Warning (Heat Scorch Risk)**: Temperature $> 36^\circ\text{C}$
+     - 🟢 **Optimal / Safe**: Clear skies, low wind ($< 15\text{ km/h}$), moderate humidity.
+
+3. **Commercial 50kg Bag Stoichiometry & Cost Projection**
+   - Direct translation of elemental deficits into integer commercial 50kg fertilizer bags:
+     $$\text{Bags}_{\text{50kg}} = \left\lceil \frac{\text{Deficit (kg)}}{50} \right\rceil$$
+   - Goverment of India NBS subsidized retail pricing benchmarks:
+     - **Urea (46% N)**: ₹267 / 50kg bag
+     - **DAP (18% N, 46% P)**: ₹1,350 / 50kg bag
+     - **MOP (60% K)**: ₹1,700 / 50kg bag
+   - Area multiplier supporting Acres ($\times 0.4047$), Gunthas ($\times 0.01$), and Hectares ($\times 1.0$).
+
+4. **APMC Mandi Price Intelligence & Gross Revenue Forecasting**
+   - New `services/mandi_service.py` and `controllers/mandi_controller.py` with REST endpoints (`/api/mandi/{district}/{crop}`, `/api/mandi/overview/{district}`).
+   - Covers key Maharashtra commodities (Cotton, Soybean, Wheat, Maize, Potato, Tomato, Onion, Grape, Rice) across major APMC hubs (Lasalgaon, Jalgaon, Pune, Nagpur, Latur, Kolhapur).
+   - Computes expected harvest gross revenue from predicted yield:
+     $$\text{Gross Revenue (₹)} = (\text{Yield}_{\text{t/ha}} \times 10) \times \text{APMC Modal Price (₹/q)}$$
+
+5. **PMFBY Insurance Loss Proof & WhatsApp Export**
+   - Automated generation of formal crop loss assessment documents compliant with Pradhan Mantri Fasal Bima Yojana (PMFBY) surveyor guidelines.
+   - 1-click WhatsApp advisory payload formatting for immediate peer sharing.
+
+6. **ICAR Krishi Vigyan Kendra (KVK) Escalation Directory**
+   - District-wise extension registry for expert human agronomist verification when AI confidence is low.
 
 ---
 
-## Next Steps (Tomorrow)
+## Technical Summary Table
 
-- [ ] Test live web application (`uvicorn main:app --reload`) with real 90.82% PyTorch model weights
-- [ ] *(Optional)* Resume training for remaining Epochs 20–30 to reach ~95%+ accuracy
-- [ ] Add unit tests (`tests/`) for fertilizer math, disease lookup, and weather API fallback
+| Parameter | AeroCrop.ai Core v2.0 | Farmer-Centric Extensions |
+|---|---|---|
+| **AI Backbone** | ResNet-18 + 3-Layer Tabular MLP | Vernacular Voice Synthesizer (`mr-IN`, `hi-IN`) |
+| **Output Metrics** | Disease Class, % Confidence, t/ha Yield | 50kg Commercial Bags, ₹ Total Input Cost |
+| **Microclimate** | Temp, Humidity, Rain Display | **Smart Spraying Window Indicator** (Drift & Wash-off) |
+| **Economics** | Yield regression only | **APMC Mandi Rates, MSP Benchmarks, Gross Revenue** |
+| **Reporting** | Generic HTML print | **PMFBY Insurance Claim Document & WhatsApp Share** |
+| **Escalation** | Automated model output only | **ICAR Krishi Vigyan Kendra (KVK) Directory** |
+| **Test Coverage** | 100+ unit & integration tests | `tests/test_farmer_features.py` (10/10 passed) |
+
+---
+
+## Running the Complete System
+
+```bash
+# 1. Run backend server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# 2. (Optional) Run Vite dev server for frontend development
+cd frontend
+npm run dev
+```

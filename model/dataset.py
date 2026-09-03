@@ -248,19 +248,35 @@ class YieldDataset(Dataset):
         else:
             df = df.iloc[n_val:]
 
-        #  Feature normalisation 
+        # ── Feature normalisation ──────────────────────────────────────────
+        # All 6 features align 1-to-1 with live inference (model/inference.py):
+        #   0: N           (kg/ha)
+        #   1: P           (kg/ha)
+        #   2: K           (kg/ha)
+        #   3: temperature (°C)
+        #   4: humidity    (estimated relative humidity %)
+        #   5: rainfall    (daily mm equivalent)
         norm = config.TABULAR_NORM
 
         def z(col, key):
             return (df[col] - norm[key]["mean"]) / norm[key]["std"]
 
+        # Convert annual rainfall to daily mm so it shares scale with live rainfall
+        df["rain_mm_day"] = df["average_rain_fall_mm_per_year"] / 365.0
+
+        # Estimate relative humidity (%) from rainfall and temperature proxy, bounded [30, 95]
+        # In agronomic physics, higher rainfall and moderate temps correlate with higher humidity
+        rain_factor = np.clip(df["rain_mm_day"] * 4.0, 0, 30)
+        temp_factor = np.clip((35 - df["avg_temp"]) * 0.8, -10, 15)
+        df["est_humidity"] = np.clip(55.0 + rain_factor + temp_factor, 30.0, 95.0)
+
         self.features = np.stack([
-            z("N",                          "N").values,
-            z("P",                          "P").values,
-            z("K",                          "K").values,
-            z("avg_temp",                   "temperature").values,
-            z("average_rain_fall_mm_per_year", "humidity").values,  # humidity proxy
-            z("pesticides_tonnes",          "rainfall").values,     # pest proxy
+            z("N",            "N").values,
+            z("P",            "P").values,
+            z("K",            "K").values,
+            z("avg_temp",     "temperature").values,
+            z("est_humidity", "humidity").values,
+            z("rain_mm_day",  "rainfall").values,
         ], axis=1).astype(np.float32)
 
         self.labels = df["yield_t_ha"].values.astype(np.float32)

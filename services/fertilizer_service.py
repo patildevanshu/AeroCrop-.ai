@@ -1,13 +1,20 @@
 """
 AeroCrop.ai — Fertilizer Service
 
-Calculates commercial fertilizer dosages required to correct soil NPK deficits.
+Calculates commercial fertilizer dosages required to correct soil NPK deficits,
+offering both DAP and SSP alternative recipes and a growth-stage split application calendar.
 
 Math:
-  DAP qty  = D_P / 0.46
-  N from DAP = DAP_qty * 0.18
-  Urea qty = max(0, D_N - N_from_DAP) / 0.46
-  MOP qty  = D_K / 0.60
+  Standard DAP Recipe:
+    DAP qty      = D_P / 0.46
+    N from DAP   = DAP_qty * 0.18
+    Urea qty     = max(0, D_N - N_from_DAP) / 0.46
+    MOP qty      = D_K / 0.60
+
+  Alternative SSP Recipe (Zero Nitrogen in Phosphorus source):
+    SSP qty      = D_P / 0.16
+    Urea qty     = D_N / 0.46
+    MOP qty      = D_K / 0.60
 
 Sources:
   - ICAR NPK recommendations for Maharashtra cash crops
@@ -25,27 +32,8 @@ class FertilizerService:
     @staticmethod
     def calculate(crop: str, soil_N: float, soil_P: float, soil_K: float) -> dict:
         """
-        Compute NPK deficits and recommended commercial fertilizer quantities.
-
-        Args:
-            crop   : crop name (cotton | wheat | maize | rice | potato)
-            soil_N : current soil Nitrogen   (kg/ha)
-            soil_P : current soil Phosphorus (kg/ha)
-            soil_K : current soil Potassium  (kg/ha)
-
-        Returns:
-            {
-                "crop"          : str,
-                "target"        : {N, P, K},
-                "soil"          : {N, P, K},
-                "deficit"       : {N, P, K},
-                "fertilizers"   : {
-                    "DAP"  : float,   # kg/ha
-                    "Urea" : float,   # kg/ha
-                    "MOP"  : float,   # kg/ha
-                },
-                "interpretation": str,
-            }
+        Compute NPK deficits, commercial fertilizer quantities (DAP & SSP recipes),
+        and growth-stage split application schedules.
         """
         crop_key = crop.lower()
         targets = config.CROP_NPK_TARGETS.get(
@@ -58,15 +46,85 @@ class FertilizerService:
         d_P = max(0.0, t_P - soil_P)
         d_K = max(0.0, t_K - soil_K)
 
-        # ── DAP first (satisfies Phosphorus, also contributes some N) ────────
         comp = config.FERTILIZER_COMPOSITION
+
+        # ── 1. Standard DAP + Urea + MOP Recipe ──────────────────────────────
         dap_qty      = d_P / comp["DAP"]["P"]
         n_from_dap   = dap_qty * comp["DAP"]["N"]
         n_remaining  = max(0.0, d_N - n_from_dap)
         urea_qty     = n_remaining / comp["Urea"]["N"]
         mop_qty      = d_K / comp["MOP"]["K"]
 
+        # ── 2. Alternative SSP (Single Superphosphate) Recipe ────────────────
+        ssp_qty      = d_P / comp["SSP"]["P"]
+        ssp_urea_qty = d_N / comp["Urea"]["N"]
+        ssp_mop_qty  = mop_qty
+
         interpretation = FertilizerService._interpret(d_N, d_P, d_K, t_N, t_P, t_K)
+
+        # ── 3. Surplus N warning ─────────────────────────────────────────────
+        surplus_n_warning: str | None = None
+        if n_from_dap > d_N and d_P > 0:
+            excess = round(n_from_dap - d_N, 1)
+            surplus_n_warning = (
+                f"DAP application will supply {excess} kg/ha of N beyond the deficit. "
+                f"Reduce or skip Urea to avoid excess nitrogen, which can cause vegetative "
+                f"overgrowth, lodging, and increased disease susceptibility. Alternatively, "
+                f"use Single Superphosphate (SSP)."
+            )
+
+        # ── 4. Growth-Stage Split Application Schedule ───────────────────────
+        split_schedule = {
+            "basal": {
+                "stage": "Basal (At Sowing / Transplanting)",
+                "DAP_kg_ha": round(dap_qty, 1),
+                "SSP_kg_ha": round(ssp_qty, 1),
+                "Urea_kg_ha": round(urea_qty * 0.333, 1),
+                "MOP_kg_ha": round(mop_qty, 1),
+                "instructions": "Apply 100% Phosphorus (DAP or SSP), 100% Potash (MOP), and 1/3rd Nitrogen (Urea) into the root zone at sowing.",
+            },
+            "vegetative_30d": {
+                "stage": "Vegetative Growth (30–35 Days After Sowing)",
+                "Urea_kg_ha": round(urea_qty * 0.333, 1),
+                "instructions": "Top-dress 1/3rd Nitrogen (Urea) along the crop rows followed by light irrigation.",
+            },
+            "flowering_60d": {
+                "stage": "Flowering / Panicle Initiation (60–65 Days After Sowing)",
+                "Urea_kg_ha": round(urea_qty * 0.334, 1),
+                "instructions": "Top-dress remaining Nitrogen (Urea) to support grain/fruit development.",
+            },
+        }
+
+        # ── 5. Commercial Bags & Financial Economics (Per Hectare Baseline) ─
+        bag_prices = getattr(config, "FERTILIZER_BAG_PRICES", {
+            "Urea": 267.0, "DAP": 1350.0, "MOP": 1700.0, "SSP": 500.0
+        })
+
+        urea_r_kg = round(urea_qty, 1)
+        dap_r_kg  = round(dap_qty, 1)
+        mop_r_kg  = round(mop_qty, 1)
+
+        commercial_bags_ha = {
+            "Urea": {
+                "kg": urea_r_kg,
+                "bags_50kg": round(urea_r_kg / 50.0, 1),
+                "bag_price_inr": bag_prices["Urea"],
+                "cost_inr": round((urea_r_kg / 50.0) * bag_prices["Urea"], 0),
+            },
+            "DAP": {
+                "kg": dap_r_kg,
+                "bags_50kg": round(dap_r_kg / 50.0, 1),
+                "bag_price_inr": bag_prices["DAP"],
+                "cost_inr": round((dap_r_kg / 50.0) * bag_prices["DAP"], 0),
+            },
+            "MOP": {
+                "kg": mop_r_kg,
+                "bags_50kg": round(mop_r_kg / 50.0, 1),
+                "bag_price_inr": bag_prices["MOP"],
+                "cost_inr": round((mop_r_kg / 50.0) * bag_prices["MOP"], 0),
+            },
+        }
+        total_fert_cost_ha = sum(item["cost_inr"] for item in commercial_bags_ha.values())
 
         return {
             "crop":   crop.title(),
@@ -78,7 +136,17 @@ class FertilizerService:
                 "Urea": round(urea_qty, 1),
                 "MOP":  round(mop_qty, 1),
             },
-            "interpretation": interpretation,
+            "ssp_alternative": {
+                "SSP":  round(ssp_qty, 1),
+                "Urea": round(ssp_urea_qty, 1),
+                "MOP":  round(ssp_mop_qty, 1),
+                "sulfur_kg_ha": round(ssp_qty * comp["SSP"].get("S", 0.11), 1),
+            },
+            "commercial_bags":  commercial_bags_ha,
+            "total_cost_inr_ha": total_fert_cost_ha,
+            "split_schedule":   split_schedule,
+            "interpretation":   interpretation,
+            "surplus_n_warning": surplus_n_warning,
         }
 
     @staticmethod
