@@ -101,10 +101,10 @@ class DiagnosisRecord(Base):
     
     predicted_yield_t_ha: Mapped[float] = mapped_column(Float, default=0.0)
     
-    # Soil nutrient state during diagnosis
-    soil_N: Mapped[float] = mapped_column(Float, default=0.0)
-    soil_P: Mapped[float] = mapped_column(Float, default=0.0)
-    soil_K: Mapped[float] = mapped_column(Float, default=0.0)
+    # Soil nutrient state during diagnosis (optional)
+    soil_N: Mapped[Optional[float]] = mapped_column(Float, nullable=True, default=None)
+    soil_P: Mapped[Optional[float]] = mapped_column(Float, nullable=True, default=None)
+    soil_K: Mapped[Optional[float]] = mapped_column(Float, nullable=True, default=None)
     
     # Prescribed fertilizer quantities (kg/ha)
     fertilizer_urea_kg: Mapped[float] = mapped_column(Float, default=0.0)

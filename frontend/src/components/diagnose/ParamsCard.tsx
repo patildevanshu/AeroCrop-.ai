@@ -9,12 +9,6 @@ interface ParamsCardProps {
   district: string;
   setDistrict: (district: string) => void;
   districts: string[];
-  N: number;
-  setN: (n: number) => void;
-  P: number;
-  setP: (p: number) => void;
-  K: number;
-  setK: (k: number) => void;
   selectedPlotId: string;
   setSelectedPlotId: (id: string) => void;
   onAnalyze: () => void;
@@ -27,12 +21,6 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
   district,
   setDistrict,
   districts,
-  N,
-  setN,
-  P,
-  setP,
-  K,
-  setK,
   selectedPlotId,
   setSelectedPlotId,
   onAnalyze,
@@ -50,9 +38,6 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
       const plot = userPlots.find((p) => p.id === parseInt(plotIdStr, 10));
       if (plot) {
         setCrop(plot.crop_type);
-        setN(plot.baseline_N);
-        setP(plot.baseline_P);
-        setK(plot.baseline_K);
         showToast(`Linked to ${plot.plot_name} (${plot.crop_type})`, 'info');
       }
     }
@@ -61,7 +46,7 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
   return (
     <div className="card glass params-card">
       <h2 className="card-title">
-        <span aria-hidden="true">🧪</span>
+        <span aria-hidden="true">🌱</span>
         <span>{t('params_title')}</span>
       </h2>
 
@@ -98,34 +83,32 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
           aria-label="Select crop type"
         >
           <optgroup label="── Primary Cash Crops ──">
-            <option value="cotton">🌱 Cotton</option>
-            <option value="wheat">🌾 Wheat</option>
-            <option value="maize">🌽 Maize</option>
-            <option value="rice">🍚 Rice</option>
-            <option value="potato">🥔 Potato</option>
-            <option value="soybean">🫘 Soybean</option>
+            <option value="cotton">Cotton (कापूस)</option>
+            <option value="soybean">Soybean (सोयाबीन)</option>
+            <option value="wheat">Wheat (गहू)</option>
+            <option value="maize">Maize (मका)</option>
+            <option value="rice">Rice (भात / धान)</option>
+            <option value="potato">Potato (बटाटा)</option>
+            <option value="tomato">Tomato (टोमॅटो)</option>
+            <option value="grape">Grape (द्राक्षे)</option>
+            <option value="pepper">Pepper (मिरची)</option>
+            <option value="apple">Apple (सफरचंद)</option>
           </optgroup>
-          <optgroup label="── Vegetables ──">
-            <option value="tomato">🍅 Tomato</option>
-            <option value="pepper">🌶️ Pepper (Bell)</option>
-            <option value="squash">🎃 Squash</option>
-          </optgroup>
-          <optgroup label="── Fruits ──">
-            <option value="apple">🍎 Apple</option>
-            <option value="grape">🍇 Grape</option>
-            <option value="orange">🍊 Orange</option>
-            <option value="peach">🍑 Peach</option>
-            <option value="strawberry">🍓 Strawberry</option>
-            <option value="cherry">🍒 Cherry</option>
-            <option value="blueberry">🫐 Blueberry</option>
-            <option value="raspberry">🫐 Raspberry</option>
+          <optgroup label="── Other PlantVillage Crops ──">
+            <option value="cherry">Cherry</option>
+            <option value="corn">Corn</option>
+            <option value="peach">Peach</option>
+            <option value="strawberry">Strawberry</option>
+            <option value="orange">Orange</option>
+            <option value="squash">Squash</option>
+            <option value="raspberry">Raspberry</option>
           </optgroup>
         </select>
       </div>
 
-      {/* Maharashtra District Selector */}
+      {/* District Selector */}
       <div className="form-group">
-        <label htmlFor="district-select">{t('district_label')}</label>
+        <label htmlFor="district-select">{t('district')}</label>
         <select
           id="district-select"
           value={district}
@@ -140,53 +123,18 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
         </select>
       </div>
 
-      {/* Soil Macronutrients NPK */}
-      <div className="npk-grid">
-        <div className="form-group">
-          <label htmlFor="input-N">
-            <span>{t('nitrogen')}</span>
-            <span className="unit">kg/ha</span>
-          </label>
-          <input
-            id="input-N"
-            type="number"
-            min={0}
-            max={300}
-            step={1}
-            value={N}
-            onChange={(e) => setN(Number(e.target.value))}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="input-P">
-            <span>{t('phosphorus')}</span>
-            <span className="unit">kg/ha</span>
-          </label>
-          <input
-            id="input-P"
-            type="number"
-            min={0}
-            max={200}
-            step={1}
-            value={P}
-            onChange={(e) => setP(Number(e.target.value))}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="input-K">
-            <span>{t('potassium')}</span>
-            <span className="unit">kg/ha</span>
-          </label>
-          <input
-            id="input-K"
-            type="number"
-            min={0}
-            max={200}
-            step={1}
-            value={K}
-            onChange={(e) => setK(Number(e.target.value))}
-          />
-        </div>
+      {/* Instant Agronomic Guidance Notice */}
+      <div style={{
+        padding: '0.65rem 0.85rem',
+        borderRadius: '6px',
+        background: 'rgba(16, 185, 129, 0.08)',
+        border: '1px solid rgba(16, 185, 129, 0.25)',
+        fontSize: '0.82rem',
+        color: '#94a3b8',
+        margin: '0.75rem 0 1.25rem 0',
+        lineHeight: 1.4
+      }}>
+        ✨ <strong style={{ color: '#34d399' }}>Photo-First Diagnosis:</strong> Standard ICAR nutrition dosages and live microclimatic weather telemetry will be automatically computed for your selected crop and district.
       </div>
 
       {/* Analyze Button */}

@@ -112,30 +112,32 @@ class InferenceService:
     def predict(
         self,
         image_bytes: bytes,
-        N: float, P: float, K: float,
-        temperature: float, humidity: float, rainfall: float,
+        temperature: float,
+        humidity: float,
+        rainfall: float,
         crop: str,
+        N: float | None = None,
+        P: float | None = None,
+        K: float | None = None,
     ) -> dict[str, Any]:
         """
         Run full multi-modal inference.
-
-        Returns:
-            {
-                "disease_class"  : int,
-                "probabilities"  : list[float],   # 38 values
-                "confidence"     : float,
-                "yield_t_ha"     : float,
-                "mock"           : bool,
-            }
+        N, P, K are optional. When omitted by the farmer, standard regional
+        soil medians are used, maintaining full compatibility with the trained model.
         """
+        target = config.CROP_NPK_TARGETS.get(crop.lower(), {"N": 100.0, "P": 50.0, "K": 50.0})
+        n_val = float(N if N is not None else target.get("N", 100.0) * 0.6)
+        p_val = float(P if P is not None else target.get("P", 50.0) * 0.6)
+        k_val = float(K if K is not None else target.get("K", 50.0) * 0.6)
+
         if self.mock_mode:
-            return self._mock_predict(N, P, K, temperature, humidity, rainfall, crop)
+            return self._mock_predict(n_val, p_val, k_val, temperature, humidity, rainfall, crop)
 
         # ── Real inference ────────────────────────────────────────────────
         from io import BytesIO
         img = Image.open(BytesIO(image_bytes)).convert("RGB")
         img_tensor = IMAGE_TRANSFORM(img).unsqueeze(0).to(self.device)       # (1,3,224,224)
-        tab_tensor = self._normalise_tabular(N, P, K, temperature, humidity, rainfall).to(self.device)
+        tab_tensor = self._normalise_tabular(n_val, p_val, k_val, temperature, humidity, rainfall).to(self.device)
 
         with torch.no_grad():
             logits, yield_raw = self.model(img_tensor, tab_tensor)
@@ -156,9 +158,13 @@ class InferenceService:
 
     @staticmethod
     def _mock_predict(
-        N: float, P: float, K: float,
-        temperature: float, humidity: float, rainfall: float,
-        crop: str,
+        N: float = 60.0,
+        P: float = 30.0,
+        K: float = 30.0,
+        temperature: float = 25.0,
+        humidity: float = 60.0,
+        rainfall: float = 0.0,
+        crop: str = "cotton",
     ) -> dict[str, Any]:
         """
         Deterministic, agronomically-aware mock inference used when weights

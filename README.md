@@ -20,8 +20,9 @@
    - Real-time weather hazard engine evaluating rainfall ($>1\text{ mm}$ wash-off hazard) and wind speed ($>15\text{ km/h}$ chemical drift hazard).
    - Instant visual badges (`🟢 Safe to Spray`, `🟡 Caution`, `🔴 Hold Spray`) and localized warnings in Marathi, Hindi, and English.
 
-3. **🧬 Commercial 50kg Bags & Subsidized ₹ Cost Calculator (खत नियोजन)**:
-   - Converts elemental deficits into physical **50kg commercial bags of Urea, DAP, and MOP**.
+3. **🧬 Commercial 50kg Bags & Growth-Stage Fertilizer Schedule (खत नियोजन)**:
+   - Converts standard ICAR Recommended Dose of Fertilizer (RDF) or soil deficit into physical **50kg commercial bags of Urea, DAP, and MOP**.
+   - Prescribes a scientific 3-stage split application calendar: **Basal (sowing)**, **Vegetative (30 DAS)**, and **Flowering (60 DAS)**.
    - Subsidized statutory pricing under GoI Nutrient Based Subsidy (Urea ₹267, DAP ₹1,350, MOP ₹1,700).
    - Dynamic area toggle for **Acres (एकर)**, **Gunthas (गुंठा)**, and **Hectares**.
 
@@ -178,7 +179,7 @@ final_year_project/
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/predict` | Multi-modal inference (Leaf image + Soil NPK + District + Crop) |
+| `POST` | `/api/predict` | Frictionless inference (Leaf image + District + Crop, soil NPK optional) |
 | `GET` | `/api/weather/{district}` | Real-time weather, wind speed, and spray safety status |
 | `GET` | `/api/mandi/{district}/{crop}` | APMC modal prices, min/max spread, MSP, and revenue |
 | `GET` | `/api/mandi/overview/{district}` | District-wide multi-crop APMC price summary |
@@ -194,7 +195,7 @@ final_year_project/
 
 ## Automated Test Suite
 
-AeroCrop.ai features a comprehensive automated test suite with **146 unit, integration, and security tests**:
+AeroCrop.ai features a comprehensive automated test suite with **147 unit, integration, and security tests**:
 
 ```bash
 # Run all tests

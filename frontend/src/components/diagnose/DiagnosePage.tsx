@@ -24,9 +24,6 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '' }
   const [crop, setCrop] = useState<string>('cotton');
   const [district, setDistrict] = useState<string>('pune');
   const [districts, setDistricts] = useState<string[]>([]);
-  const [N, setN] = useState<number>(60);
-  const [P, setP] = useState<number>(30);
-  const [K, setK] = useState<number>(30);
   const [selectedPlotId, setSelectedPlotId] = useState<string>(initialPlotId);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -63,10 +60,6 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '' }
       showToast('Please upload a leaf photograph first.', 'warning');
       return;
     }
-    if (isNaN(N) || isNaN(P) || isNaN(K) || N < 0 || P < 0 || K < 0) {
-      showToast('Please enter valid soil N, P, K values (≥ 0).', 'warning');
-      return;
-    }
 
     setIsLoading(true);
     try {
@@ -74,9 +67,6 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '' }
         image: selectedFile,
         crop,
         district,
-        N,
-        P,
-        K,
         plot_id: selectedPlotId ? parseInt(selectedPlotId, 10) : null,
       });
 
@@ -133,12 +123,6 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '' }
           district={district}
           setDistrict={setDistrict}
           districts={districts}
-          N={N}
-          setN={setN}
-          P={P}
-          setP={setP}
-          K={K}
-          setK={setK}
           selectedPlotId={selectedPlotId}
           setSelectedPlotId={setSelectedPlotId}
           onAnalyze={handleAnalyze}

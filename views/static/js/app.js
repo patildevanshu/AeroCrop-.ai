@@ -482,10 +482,9 @@ function initPlotSelectorSync() {
     if (plot) {
       // Sync crop
       els.cropSelect.value = plot.crop_type;
-      // Sync baseline NPK
-      els.inputN.value = plot.baseline_N;
-      els.inputP.value = plot.baseline_P;
-      els.inputK.value = plot.baseline_K;
+      if (els.inputN && plot.baseline_N != null) els.inputN.value = plot.baseline_N;
+      if (els.inputP && plot.baseline_P != null) els.inputP.value = plot.baseline_P;
+      if (els.inputK && plot.baseline_K != null) els.inputK.value = plot.baseline_K;
       showToast(`Linked to ${plot.plot_name} (${plot.crop_type})`, 'info');
     }
   });
@@ -497,9 +496,9 @@ window.quickDiagnoseOnPlot = function(plotId) {
   const plot = state.userPlots.find(p => p.id === plotId);
   if (plot) {
     els.cropSelect.value = plot.crop_type;
-    els.inputN.value = plot.baseline_N;
-    els.inputP.value = plot.baseline_P;
-    els.inputK.value = plot.baseline_K;
+    if (els.inputN && plot.baseline_N != null) els.inputN.value = plot.baseline_N;
+    if (els.inputP && plot.baseline_P != null) els.inputP.value = plot.baseline_P;
+    if (els.inputK && plot.baseline_K != null) els.inputK.value = plot.baseline_K;
   }
   els.uploadZone.scrollIntoView({ behavior: 'smooth' });
 };
@@ -698,24 +697,16 @@ async function runAnalysis() {
     return;
   }
 
-  const N = parseFloat(els.inputN.value);
-  const P = parseFloat(els.inputP.value);
-  const K = parseFloat(els.inputK.value);
-
-  if (isNaN(N) || isNaN(P) || isNaN(K) || N < 0 || P < 0 || K < 0) {
-    showToast('Please enter valid soil N, P, K values (≥ 0).', 'warning');
-    return;
-  }
-
   setLoading(true);
 
   const form = new FormData();
   form.append('image',    state.uploadedFile);
   form.append('crop',     els.cropSelect.value);
   form.append('district', els.districtSelect.value);
-  form.append('N',        N);
-  form.append('P',        P);
-  form.append('K',        K);
+
+  if (els.inputN && els.inputN.value) form.append('N', els.inputN.value);
+  if (els.inputP && els.inputP.value) form.append('P', els.inputP.value);
+  if (els.inputK && els.inputK.value) form.append('K', els.inputK.value);
 
   const selectedPlotId = els.plotSelect ? els.plotSelect.value : '';
   if (selectedPlotId) form.append('plot_id', selectedPlotId);
@@ -871,7 +862,9 @@ function severityColor(sev) {
    NPK CHART (Chart.js)
 ══════════════════════════════════════════════════════════════════════════ */
 function renderNPKChart(fertilizer) {
-  const ctx = document.getElementById('npk-chart').getContext('2d');
+  const canvas = document.getElementById('npk-chart');
+  if (!canvas || !fertilizer || !fertilizer.soil) return;
+  const ctx = canvas.getContext('2d');
   const { soil, target, deficit } = fertilizer;
 
   if (state.npkChart) state.npkChart.destroy();

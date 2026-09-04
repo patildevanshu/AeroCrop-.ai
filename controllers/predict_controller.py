@@ -55,15 +55,15 @@ async def predict(
     image:    UploadFile = File(..., description="RGB leaf photograph (JPG/PNG)"),
     crop:     str        = Form(..., description="Crop type (see /api/disease/classes for supported crops)"),
     district: str        = Form(..., description="Maharashtra district name"),
-    N:        float      = Form(..., description="Soil Nitrogen level   (kg/ha)"),
-    P:        float      = Form(..., description="Soil Phosphorus level (kg/ha)"),
-    K:        float      = Form(..., description="Soil Potassium level  (kg/ha)"),
+    N:        Optional[float] = Form(None, description="Optional Soil Nitrogen level   (kg/ha)"),
+    P:        Optional[float] = Form(None, description="Optional Soil Phosphorus level (kg/ha)"),
+    K:        Optional[float] = Form(None, description="Optional Soil Potassium level  (kg/ha)"),
     plot_id:  Optional[int] = Form(None, description="Optional Plot ID to link this diagnosis to"),
     optional_user: Optional[User] = Depends(get_optional_user),
     db:       AsyncSession = Depends(get_db),
 ):
     """
-    Unified inference endpoint — accepts a leaf image + soil data + district,
+    Unified inference endpoint — accepts a leaf image + district (soil NPK optional),
     returns disease diagnosis, fertilizer prescription, and yield forecast.
     If the farmer is logged in, automatically saves the assessment & image to their history.
     """
@@ -85,11 +85,13 @@ async def predict(
         inference_svc = _get_inference()
         result = inference_svc.predict(
             image_bytes=image_bytes,
-            N=N, P=P, K=K,
             temperature=temperature,
             humidity=humidity,
             rainfall=rainfall,
             crop=crop,
+            N=N,
+            P=P,
+            K=K,
         )
     except Exception as exc:
         logger.error("Inference failed: %s", exc)
@@ -113,7 +115,7 @@ async def predict(
     }
 
     # ── 5. Fertilizer recommendation ─────────────────────────────────────────
-    fertilizer_payload = FertilizerService.calculate(crop, N, P, K)
+    fertilizer_payload = FertilizerService.calculate(crop=crop, soil_N=N, soil_P=P, soil_K=K)
 
     # ── 6. Mandi price intelligence & revenue forecast ────────────────────────
     mandi_payload = MandiService.get_market_rate(district, crop, yield_t_ha=result["yield_t_ha"])

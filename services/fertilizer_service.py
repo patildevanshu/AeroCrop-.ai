@@ -30,10 +30,16 @@ import config
 class FertilizerService:
 
     @staticmethod
-    def calculate(crop: str, soil_N: float, soil_P: float, soil_K: float) -> dict:
+    def calculate(
+        crop: str,
+        soil_N: float | None = None,
+        soil_P: float | None = None,
+        soil_K: float | None = None,
+    ) -> dict:
         """
-        Compute NPK deficits, commercial fertilizer quantities (DAP & SSP recipes),
-        and growth-stage split application schedules.
+        Compute commercial fertilizer quantities (DAP & SSP recipes) and growth-stage
+        split application schedules. If soil test values are omitted, computes the
+        standard ICAR Recommended Dose of Fertilizer (RDF) for the crop.
         """
         crop_key = crop.lower()
         targets = config.CROP_NPK_TARGETS.get(
@@ -42,9 +48,23 @@ class FertilizerService:
         )
 
         t_N, t_P, t_K = targets["N"], targets["P"], targets["K"]
-        d_N = max(0.0, t_N - soil_N)
-        d_P = max(0.0, t_P - soil_P)
-        d_K = max(0.0, t_K - soil_K)
+
+        is_standard_pop = soil_N is None or soil_P is None or soil_K is None
+        if is_standard_pop:
+            d_N = t_N
+            d_P = t_P
+            d_K = t_K
+            soil_repr = None
+            interpretation = (
+                f"Standard ICAR Package of Practices (PoP) recommended fertilizer dosage for {crop.title()}. "
+                f"Prescribes balanced basal and split top-dressing applications for optimal seasonal yield."
+            )
+        else:
+            d_N = max(0.0, t_N - float(soil_N))
+            d_P = max(0.0, t_P - float(soil_P))
+            d_K = max(0.0, t_K - float(soil_K))
+            soil_repr = {"N": round(float(soil_N), 1), "P": round(float(soil_P), 1), "K": round(float(soil_K), 1)}
+            interpretation = FertilizerService._interpret(d_N, d_P, d_K, t_N, t_P, t_K)
 
         comp = config.FERTILIZER_COMPOSITION
 
@@ -59,8 +79,6 @@ class FertilizerService:
         ssp_qty      = d_P / comp["SSP"]["P"]
         ssp_urea_qty = d_N / comp["Urea"]["N"]
         ssp_mop_qty  = mop_qty
-
-        interpretation = FertilizerService._interpret(d_N, d_P, d_K, t_N, t_P, t_K)
 
         # ── 3. Surplus N warning ─────────────────────────────────────────────
         surplus_n_warning: str | None = None
@@ -128,8 +146,9 @@ class FertilizerService:
 
         return {
             "crop":   crop.title(),
+            "mode":   "standard_pop" if is_standard_pop else "soil_test",
             "target": {"N": t_N, "P": t_P, "K": t_K},
-            "soil":   {"N": round(soil_N, 1), "P": round(soil_P, 1), "K": round(soil_K, 1)},
+            "soil":   soil_repr,
             "deficit": {"N": round(d_N, 1),   "P": round(d_P, 1),   "K": round(d_K, 1)},
             "fertilizers": {
                 "DAP":  round(dap_qty, 1),

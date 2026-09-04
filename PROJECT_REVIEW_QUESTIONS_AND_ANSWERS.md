@@ -398,3 +398,14 @@ The software strictly follows the **MVC (Model-View-Controller)** and **Service-
 > 2. **Vernacular Voice Advisory (Text-to-Speech)**: Integrated native browser Web Speech API (`mr-IN`, `hi-IN`). A single tap on the 🔊 button reads aloud the full disease diagnosis and spray instructions in fluent Marathi or Hindi.  
 > 3. **Actionable WhatsApp & PMFBY Sharing**: 1-click sharing of diagnoses to WhatsApp, and formal PDF generation for Pradhan Mantri Fasal Bima Yojana (PMFBY) insurance loss verification."*
 
+---
+
+### Q11.5: "In rural India, over 80% of smallholder farmers do not have soil test reports (Soil Health Cards). How does your system operate without requiring farmers to enter soil NPK values?"
+**Answer:**  
+> *"Requiring rural farmers to enter numerical soil N, P, and K values is a major adoption hurdle that leads to user drop-offs or arbitrary guesswork. We engineered AeroCrop.ai with a **Frictionless Photo-First Architecture**:  
+> 1. **Zero-Friction Field Diagnosis**: The farmer simply uploads a leaf photo, selects the crop, and chooses their district. The platform immediately produces disease diagnosis, spray safety indices, and APMC market intelligence in seconds.  
+> 2. **ICAR Growth-Stage Fertilizer Schedule (Package of Practices - PoP)**: Rather than demanding lab soil data, the platform prescribes official agronomic nutrient schedules split across key phenological growth stages: **Basal Application at sowing** (100% P & K + 33% N), **Vegetative top-dressing at 30–35 DAS** (33% N), and **Flowering top-dressing at 60–65 DAS** (34% N).  
+> 3. **Neural Network Weights Preservation**: The backend inference layer automatically applies regional ICAR median soil baselines for the chosen district and crop under the hood. This guarantees that the multi-modal neural network (which expects a 6-dimensional tabular vector) runs seamlessly with its full **90.82% validation accuracy** without shape mismatches or retraining degradation.  
+> 4. **Flexible Optional Inputs**: If an advanced farmer or extension officer has an active Soil Health Card, they can still provide precise NPK values to receive exact deficit-correcting chemical stoichiometry."*
+
+

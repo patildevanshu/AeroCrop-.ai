@@ -20,9 +20,6 @@ export const AddPlotModal: React.FC<AddPlotModalProps> = ({ isOpen, onClose, onS
   const [areaAcres, setAreaAcres] = useState(2.5);
   const [soilType, setSoilType] = useState('Medium Black');
   const [sowingDate, setSowingDate] = useState('');
-  const [baselineN, setBaselineN] = useState(60);
-  const [baselineP, setBaselineP] = useState(30);
-  const [baselineK, setBaselineK] = useState(30);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -42,9 +39,6 @@ export const AddPlotModal: React.FC<AddPlotModalProps> = ({ isOpen, onClose, onS
         area_acres: areaAcres,
         soil_type: soilType,
         sowing_date: sowingDate || null,
-        baseline_N: baselineN,
-        baseline_P: baselineP,
-        baseline_K: baselineK,
       });
 
       showToast(`Plot '${plotName}' registered successfully!`, 'success');
@@ -58,9 +52,6 @@ export const AddPlotModal: React.FC<AddPlotModalProps> = ({ isOpen, onClose, onS
       setAreaAcres(2.5);
       setSoilType('Medium Black');
       setSowingDate('');
-      setBaselineN(60);
-      setBaselineP(30);
-      setBaselineK(30);
     } catch (err: any) {
       showToast(`Could not register plot: ${err.message}`, 'error');
     } finally {
@@ -156,42 +147,6 @@ export const AddPlotModal: React.FC<AddPlotModalProps> = ({ isOpen, onClose, onS
                 type="date"
                 value={sowingDate}
                 onChange={(e) => setSowingDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="npk-grid">
-            <div className="form-group">
-              <label htmlFor="modal-plot-N">Baseline N</label>
-              <input
-                id="modal-plot-N"
-                type="number"
-                min={0}
-                max={300}
-                value={baselineN}
-                onChange={(e) => setBaselineN(Number(e.target.value))}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="modal-plot-P">Baseline P</label>
-              <input
-                id="modal-plot-P"
-                type="number"
-                min={0}
-                max={200}
-                value={baselineP}
-                onChange={(e) => setBaselineP(Number(e.target.value))}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="modal-plot-K">Baseline K</label>
-              <input
-                id="modal-plot-K"
-                type="number"
-                min={0}
-                max={200}
-                value={baselineK}
-                onChange={(e) => setBaselineK(Number(e.target.value))}
               />
             </div>
           </div>

@@ -214,31 +214,8 @@
               </select>
             </div>
 
-            <div class="npk-grid">
-              <div class="form-group">
-                <label for="input-N">
-                  <span data-i18n="nitrogen">Nitrogen (N)</span>
-                  <span class="unit">kg/ha</span>
-                </label>
-                <input type="number" id="input-N" min="0" max="300" step="1"
-                       value="60" aria-label="Soil Nitrogen in kg per hectare" />
-              </div>
-              <div class="form-group">
-                <label for="input-P">
-                  <span data-i18n="phosphorus">Phosphorus (P)</span>
-                  <span class="unit">kg/ha</span>
-                </label>
-                <input type="number" id="input-P" min="0" max="200" step="1"
-                       value="30" aria-label="Soil Phosphorus in kg per hectare" />
-              </div>
-              <div class="form-group">
-                <label for="input-K">
-                  <span data-i18n="potassium">Potassium (K)</span>
-                  <span class="unit">kg/ha</span>
-                </label>
-                <input type="number" id="input-K" min="0" max="200" step="1"
-                       value="30" aria-label="Soil Potassium in kg per hectare" />
-              </div>
+            <div style="padding:0.65rem 0.85rem;border-radius:6px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);font-size:0.82rem;color:#94a3b8;margin:0.75rem 0 1.25rem 0;line-height:1.4;">
+              ✨ <strong style="color:#34d399;">Photo-First Diagnosis:</strong> Standard ICAR nutrition dosages and live microclimatic weather telemetry will be automatically applied for your selected crop and district.
             </div>
 
             <button class="btn btn-primary" id="analyze-btn"
@@ -450,13 +427,27 @@
             </div>
           </div>
 
-          <!-- NPK Chart -->
-          <div class="card glass chart-card">
+          <!-- Fertilizer Application Schedule Card -->
+          <div class="card glass chart-card" id="fert-schedule-card">
             <h2 class="card-title">
-              <span aria-hidden="true">📈</span> <span data-i18n="npk_chart_title">Soil Nutrient Analysis — Current vs Target</span>
+              <span aria-hidden="true">📅</span> <span data-i18n="fert_schedule_title">Crop Nutrient Application Schedule (खत व्यवस्थापन वेळापत्रक)</span>
             </h2>
-            <div class="chart-wrapper" role="img" aria-label="Bar chart comparing current soil NPK levels against target levels">
-              <canvas id="npk-chart" aria-hidden="true"></canvas>
+            <div class="stage-schedule-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1rem;margin-top:0.75rem;">
+              <div class="metric-card glass" style="padding:1rem;border-left:3px solid #38bdf8;">
+                <span style="font-size:0.82rem;font-weight:700;color:#38bdf8;">🌱 STAGE 1: BASAL (पेरणीच्या वेळी)</span>
+                <p style="margin:0.4rem 0;font-size:0.9rem;font-weight:600;">Full P &amp; K + 1/3rd Nitrogen</p>
+                <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Apply 100% DAP/SSP, 100% MOP, and 1/3rd Urea directly into root furrow.</p>
+              </div>
+              <div class="metric-card glass" style="padding:1rem;border-left:3px solid #10b981;">
+                <span style="font-size:0.82rem;font-weight:700;color:#10b981;">🌿 STAGE 2: VEGETATIVE (वाढीची अवस्था)</span>
+                <p style="margin:0.4rem 0;font-size:0.9rem;font-weight:600;">1st Top-Dressing (30–35 DAS)</p>
+                <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Top-dress 1/3rd Urea along crop rows followed by light irrigation.</p>
+              </div>
+              <div class="metric-card glass" style="padding:1rem;border-left:3px solid #fbbf24;">
+                <span style="font-size:0.82rem;font-weight:700;color:#fbbf24;">🌸 STAGE 3: FLOWERING (फुलोरा अवस्था)</span>
+                <p style="margin:0.4rem 0;font-size:0.9rem;font-weight:600;">2nd Top-Dressing (60–65 DAS)</p>
+                <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Top-dress remaining Urea to support boll, pod, and fruit development.</p>
+              </div>
             </div>
           </div>
 

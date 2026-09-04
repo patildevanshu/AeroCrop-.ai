@@ -116,7 +116,8 @@ export interface MandiRateInfo {
 }
 
 export interface FertilizerAdvice {
-  soil: NPKValues;
+  mode?: 'standard_pop' | 'soil_test';
+  soil?: NPKValues | null;
   target: NPKValues;
   deficit: NPKValues;
   fertilizers: FertilizerQuantities;

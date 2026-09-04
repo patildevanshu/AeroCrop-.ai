@@ -195,3 +195,35 @@ def test_farmer_predict_journey_with_weather_and_mandi():
     assert mandi["revenue_projection"]["gross_revenue_ha_inr"] > 0
     assert mandi["revenue_projection"]["gross_revenue_acre_inr"] > 0
 
+
+def test_frictionless_predict_without_npk():
+    """Verify that a farmer can diagnose with only a photo, crop, and district without entering NPK."""
+    import io
+    from PIL import Image
+
+    img = Image.new("RGB", (224, 224), color=(34, 139, 34))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    buf.seek(0)
+
+    response = client.post(
+        "/api/predict",
+        data={
+            "crop": "soybean",
+            "district": "nagpur",
+        },
+        files={"image": ("leaf.jpg", buf, "image/jpeg")},
+    )
+    assert response.status_code == 200
+    res = response.json()
+    assert res["status"] == "success"
+    assert "disease" in res
+    assert "fertilizer" in res
+    assert res["fertilizer"]["mode"] == "standard_pop"
+    assert "commercial_bags" in res["fertilizer"]
+    assert "Urea" in res["fertilizer"]["commercial_bags"]
+    assert res["fertilizer"]["total_cost_inr_ha"] > 0
+    assert "mandi" in res
+    assert res["mandi"]["district"] == "Nagpur"
+
+
