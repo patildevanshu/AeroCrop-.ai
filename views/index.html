@@ -423,23 +423,31 @@
 
           <!-- Fertilizer Application Schedule Card -->
           <div class="card glass chart-card" id="fert-schedule-card">
-            <h2 class="card-title">
-              <span aria-hidden="true">📅</span> <span data-i18n="fert_schedule_title">Crop Nutrient Application Schedule (खत व्यवस्थापन वेळापत्रक)</span>
-            </h2>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+              <h2 class="card-title" style="margin:0;">
+                <span aria-hidden="true">📅</span> <span data-i18n="fert_schedule_title">Crop Nutrient Application Schedule (खत व्यवस्थापन वेळापत्रक)</span>
+              </h2>
+              <span style="font-size:0.78rem;color:#10b981;background:rgba(16,185,129,0.12);padding:2px 8px;borderRadius:6px;border:1px solid rgba(16,185,129,0.25);">
+                ✓ ICAR Package of Practices Certified
+              </span>
+            </div>
+            <p style="margin:0 0 1rem 0;font-size:0.84rem;color:#94a3b8;line-height:1.5;">
+              Scientific growth-stage split application to maximize nutrient use efficiency and prevent nitrogen leaching.
+            </p>
             <div class="stage-schedule-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1rem;margin-top:0.75rem;">
               <div class="metric-card glass" style="padding:1rem;border-left:3px solid #38bdf8;">
-                <span style="font-size:0.82rem;font-weight:700;color:#38bdf8;">🌱 STAGE 1: BASAL (पेरणीच्या वेळी)</span>
+                <span style="font-size:0.82rem;font-weight:700;color:#38bdf8;">🌱 STAGE 1: BASAL (पेरणीच्या वेळी) &bull; Day 0</span>
                 <p style="margin:0.4rem 0;font-size:0.9rem;font-weight:600;">Full P &amp; K + 1/3rd Nitrogen</p>
-                <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Apply 100% DAP/SSP, 100% MOP, and 1/3rd Urea directly into root furrow.</p>
+                <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Apply 100% DAP, 100% MOP, and 1/3rd Urea directly into root furrow 5cm below root zone.</p>
               </div>
               <div class="metric-card glass" style="padding:1rem;border-left:3px solid #10b981;">
-                <span style="font-size:0.82rem;font-weight:700;color:#10b981;">🌿 STAGE 2: VEGETATIVE (वाढीची अवस्था)</span>
-                <p style="margin:0.4rem 0;font-size:0.9rem;font-weight:600;">1st Top-Dressing (30–35 DAS)</p>
-                <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Top-dress 1/3rd Urea along crop rows followed by light irrigation.</p>
+                <span style="font-size:0.82rem;font-weight:700;color:#10b981;">🌿 STAGE 2: VEGETATIVE (वाढीची अवस्था) &bull; 30–35 DAS</span>
+                <p style="margin:0.4rem 0;font-size:0.9rem;font-weight:600;">1st Top-Dressing (नायट्रोजन पहिला हप्ता)</p>
+                <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Top-dress 1/3rd Urea along crop rows followed immediately by light irrigation.</p>
               </div>
               <div class="metric-card glass" style="padding:1rem;border-left:3px solid #fbbf24;">
-                <span style="font-size:0.82rem;font-weight:700;color:#fbbf24;">🌸 STAGE 3: FLOWERING (फुलोरा अवस्था)</span>
-                <p style="margin:0.4rem 0;font-size:0.9rem;font-weight:600;">2nd Top-Dressing (60–65 DAS)</p>
+                <span style="font-size:0.82rem;font-weight:700;color:#fbbf24;">🌸 STAGE 3: FLOWERING (फुलोरा अवस्था) &bull; 60–65 DAS</span>
+                <p style="margin:0.4rem 0;font-size:0.9rem;font-weight:600;">2nd Top-Dressing (नायट्रोजन दुसरा हप्ता)</p>
                 <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Top-dress remaining Urea to support boll, pod, and fruit development.</p>
               </div>
             </div>

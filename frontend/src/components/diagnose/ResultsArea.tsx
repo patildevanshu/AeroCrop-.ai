@@ -101,8 +101,13 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
       {/* Mandi Intelligence Card */}
       {mandi && <MandiCard mandi={mandi} />}
 
-      {/* NPK Chart */}
-      <NPKChart fertilizer={fertilizer} />
+      {/* Fertilizer Growth Stage Schedule */}
+      <NPKChart
+        fertilizer={fertilizer}
+        crop={result.crop}
+        district={result.district}
+        diseaseName={disease?.name}
+      />
     </div>
   );
 };
