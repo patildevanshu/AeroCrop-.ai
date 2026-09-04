@@ -26,6 +26,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import config
 from database.connection         import get_db
 from database.models             import User, FarmPlot
 from model.inference             import InferenceService
