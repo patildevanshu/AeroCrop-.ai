@@ -21,7 +21,7 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '' }
   const { showToast } = useToast();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [crop, setCrop] = useState<string>('cotton');
+  const [crop, setCrop] = useState<string>('auto');
   const [district, setDistrict] = useState<string>('pune');
   const [districts, setDistricts] = useState<string[]>([]);
   const [selectedPlotId, setSelectedPlotId] = useState<string>(initialPlotId);

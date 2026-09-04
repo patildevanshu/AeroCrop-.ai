@@ -53,7 +53,7 @@ def _get_inference() -> InferenceService:
 @router.post("/predict", summary="Multi-modal crop disease + yield inference")
 async def predict(
     image:    UploadFile = File(..., description="RGB leaf photograph (JPG/PNG)"),
-    crop:     str        = Form(..., description="Crop type (see /api/disease/classes for supported crops)"),
+    crop:     str        = Form("auto", description="Crop type (or 'auto' for automatic visual specimen detection)"),
     district: str        = Form(..., description="Maharashtra district name"),
     N:        Optional[float] = Form(None, description="Optional Soil Nitrogen level   (kg/ha)"),
     P:        Optional[float] = Form(None, description="Optional Soil Phosphorus level (kg/ha)"),
@@ -81,6 +81,7 @@ async def predict(
     rainfall    = weather["rainfall"]
 
     # ── 3. Run multi-modal inference ─────────────────────────────────────────
+    prelim_crop = crop if crop and crop.lower() != "auto" else "tomato"
     try:
         inference_svc = _get_inference()
         result = inference_svc.predict(
@@ -88,7 +89,7 @@ async def predict(
             temperature=temperature,
             humidity=humidity,
             rainfall=rainfall,
-            crop=crop,
+            crop=prelim_crop,
             N=N,
             P=P,
             K=K,
@@ -97,14 +98,32 @@ async def predict(
         logger.error("Inference failed: %s", exc)
         raise HTTPException(status_code=500, detail=f"Inference error: {str(exc)}")
 
-    # ── 4. Disease knowledge lookup ──────────────────────────────────────────
+    # ── 4. Disease knowledge lookup & Automatic Crop Resolution ──────────────
     disease_idx  = result["disease_class"]
     disease_info = DiseaseService.get_by_index(disease_idx)
+
+    # Automatically detect crop from visual disease taxonomy
+    detected_crop_raw = disease_info.crop if disease_info else (crop if crop and crop.lower() != "auto" else "Tomato")
+    
+    # Standardize crop key for fertilizer & mandi lookups
+    det_lower = detected_crop_raw.lower().strip()
+    if "corn" in det_lower or "maize" in det_lower:
+        effective_crop_key = "maize"
+    elif "pepper" in det_lower or "chili" in det_lower or "capsicum" in det_lower:
+        effective_crop_key = "pepper"
+    elif "orange" in det_lower or "citrus" in det_lower:
+        effective_crop_key = "orange"
+    elif det_lower in config.CROP_NPK_TARGETS:
+        effective_crop_key = det_lower
+    else:
+        effective_crop_key = "tomato"
+
+    final_crop_name = detected_crop_raw
 
     disease_payload = {
         "class_index":  disease_idx,
         "name":         disease_info.name         if disease_info else f"Class {disease_idx}",
-        "crop":         disease_info.crop         if disease_info else crop.title(),
+        "crop":         final_crop_name,
         "is_healthy":   disease_info.is_healthy   if disease_info else False,
         "severity":     disease_info.severity     if disease_info else "Unknown",
         "description":  disease_info.description  if disease_info else "",
@@ -114,11 +133,11 @@ async def predict(
         "probabilities": result["probabilities"],
     }
 
-    # ── 5. Fertilizer recommendation ─────────────────────────────────────────
-    fertilizer_payload = FertilizerService.calculate(crop=crop, soil_N=N, soil_P=P, soil_K=K)
+    # ── 5. Fertilizer recommendation for the AUTO-DETECTED crop ──────────────
+    fertilizer_payload = FertilizerService.calculate(crop=effective_crop_key, soil_N=N, soil_P=P, soil_K=K)
 
-    # ── 6. Mandi price intelligence & revenue forecast ────────────────────────
-    mandi_payload = MandiService.get_market_rate(district, crop, yield_t_ha=result["yield_t_ha"])
+    # ── 6. Mandi price intelligence & revenue forecast for the AUTO-DETECTED crop
+    mandi_payload = MandiService.get_market_rate(district, crop=effective_crop_key, yield_t_ha=result["yield_t_ha"])
 
     # ── 7. Persist to database if authenticated ──────────────────────────────
     saved_record_id = None
@@ -144,7 +163,7 @@ async def predict(
             saved_record = await HistoryService.save_diagnosis(
                 db=db,
                 user_id=optional_user.id,
-                crop_type=crop,
+                crop_type=final_crop_name.lower(),
                 district=district,
                 disease_class_idx=disease_idx,
                 disease_name=disease_payload["name"],
@@ -176,7 +195,9 @@ async def predict(
         "status":          "success",
         "mock_mode":       result["mock"],
         "low_confidence":  result.get("low_confidence", False),
-        "crop":            crop.title(),
+        "crop":            final_crop_name,
+        "crop_key":        effective_crop_key,
+        "auto_detected":   True,
         "district":        district.title(),
         "plot_id":         valid_plot_id if optional_user else None,
         "saved_record_id": saved_record_id,

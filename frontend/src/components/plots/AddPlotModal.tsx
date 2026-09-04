@@ -16,7 +16,7 @@ export const AddPlotModal: React.FC<AddPlotModalProps> = ({ isOpen, onClose, onS
   const { refreshPlots } = useAuth();
 
   const [plotName, setPlotName] = useState('');
-  const [cropType, setCropType] = useState('cotton');
+  const [cropType, setCropType] = useState('tomato');
   const [areaAcres, setAreaAcres] = useState(2.5);
   const [soilType, setSoilType] = useState('Medium Black');
   const [sowingDate, setSowingDate] = useState('');
@@ -48,7 +48,7 @@ export const AddPlotModal: React.FC<AddPlotModalProps> = ({ isOpen, onClose, onS
 
       // Reset form
       setPlotName('');
-      setCropType('cotton');
+      setCropType('tomato');
       setAreaAcres(2.5);
       setSoilType('Medium Black');
       setSowingDate('');
@@ -92,23 +92,20 @@ export const AddPlotModal: React.FC<AddPlotModalProps> = ({ isOpen, onClose, onS
                 onChange={(e) => setCropType(e.target.value)}
                 required
               >
-                <option value="cotton">🌱 Cotton</option>
-                <option value="wheat">🌾 Wheat</option>
-                <option value="maize">🌽 Maize</option>
-                <option value="rice">🍚 Rice</option>
-                <option value="potato">🥔 Potato</option>
-                <option value="tomato">🍅 Tomato</option>
-                <option value="pepper">🌶️ Pepper (Bell)</option>
-                <option value="apple">🍎 Apple</option>
-                <option value="grape">🍇 Grape</option>
-                <option value="orange">🍊 Orange</option>
-                <option value="strawberry">🍓 Strawberry</option>
-                <option value="soybean">🫘 Soybean</option>
+                <option value="tomato">🍅 Tomato (टोमॅटो)</option>
+                <option value="potato">🥔 Potato (बटाटा)</option>
+                <option value="maize">🌽 Corn / Maize (मका)</option>
+                <option value="grape">🍇 Grape (द्राक्षे)</option>
+                <option value="soybean">🌱 Soybean (सोयाबीन)</option>
+                <option value="pepper">🌶️ Pepper / Bell Pepper (मिरची)</option>
+                <option value="apple">🍎 Apple (सफरचंद)</option>
+                <option value="orange">🍊 Orange (संत्रे)</option>
+                <option value="strawberry">🍓 Strawberry (स्ट्रॉबेरी)</option>
                 <option value="peach">🍑 Peach</option>
                 <option value="cherry">🍒 Cherry</option>
                 <option value="blueberry">🫐 Blueberry</option>
-                <option value="squash">🎃 Squash</option>
-                <option value="raspberry">🫐 Raspberry</option>
+                <option value="squash">🥒 Squash</option>
+                <option value="raspberry">🍇 Raspberry</option>
               </select>
             </div>
             <div className="form-group">

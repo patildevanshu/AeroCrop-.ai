@@ -82,26 +82,22 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
           onChange={(e) => setCrop(e.target.value)}
           aria-label="Select crop type"
         >
-          <optgroup label="── Primary Cash Crops ──">
-            <option value="cotton">Cotton (कापूस)</option>
-            <option value="soybean">Soybean (सोयाबीन)</option>
-            <option value="wheat">Wheat (गहू)</option>
-            <option value="maize">Maize (मका)</option>
-            <option value="rice">Rice (भात / धान)</option>
-            <option value="potato">Potato (बटाटा)</option>
-            <option value="tomato">Tomato (टोमॅटो)</option>
-            <option value="grape">Grape (द्राक्षे)</option>
-            <option value="pepper">Pepper (मिरची)</option>
-            <option value="apple">Apple (सफरचंद)</option>
-          </optgroup>
-          <optgroup label="── Other PlantVillage Crops ──">
-            <option value="cherry">Cherry</option>
-            <option value="corn">Corn</option>
-            <option value="peach">Peach</option>
-            <option value="strawberry">Strawberry</option>
-            <option value="orange">Orange</option>
-            <option value="squash">Squash</option>
-            <option value="raspberry">Raspberry</option>
+          <option value="auto">✨ Auto-Detect from Leaf Specimen (स्वयंचलित पीक ओळख)</option>
+          <optgroup label="── Supported Horticultural &amp; Field Crops ──">
+            <option value="tomato">🍅 Tomato (टोमॅटो)</option>
+            <option value="potato">🥔 Potato (बटाटा)</option>
+            <option value="maize">🌽 Corn / Maize (मका)</option>
+            <option value="grape">🍇 Grape (द्राक्षे)</option>
+            <option value="soybean">🌱 Soybean (सोयाबीन)</option>
+            <option value="pepper">🌶️ Pepper / Bell Pepper (मिरची / शिमला)</option>
+            <option value="apple">🍎 Apple (सफरचंद)</option>
+            <option value="orange">🍊 Orange / Mandarin (संत्रे / मोसंबी)</option>
+            <option value="strawberry">🍓 Strawberry (स्ट्रॉबेरी)</option>
+            <option value="peach">🍑 Peach (आड़ू)</option>
+            <option value="cherry">🍒 Cherry (चेरी)</option>
+            <option value="blueberry">🫐 Blueberry (ब्लूबेरी)</option>
+            <option value="raspberry">🍇 Raspberry (रसभरी)</option>
+            <option value="squash">🥒 Squash (भोपळा)</option>
           </optgroup>
         </select>
       </div>

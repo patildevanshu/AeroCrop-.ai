@@ -94,6 +94,62 @@ COMMODITY_METADATA: dict[str, dict[str, Any]] = {
         "default_modal": 7200.0,
         "unit": "₹ / Quintal (100 kg)",
     },
+    "orange": {
+        "name_en": "Orange / Nagpur Mandarin",
+        "name_mr": "संत्रे / मोसंबी",
+        "name_hi": "संतरा / मौसमी",
+        "msp_inr_quintal": 0.0,
+        "default_modal": 4200.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
+    "strawberry": {
+        "name_en": "Strawberry",
+        "name_mr": "स्ट्रॉबेरी",
+        "name_hi": "स्ट्रॉबेरी",
+        "msp_inr_quintal": 0.0,
+        "default_modal": 12500.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
+    "peach": {
+        "name_en": "Peach",
+        "name_mr": "पीच",
+        "name_hi": "आड़ू",
+        "msp_inr_quintal": 0.0,
+        "default_modal": 6500.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
+    "cherry": {
+        "name_en": "Cherry",
+        "name_mr": "चेरी",
+        "name_hi": "चेरी",
+        "msp_inr_quintal": 0.0,
+        "default_modal": 9500.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
+    "blueberry": {
+        "name_en": "Blueberry",
+        "name_mr": "ब्लूबेरी",
+        "name_hi": "ब्लूबेरी",
+        "msp_inr_quintal": 0.0,
+        "default_modal": 15000.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
+    "raspberry": {
+        "name_en": "Raspberry",
+        "name_mr": "रासबेरी",
+        "name_hi": "रसभरी",
+        "msp_inr_quintal": 0.0,
+        "default_modal": 14000.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
+    "squash": {
+        "name_en": "Squash / Gourd",
+        "name_mr": "भोपळा / दोडका",
+        "name_hi": "कद्दू / तोरी",
+        "msp_inr_quintal": 0.0,
+        "default_modal": 1850.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
 }
 
 # Major APMC Hubs for Maharashtra Districts
@@ -137,7 +193,16 @@ class MandiService:
         Calculates projected revenue if yield_t_ha is supplied.
         """
         district_key = district.lower().strip()
-        crop_key = crop.lower().strip()
+        raw_crop = crop.lower().strip()
+
+        if "corn" in raw_crop or "maize" in raw_crop:
+            crop_key = "maize"
+        elif "pepper" in raw_crop or "chili" in raw_crop or "capsicum" in raw_crop:
+            crop_key = "pepper"
+        elif "orange" in raw_crop or "citrus" in raw_crop:
+            crop_key = "orange"
+        else:
+            crop_key = raw_crop
 
         meta = COMMODITY_METADATA.get(crop_key, {
             "name_en": crop.title(),

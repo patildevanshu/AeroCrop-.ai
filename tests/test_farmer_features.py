@@ -164,7 +164,7 @@ def test_farmer_predict_journey_with_weather_and_mandi():
     assert response.status_code == 200
     res = response.json()
     assert res["status"] == "success"
-    assert res["crop"] == "Cotton"
+    assert res["crop"] == res["disease"]["crop"]
     assert res["district"] == "Jalgaon"
 
     # 1. Weather & Spray Window Verification
@@ -185,10 +185,10 @@ def test_farmer_predict_journey_with_weather_and_mandi():
     assert "MOP" in fert["commercial_bags"]
     assert fert["total_cost_inr_ha"] > 0
 
-    # 3. Mandi Intelligence & Revenue Verification
+    # 3. Mandi Intelligence & Revenue Verification (in the context of the auto-detected crop!)
     mandi = res["mandi"]
     assert mandi is not None
-    assert mandi["crop"] == "cotton"
+    assert mandi["crop"] == res["crop_key"]
     assert mandi["district"] == "Jalgaon"
     assert mandi["modal_price_inr"] > 0
     assert mandi["revenue_projection"] is not None
