@@ -35,7 +35,7 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ result }) => {
         <div className="metric-body">
           <p className="metric-label">{t('detected_disease')}</p>
           <p className="metric-value">{disease.name}</p>
-          <p className="metric-sub">Crop: {disease.crop}</p>
+          <p className="metric-sub">{t('crop_label')}: {disease.crop}</p>
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ result }) => {
         <div className="metric-body">
           <p className="metric-label">{t('predicted_yield')}</p>
           <p className="metric-value">{yield_t_ha} t/ha</p>
-          <p className="metric-sub">For {crop}</p>
+          <p className="metric-sub">{t('for_crop')} {crop}</p>
         </div>
       </div>
 
@@ -74,7 +74,7 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ result }) => {
           <p className="metric-label">{t('severity')}</p>
           <p className="metric-value">{disease.severity || 'None'}</p>
           <p className="metric-sub">
-            {disease.is_healthy ? '✅ Healthy' : '⚠️ Diseased'}
+            {disease.is_healthy ? `✅ ${t('healthy_status')}` : `⚠️ ${t('diseased_status')}`}
           </p>
         </div>
       </div>

@@ -9,7 +9,20 @@ import torch
 # ─── Paths ────────────────────────────────────────────────────────────────────
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR   = os.path.join(BASE_DIR, "model")
-WEIGHTS_PATH = os.path.join(MODEL_DIR, "aerocrop_weights.pth")
+WEIGHTS_PATH_SET1 = os.path.join(MODEL_DIR, "aerocrop_weights.pth")
+WEIGHTS_PATH_SET2 = os.path.join(MODEL_DIR, "aerocrop_weights_full_v2.pth")
+WEIGHTS_PATH_SET3 = os.path.join(MODEL_DIR, "aerocrop_weights_full_v3.pth")
+DEFAULT_WEIGHTS_FILE = os.getenv(
+    "AEROCROP_WEIGHTS_FILE",
+    "aerocrop_weights_full_v3.pth"
+    if os.path.exists(os.path.join(MODEL_DIR, "aerocrop_weights_full_v3.pth"))
+    else (
+        "aerocrop_weights_full_v2.pth"
+        if os.path.exists(os.path.join(MODEL_DIR, "aerocrop_weights_full_v2.pth"))
+        else "aerocrop_weights.pth"
+    ),
+)
+WEIGHTS_PATH = os.path.join(MODEL_DIR, DEFAULT_WEIGHTS_FILE)
 VIEWS_DIR   = os.path.join(BASE_DIR, "views")
 STATIC_DIR  = os.path.join(VIEWS_DIR, "static")
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
@@ -29,7 +42,7 @@ JWT_ACCESS_TOKEN_EXPIRE_DAYS = 7
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # ─── Model Architecture ───────────────────────────────────────────────────────
-NUM_DISEASE_CLASSES = 38
+NUM_DISEASE_CLASSES = 56
 IMAGE_SIZE          = 224
 TABULAR_INPUT_DIM   = 6      # N, P, K, temperature, humidity, rainfall
 TABULAR_HIDDEN_DIMS = [64, 64, 64]
@@ -41,8 +54,13 @@ FUSION_OUTPUT_DIM   = 128
 # Covers all 14 crops present in the PlantVillage 38-class dataset.
 # Crops not natively in ICAR Maharashtra guidelines use nearest proxy values.
 CROP_NPK_TARGETS = {
-    # Primary cash crops (ICAR Maharashtra baselines)
+    # Major Maharashtra cash & field crops (ICAR / MPKV Rahuri baselines)
     "cotton":      {"N": 120, "P": 60,  "K": 60},
+    "sugarcane":   {"N": 250, "P": 115, "K": 115},
+    "banana":      {"N": 200, "P": 50,  "K": 300},  # Heavy potassium consumer
+    "turmeric":    {"N": 150, "P": 60,  "K": 100},  # Haldi rhizome nutrition
+    "onion":       {"N": 100, "P": 50,  "K": 50},
+    "soybean":     {"N": 30,  "P": 60,  "K": 40},   # Nitrogen-fixing legume
     "wheat":       {"N": 120, "P": 60,  "K": 40},
     "maize":       {"N": 120, "P": 60,  "K": 40},
     "rice":        {"N": 100, "P": 50,  "K": 50},
@@ -59,7 +77,6 @@ CROP_NPK_TARGETS = {
     "blueberry":   {"N": 70,  "P": 30,  "K": 50},  # proxy: berry crops
     "cherry":      {"N": 80,  "P": 40,  "K": 60},  # proxy: stone fruits
     "raspberry":   {"N": 70,  "P": 30,  "K": 50},  # proxy: berry crops
-    "soybean":     {"N": 30,  "P": 60,  "K": 40},  # nitrogen-fixing legume
     "squash":      {"N": 100, "P": 50,  "K": 60},  # proxy: cucurbit crops
 }
 

@@ -51,13 +51,13 @@ export const MandiCard: React.FC<MandiCardProps> = ({ mandi }) => {
         {/* MSP Comparison or Arrivals */}
         <div className="metric-card glass" style={{ padding: '0.85rem' }}>
           <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted, #94a3b8)' }}>
-            {mandi.msp_inr > 0 ? t('msp_inr', 'MSP Benchmark') : t('daily_arrivals')}
+            {mandi.msp_inr > 0 ? t('msp_col') : t('daily_arrivals')}
           </p>
           <p style={{ margin: '0.2rem 0', fontSize: '1.1rem', fontWeight: 600, color: mandi.msp_inr > 0 ? '#fbbf24' : '#a78bfa' }}>
             {mandi.msp_inr > 0 ? `₹${mandi.msp_inr.toLocaleString('en-IN')}` : `${mandi.arrivals_quintal} q`}
           </p>
           <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted, #94a3b8)' }}>
-            {mandi.msp_inr > 0 ? `GoI Minimum Support Price` : `Today's Market Inflow`}
+            {mandi.msp_inr > 0 ? t('goi_msp') : t('market_inflow')}
           </p>
         </div>
       </div>
@@ -94,7 +94,7 @@ export const MandiCard: React.FC<MandiCardProps> = ({ mandi }) => {
             </div>
           </div>
           <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#94a3b8' }}>
-            <span>Est. Harvest: {mandi.revenue_projection.yield_quintals_per_acre} q/acre</span>
+            <span>{t('est_harvest')} {mandi.revenue_projection.yield_quintals_per_acre} q/acre</span>
             <br />
             <span>({mandi.revenue_projection.yield_t_ha} t/ha)</span>
           </div>

@@ -64,9 +64,9 @@ export const CropsPage: React.FC<CropsPageProps> = ({ onQuickDiagnose }) => {
             style={{ gridColumn: '1/-1', textAlign: 'center', padding: '48px 24px' }}
           >
             <p style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🌾</p>
-            <h3>Sign In to Manage Your Farm Plots</h3>
+            <h3>{t('signin_manage_plots')}</h3>
             <p style={{ color: 'var(--text-secondary)', margin: '8px 0 24px' }}>
-              Create an account to track multiple fields, monitor localized soil NPK, and organize crop diagnostics.
+              {t('signin_plots_desc')}
             </p>
             <button
               type="button"
@@ -74,7 +74,7 @@ export const CropsPage: React.FC<CropsPageProps> = ({ onQuickDiagnose }) => {
               style={{ maxWidth: '240px', margin: '0 auto' }}
               onClick={() => openAuthModal('login')}
             >
-              👤 Sign In / Register
+              {t('signin_register_btn')}
             </button>
           </div>
         ) : userPlots.length === 0 ? (
@@ -83,9 +83,9 @@ export const CropsPage: React.FC<CropsPageProps> = ({ onQuickDiagnose }) => {
             style={{ gridColumn: '1/-1', textAlign: 'center', padding: '48px 24px' }}
           >
             <p style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🌾</p>
-            <h3>No Farm Plots Registered Yet</h3>
+            <h3>{t('no_plots_yet')}</h3>
             <p style={{ color: 'var(--text-secondary)', margin: '8px 0 24px' }}>
-              Register your fields to track different crops, acreages, and localized soil health.
+              {t('no_plots_desc')}
             </p>
             <button
               type="button"
@@ -93,7 +93,7 @@ export const CropsPage: React.FC<CropsPageProps> = ({ onQuickDiagnose }) => {
               style={{ maxWidth: '240px', margin: '0 auto' }}
               onClick={() => setIsAddModalOpen(true)}
             >
-              ➕ Add Your First Plot
+              {t('add_first_plot')}
             </button>
           </div>
         ) : (

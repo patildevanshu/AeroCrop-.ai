@@ -101,7 +101,7 @@ Generated via AeroCrop.ai Precision Agriculture Platform`;
           <div className="fert-body">
             <p className="fert-name">Urea (46% N)</p>
             <p className="fert-qty" style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-              {ureaBags} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>bags (50kg)</span>
+              {ureaBags} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>{t('bags_50kg')}</span>
             </p>
             <p className="fert-note">{ureaKg.toFixed(1)} kg &bull; ₹{costUrea.toLocaleString('en-IN')}</p>
           </div>
@@ -112,7 +112,7 @@ Generated via AeroCrop.ai Precision Agriculture Platform`;
           <div className="fert-body">
             <p className="fert-name">DAP (18-46-0)</p>
             <p className="fert-qty" style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-              {dapBags} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>bags (50kg)</span>
+              {dapBags} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>{t('bags_50kg')}</span>
             </p>
             <p className="fert-note">{dapKg.toFixed(1)} kg &bull; ₹{costDap.toLocaleString('en-IN')}</p>
           </div>
@@ -123,7 +123,7 @@ Generated via AeroCrop.ai Precision Agriculture Platform`;
           <div className="fert-body">
             <p className="fert-name">MOP (60% K)</p>
             <p className="fert-qty" style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-              {mopBags} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>bags (50kg)</span>
+              {mopBags} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>{t('bags_50kg')}</span>
             </p>
             <p className="fert-note">{mopKg.toFixed(1)} kg &bull; ₹{costMop.toLocaleString('en-IN')}</p>
           </div>
@@ -143,7 +143,7 @@ Generated via AeroCrop.ai Precision Agriculture Platform`;
           fontSize: '0.9rem',
         }}
       >
-        <span>💰 {t('est_cost')} ({area} {unit}):</span>
+        <span>💰 {t('est_cost')} ({area} {t(`unit_${unit}` as any)}):</span>
         <strong style={{ fontSize: '1.1rem', color: '#10b981' }}>
           ₹{totalCost.toLocaleString('en-IN')}
         </strong>

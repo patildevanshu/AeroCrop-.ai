@@ -5,23 +5,16 @@ export const AboutPage: React.FC = () => {
   const { t } = useI18n();
 
   const crops = [
-    '🌱 Cotton',
-    '🌾 Wheat',
-    '🌽 Maize',
-    '🍚 Rice',
-    '🥔 Potato',
-    '🍅 Tomato',
-    '🌶️ Pepper',
-    '🍎 Apple',
-    '🍇 Grape',
-    '🍊 Orange',
-    '🍑 Peach',
-    '🍓 Strawberry',
-    '🫘 Soybean',
-    '🫐 Blueberry',
-    '🍒 Cherry',
-    '🎃 Squash',
-    '🫐 Raspberry',
+    '🌱 Cotton (कापूस)',
+    '🎋 Sugarcane (ऊस)',
+    '🍌 Banana (केळी)',
+    '🌿 Turmeric (हळद)',
+    '🌽 Maize / Corn (मका)',
+    '🍚 Rice / Paddy (भात)',
+    '🫘 Soybean (सोयाबीन)',
+    '🥔 Potato (बटाटा)',
+    '🌾 Wheat (गहू)',
+    '🧅 Onion (कांदा)',
   ];
 
   return (
@@ -36,7 +29,7 @@ export const AboutPage: React.FC = () => {
       <div className="about-grid">
         {/* Architecture Card */}
         <div className="card glass about-card">
-          <h2>🧠 Architecture &amp; Multi-Modal Fusion</h2>
+          <h2>{t('arch_title')}</h2>
           <div className="arch-diagram" aria-label="Model architecture diagram">
             <div className="arch-block visual">
               📷 RGB Leaf Image<br />
@@ -74,7 +67,7 @@ export const AboutPage: React.FC = () => {
 
         {/* References Card */}
         <div className="card glass about-card">
-          <h2>📦 Dataset &amp; Technology Stack</h2>
+          <h2>{t('dataset_tech_title')}</h2>
           <ul className="about-list">
             <li>
               <strong>Dataset:</strong> PlantVillage &amp; New Plant Diseases Dataset — 87,900 images across 38 classes (Kaggle).
@@ -96,7 +89,7 @@ export const AboutPage: React.FC = () => {
 
         {/* Supported Crops */}
         <div className="card glass about-card">
-          <h2>🌾 Supported Agricultural Crops</h2>
+          <h2>{t('supported_crops_title')}</h2>
           <div className="crop-badges">
             {crops.map((c, idx) => (
               <span key={idx} className="crop-badge">
@@ -108,12 +101,12 @@ export const AboutPage: React.FC = () => {
 
         {/* Coverage Card */}
         <div className="card glass about-card">
-          <h2>📍 Maharashtra State Coverage</h2>
+          <h2>{t('mh_coverage_title')}</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            Full telemetry and agronomic dataset integration across all <strong>36 districts</strong> of Maharashtra.
+            {t('mh_coverage_desc')}
           </p>
           <p className="about-note">
-            Target zones include Pune, Jalgaon, Nagpur, Nashik, Chhatrapati Sambhajinagar, Amravati, Kolhapur, Solapur, Akola, and more.
+            {t('mh_target_zones')}
           </p>
         </div>
       </div>

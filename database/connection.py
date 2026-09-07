@@ -56,7 +56,7 @@ async def init_db() -> None:
                 await conn.execute(text("PRAGMA foreign_keys=ON;"))
             await conn.run_sync(Base.metadata.create_all)
 
-            # Auto-migration: Ensure new columns exist on existing SQLite tables
+            # Auto-migration: Ensure new columns and constraints exist on existing SQLite tables
             if config.DATABASE_URL.startswith("sqlite"):
                 from sqlalchemy import text
                 try:
@@ -67,6 +67,53 @@ async def init_db() -> None:
                         logger.info("[Database] Migrated 'users' table: added 'token_version' column.")
                 except Exception as mig_err:
                     logger.debug("[Database] Migration skipped or not needed: %s", mig_err)
+
+                try:
+                    diag_info = await conn.execute(text("PRAGMA table_info(diagnosis_records);"))
+                    diag_cols = diag_info.fetchall()
+                    soil_n_col = next((row for row in diag_cols if row[1] == "soil_N"), None)
+                    if soil_n_col and soil_n_col[3] == 1:
+                        await conn.execute(text("PRAGMA foreign_keys=OFF;"))
+                        await conn.execute(text("""
+                            CREATE TABLE IF NOT EXISTS diagnosis_records_new (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                                plot_id INTEGER REFERENCES farm_plots(id) ON DELETE SET NULL,
+                                crop_type VARCHAR(64) NOT NULL,
+                                district VARCHAR(64) NOT NULL,
+                                image_filename VARCHAR(255),
+                                image_url VARCHAR(255),
+                                disease_class_idx INTEGER NOT NULL,
+                                disease_name VARCHAR(160) NOT NULL,
+                                confidence FLOAT NOT NULL,
+                                severity VARCHAR(32) DEFAULT 'None',
+                                is_healthy BOOLEAN DEFAULT 0,
+                                predicted_yield_t_ha FLOAT DEFAULT 0.0,
+                                soil_N FLOAT,
+                                soil_P FLOAT,
+                                soil_K FLOAT,
+                                fertilizer_urea_kg FLOAT DEFAULT 0.0,
+                                fertilizer_dap_kg FLOAT DEFAULT 0.0,
+                                fertilizer_mop_kg FLOAT DEFAULT 0.0,
+                                weather_temp FLOAT DEFAULT 0.0,
+                                weather_hum FLOAT DEFAULT 0.0,
+                                weather_rain FLOAT DEFAULT 0.0,
+                                mock_mode BOOLEAN DEFAULT 0,
+                                low_confidence BOOLEAN DEFAULT 0,
+                                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                            );
+                        """))
+                        await conn.execute(text("INSERT INTO diagnosis_records_new SELECT * FROM diagnosis_records;"))
+                        await conn.execute(text("DROP TABLE diagnosis_records;"))
+                        await conn.execute(text("ALTER TABLE diagnosis_records_new RENAME TO diagnosis_records;"))
+                        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_diagnosis_records_user_id ON diagnosis_records (user_id);"))
+                        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_diagnosis_records_plot_id ON diagnosis_records (plot_id);"))
+                        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_diagnosis_records_created_at ON diagnosis_records (created_at);"))
+                        await conn.execute(text("CREATE INDEX IF NOT EXISTS ix_user_diagnoses_created_at ON diagnosis_records (user_id, created_at DESC);"))
+                        await conn.execute(text("PRAGMA foreign_keys=ON;"))
+                        logger.info("[Database] Migrated 'diagnosis_records' table: made soil nutrient columns nullable.")
+                except Exception as mig_err:
+                    logger.debug("[Database] diagnosis_records migration skipped or not needed: %s", mig_err)
 
         logger.info("[Database] Tables initialized successfully at %s", config.DATABASE_URL)
     except Exception as exc:

@@ -21,11 +21,12 @@ export const MandiDashboardCard: React.FC = () => {
     setLoading(true);
     fetchDistrictMandiOverview(district)
       .then((res) => {
-        setRates(res.market_rates);
+        setRates(Array.isArray(res?.market_rates) ? res.market_rates : []);
         setLoading(false);
       })
       .catch((err) => {
         console.warn('Failed to load mandi overview:', err);
+        setRates([]);
         setLoading(false);
       });
   }, [district]);
@@ -39,7 +40,7 @@ export const MandiDashboardCard: React.FC = () => {
         </h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <label htmlFor="mandi-district-select" style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
-            APMC Hub:
+            {t('apmc_hub')}
           </label>
           <select
             id="mandi-district-select"
@@ -64,46 +65,47 @@ export const MandiDashboardCard: React.FC = () => {
       </div>
 
       {loading ? (
-        <p style={{ padding: '1rem', color: '#94a3b8' }}>Loading APMC market data…</p>
+        <p style={{ padding: '1rem', color: '#94a3b8' }}>{t('loading_mandi')}</p>
       ) : (
         <div style={{ overflowX: 'auto', marginTop: '0.75rem' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>Crop / Commodity</th>
-                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>APMC Market</th>
-                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>Modal Price</th>
-                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>Price Range</th>
-                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>7-Day Trend</th>
-                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>MSP Benchmark</th>
+                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>{t('commodity_col')}</th>
+                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>{t('market_col')}</th>
+                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>{t('modal_price_col')}</th>
+                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>{t('price_range_col')}</th>
+                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>{t('trend_col')}</th>
+                <th style={{ padding: '0.6rem 0.75rem', color: '#94a3b8' }}>{t('msp_col')}</th>
               </tr>
             </thead>
             <tbody>
-              {rates.map((item) => {
+              {(Array.isArray(rates) ? rates : []).map((item) => {
                 const name = language === 'mr' ? item.name_mr : (language === 'hi' ? item.name_hi : item.commodity_name);
                 const trendColor = item.trend === 'bullish' ? '#10b981' : (item.trend === 'bearish' ? '#ef4444' : '#94a3b8');
                 const trendIcon = item.trend === 'bullish' ? '📈' : (item.trend === 'bearish' ? '📉' : '➡️');
+                const trendText = item.trend === 'bullish' ? t('trend_bullish') : (item.trend === 'bearish' ? t('trend_bearish') : t('trend_steady'));
+                const modalPrice = item.modal_price_inr != null ? item.modal_price_inr : 0;
+                const minPrice = item.min_price_inr != null ? item.min_price_inr : 0;
+                const maxPrice = item.max_price_inr != null ? item.max_price_inr : 0;
+                const mspPrice = item.msp_inr != null ? item.msp_inr : 0;
 
                 return (
                   <tr key={item.crop} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: '0.65rem 0.75rem', fontWeight: 600 }}>{name}</td>
-                    <td style={{ padding: '0.65rem 0.75rem', color: '#cbd5e1', fontSize: '0.82rem' }}>{item.apmc_market}</td>
+                    <td style={{ padding: '0.65rem 0.75rem', fontWeight: 600 }}>{name || item.crop}</td>
+                    <td style={{ padding: '0.65rem 0.75rem', color: '#cbd5e1', fontSize: '0.82rem' }}>{item.apmc_market || 'APMC'}</td>
                     <td style={{ padding: '0.65rem 0.75rem', fontWeight: 700, color: '#38bdf8' }}>
-                      ₹{item.modal_price_inr.toLocaleString('en-IN')}{' '}
+                      ₹{modalPrice.toLocaleString('en-IN')}{' '}
                       <span style={{ fontSize: '0.75rem', fontWeight: 400, color: '#94a3b8' }}>/ q</span>
                     </td>
                     <td style={{ padding: '0.65rem 0.75rem', color: '#94a3b8' }}>
-                      ₹{item.min_price_inr} – ₹{item.max_price_inr}
+                      ₹{minPrice} – ₹{maxPrice}
                     </td>
-                    <td style={{ padding: '0.65rem 0.75rem', color: trendColor, fontWeight: 600 }}>
-                      {trendIcon} {item.trend_change_pct}%
+                    <td style={{ padding: '0.65rem 0.75rem', color: trendColor, fontWeight: 600 }} title={trendText}>
+                      {trendIcon} {item.trend_change_pct != null ? item.trend_change_pct : 0}%
                     </td>
-                    <td style={{ padding: '0.65rem 0.75rem' }}>
-                      {item.msp_inr > 0 ? (
-                        <span style={{ color: '#fbbf24' }}>₹{item.msp_inr.toLocaleString('en-IN')} / q</span>
-                      ) : (
-                        <span style={{ color: '#64748b' }}>Open Market</span>
-                      )}
+                    <td style={{ padding: '0.65rem 0.75rem', color: mspPrice > 0 ? '#fbbf24' : '#94a3b8' }}>
+                      {mspPrice > 0 ? `₹${mspPrice.toLocaleString('en-IN')}` : '--'}
                     </td>
                   </tr>
                 );

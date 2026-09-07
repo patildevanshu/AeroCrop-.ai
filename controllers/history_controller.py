@@ -80,3 +80,19 @@ async def get_farmer_analytics(
     """Aggregate health and acreage metrics for the farmer's dashboard."""
     stats = await HistoryService.get_farmer_analytics(db, current_user.id)
     return stats
+
+
+@router.get("/crop-progress", summary="Get longitudinal crop health progress across analyses")
+async def get_crop_progress(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Returns progress tracking for each of the farmer's crops/plots:
+    - Chronological list of analyses with pathology, yield, and treatment status
+    - Health score (0-100) and trend (baseline, improving, recovered, deteriorating)
+    - Comparative progression across consecutive diagnoses
+    """
+    progress = await HistoryService.get_crop_progress_for_user(db, current_user.id)
+    return {"count": len(progress), "crops": progress}
+

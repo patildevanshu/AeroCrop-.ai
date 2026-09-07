@@ -92,20 +92,18 @@ export const AddPlotModal: React.FC<AddPlotModalProps> = ({ isOpen, onClose, onS
                 onChange={(e) => setCropType(e.target.value)}
                 required
               >
-                <option value="tomato">🍅 Tomato (टोमॅटो)</option>
-                <option value="potato">🥔 Potato (बटाटा)</option>
-                <option value="maize">🌽 Corn / Maize (मका)</option>
-                <option value="grape">🍇 Grape (द्राक्षे)</option>
-                <option value="soybean">🌱 Soybean (सोयाबीन)</option>
-                <option value="pepper">🌶️ Pepper / Bell Pepper (मिरची)</option>
-                <option value="apple">🍎 Apple (सफरचंद)</option>
-                <option value="orange">🍊 Orange (संत्रे)</option>
-                <option value="strawberry">🍓 Strawberry (स्ट्रॉबेरी)</option>
-                <option value="peach">🍑 Peach</option>
-                <option value="cherry">🍒 Cherry</option>
-                <option value="blueberry">🫐 Blueberry</option>
-                <option value="squash">🥒 Squash</option>
-                <option value="raspberry">🍇 Raspberry</option>
+                <optgroup label={t('cash_crops_group')}>
+                  <option value="cotton">🌱 Cotton (कापूस / कपास)</option>
+                  <option value="sugarcane">🎋 Sugarcane (ऊस / गन्ना)</option>
+                  <option value="banana">🍌 Banana (केळी / केला)</option>
+                  <option value="turmeric">🌿 Turmeric / Haldi (हळद / हल्दी)</option>
+                  <option value="soybean">🌱 Soybean (सोयाबीन)</option>
+                  <option value="maize">🌽 Corn / Maize (मका / मक्का)</option>
+                  <option value="rice">🌾 Rice / Paddy (भात / धान)</option>
+                  <option value="potato">🥔 Potato (बटाटा / आलू)</option>
+                  <option value="wheat">🌾 Wheat (गहू / गेहूं)</option>
+                  <option value="onion">🧅 Onion (कांदा / प्याज)</option>
+                </optgroup>
               </select>
             </div>
             <div className="form-group">

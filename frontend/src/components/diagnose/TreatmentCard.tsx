@@ -59,7 +59,7 @@ export const TreatmentCard: React.FC<TreatmentCardProps> = ({ disease }) => {
       </div>
 
       <p className="disease-desc">
-        {disease.description || 'No description available for this class.'}
+        {disease.description || t('no_desc_avail')}
       </p>
 
       <div className="treatment-section">
@@ -67,7 +67,7 @@ export const TreatmentCard: React.FC<TreatmentCardProps> = ({ disease }) => {
         <ul className="treatment-list" aria-label="Chemical treatment recommendations">
           {(disease.chemical_treatment && disease.chemical_treatment.length > 0
             ? disease.chemical_treatment
-            : ['No specific chemical treatment required.']
+            : [t('no_chem_treatment')]
           ).map((item, index) => (
             <li key={index}>{item}</li>
           ))}
@@ -79,7 +79,7 @@ export const TreatmentCard: React.FC<TreatmentCardProps> = ({ disease }) => {
         <ul className="treatment-list" aria-label="Organic treatment recommendations">
           {(disease.organic_treatment && disease.organic_treatment.length > 0
             ? disease.organic_treatment
-            : ['No specific organic treatment required.']
+            : [t('no_org_treatment')]
           ).map((item, index) => (
             <li key={index}>{item}</li>
           ))}

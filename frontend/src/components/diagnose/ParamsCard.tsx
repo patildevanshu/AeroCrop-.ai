@@ -63,7 +63,7 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
             onChange={handlePlotSelectChange}
             aria-label="Select farm plot"
           >
-            <option value="">-- No plot linked (General diagnosis) --</option>
+            <option value="">{t('no_plot_linked')}</option>
             {userPlots.map((p) => (
               <option key={p.id} value={p.id.toString()}>
                 📍 {p.plot_name} ({p.crop_type.toUpperCase()} — {p.area_acres} Acres)
@@ -82,22 +82,18 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
           onChange={(e) => setCrop(e.target.value)}
           aria-label="Select crop type"
         >
-          <option value="auto">✨ Auto-Detect from Leaf Specimen (स्वयंचलित पीक ओळख)</option>
-          <optgroup label="── Supported Horticultural &amp; Field Crops ──">
-            <option value="tomato">🍅 Tomato (टोमॅटो)</option>
-            <option value="potato">🥔 Potato (बटाटा)</option>
-            <option value="maize">🌽 Corn / Maize (मका)</option>
-            <option value="grape">🍇 Grape (द्राक्षे)</option>
+          <option value="auto">{t('crop_auto_detect')}</option>
+          <optgroup label={t('cash_crops_group')}>
+            <option value="cotton">🌱 Cotton (कापूस / कपास)</option>
+            <option value="sugarcane">🎋 Sugarcane (ऊस / गन्ना)</option>
+            <option value="banana">🍌 Banana (केळी / केला)</option>
+            <option value="turmeric">🌿 Turmeric / Haldi (हळद / हल्दी)</option>
             <option value="soybean">🌱 Soybean (सोयाबीन)</option>
-            <option value="pepper">🌶️ Pepper / Bell Pepper (मिरची / शिमला)</option>
-            <option value="apple">🍎 Apple (सफरचंद)</option>
-            <option value="orange">🍊 Orange / Mandarin (संत्रे / मोसंबी)</option>
-            <option value="strawberry">🍓 Strawberry (स्ट्रॉबेरी)</option>
-            <option value="peach">🍑 Peach (आड़ू)</option>
-            <option value="cherry">🍒 Cherry (चेरी)</option>
-            <option value="blueberry">🫐 Blueberry (ब्लूबेरी)</option>
-            <option value="raspberry">🍇 Raspberry (रसभरी)</option>
-            <option value="squash">🥒 Squash (भोपळा)</option>
+            <option value="maize">🌽 Corn / Maize (मका / मक्का)</option>
+            <option value="rice">🌾 Rice / Paddy (भात / धान)</option>
+            <option value="potato">🥔 Potato (बटाटा / आलू)</option>
+            <option value="wheat">🌾 Wheat (गहू / गेहूं)</option>
+            <option value="onion">🧅 Onion (कांदा / प्याज)</option>
           </optgroup>
         </select>
       </div>
@@ -130,7 +126,7 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
         margin: '0.75rem 0 1.25rem 0',
         lineHeight: 1.4
       }}>
-        ✨ <strong style={{ color: '#34d399' }}>Photo-First Diagnosis:</strong> Standard ICAR nutrition dosages and live microclimatic weather telemetry will be automatically computed for your selected crop and district.
+        ✨ {t('photo_first_notice')}
       </div>
 
       {/* Analyze Button */}

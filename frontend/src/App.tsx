@@ -22,11 +22,16 @@ const MainApp: React.FC = () => {
     setActiveTab('diagnose');
   };
 
+  const handleQuickDiagnoseFromId = (plotId?: number | null) => {
+    setActivePlotId(plotId ? plotId.toString() : '');
+    setActiveTab('diagnose');
+  };
+
   return (
     <AppShell activeTab={activeTab} onTabChange={setActiveTab}>
       {activeTab === 'diagnose' && <DiagnosePage initialPlotId={activePlotId} />}
       {activeTab === 'crops' && <CropsPage onQuickDiagnose={handleQuickDiagnose} />}
-      {activeTab === 'dashboard' && <DashboardPage />}
+      {activeTab === 'dashboard' && <DashboardPage onQuickDiagnose={handleQuickDiagnoseFromId} />}
       {activeTab === 'diseases' && <DiseaseDBPage />}
       {activeTab === 'about' && <AboutPage />}
 

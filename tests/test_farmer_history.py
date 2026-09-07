@@ -155,3 +155,64 @@ class TestFarmerDiagnosisHistory:
 
         get_res = client.get(f"/api/farmer/history/{rec_id}", headers=headers)
         assert get_res.status_code == 404
+
+    def test_authenticated_prediction_persists_without_npk_and_auto_links(self, farmer_session):
+        """Test photo-only workflow (no NPK provided) persists and auto-links to plot."""
+        headers = farmer_session["headers"]
+        res = client.post(
+            "/api/predict",
+            headers=headers,
+            data={
+                "crop": "orange",
+                "district": "aurangabad",
+                # Omit N, P, K and omit plot_id
+            },
+            files={"image": ("orange_photo_only.jpg", JPEG_BYTES, "image/jpeg")},
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "success"
+        assert data["saved_record_id"] is not None
+
+        # Check detail confirms plot was auto-linked
+        detail = client.get(f"/api/farmer/history/{data['saved_record_id']}", headers=headers).json()
+        assert detail["plot_id"] == farmer_session["plot_id"]
+        assert detail["plot_name"] == "Main Orchard"
+
+    def test_crop_progress_endpoint(self, farmer_session):
+        """Test GET /api/farmer/crop-progress returns longitudinal progression."""
+        headers = farmer_session["headers"]
+        res = client.get("/api/farmer/crop-progress", headers=headers)
+        assert res.status_code == 200
+        data = res.json()
+        assert "count" in data
+        assert data["count"] >= 1
+        assert "crops" in data
+        crop_progress = next((c for c in data["crops"] if c["plot_id"] == farmer_session["plot_id"]), None)
+        assert crop_progress is not None
+        assert crop_progress["crop_type"] == "orange"
+        assert crop_progress["plot_name"] == "Main Orchard"
+        assert crop_progress["total_analyses"] >= 2
+        assert "health_score" in crop_progress
+        assert "trend" in crop_progress
+        assert "analyses" in crop_progress
+        assert len(crop_progress["analyses"]) >= 2
+        first_an = crop_progress["analyses"][0]
+        assert first_an["analysis_number"] == 1
+        assert "disease_name" in first_an
+        assert "predicted_yield_t_ha" in first_an
+        assert "confidence" in first_an
+
+    def test_plots_endpoint_includes_health_score_and_recent_analyses(self, farmer_session):
+        """Test GET /api/farmer/plots includes health_score and recent_analyses."""
+        headers = farmer_session["headers"]
+        res = client.get("/api/farmer/plots", headers=headers)
+        assert res.status_code == 200
+        data = res.json()
+        assert "plots" in data
+        plot = next((p for p in data["plots"] if p["id"] == farmer_session["plot_id"]), None)
+        assert plot is not None
+        assert "health_score" in plot
+        assert "recent_analyses" in plot
+        assert len(plot["recent_analyses"]) >= 2
+

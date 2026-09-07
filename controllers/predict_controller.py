@@ -19,7 +19,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from PIL import Image
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import sys
@@ -82,7 +82,7 @@ async def predict(
     rainfall    = weather["rainfall"]
 
     # ── 3. Run multi-modal inference ─────────────────────────────────────────
-    prelim_crop = crop if crop and crop.lower() != "auto" else "tomato"
+    prelim_crop = crop if crop and crop.lower() != "auto" else "auto"
     try:
         inference_svc = _get_inference()
         result = inference_svc.predict(
@@ -103,8 +103,11 @@ async def predict(
     disease_idx  = result["disease_class"]
     disease_info = DiseaseService.get_by_index(disease_idx)
 
-    # Automatically detect crop from visual disease taxonomy
-    detected_crop_raw = disease_info.crop if disease_info else (crop if crop and crop.lower() != "auto" else "Tomato")
+    # Automatically detect crop from visual disease taxonomy or user selection
+    if crop and crop.lower() != "auto":
+        detected_crop_raw = crop.strip().capitalize()
+    else:
+        detected_crop_raw = disease_info.crop if disease_info else "Tomato"
     
     # Standardize crop key for fertilizer & mandi lookups
     det_lower = detected_crop_raw.lower().strip()
@@ -154,10 +157,21 @@ async def predict(
             owned_plot = plot_res.scalar_one_or_none()
             if owned_plot:
                 valid_plot_id = owned_plot.id
-            else:
-                logger.warning(
-                    "[PredictController] Plot #%d does not belong to user #%d. Omitting plot linkage.",
-                    plot_id, optional_user.id
+        if not valid_plot_id:
+            # Auto-link to matching plot for this crop if user has one
+            auto_plot_res = await db.execute(
+                select(FarmPlot).where(
+                    FarmPlot.user_id == optional_user.id,
+                    (func.lower(FarmPlot.crop_type) == final_crop_name.lower()) |
+                    (func.lower(FarmPlot.crop_type) == effective_crop_key.lower())
+                ).order_by(FarmPlot.id.desc()).limit(1)
+            )
+            matched_plot = auto_plot_res.scalar_one_or_none()
+            if matched_plot:
+                valid_plot_id = matched_plot.id
+                logger.info(
+                    "[PredictController] Auto-linked diagnosis to user #%d's plot #%d (%s - %s)",
+                    optional_user.id, matched_plot.id, matched_plot.plot_name, matched_plot.crop_type
                 )
 
         try:

@@ -283,6 +283,115 @@ class DiseaseService:
             ["Reflective mulches", "Insect-proof nets", "Neem Oil"],
             "Critical",
             "Severe upward leaf curl, yellowing, stunting; spread by whitefly."),
+
+        # ── Maharashtra Cash & Field Crops Expansion (Classes 38-55) ──
+        DiseaseInfo(38, "Cotton — Bacterial Blight (Angular Leaf Spot)", "Cotton", False,
+            ["Copper Oxychloride 50WP (2.5 g/L)", "Streptocycline (100 ppm)"],
+            ["Neem seed kernel extract (NSKE 5%)", "Pseudomonas fluorescens spray"],
+            "High",
+            "Angular water-soaked lesions bounded by leaf veins; turns dark brown to black."),
+
+        DiseaseInfo(39, "Cotton — Healthy", "Cotton", True,
+            [],
+            [],
+            "None",
+            "Vigorous green foliage with no pathology or necrotic lesions."),
+
+        DiseaseInfo(40, "Banana — Cordana Leaf Spot", "Banana", False,
+            ["Mancozeb 75WP (2 g/L)", "Chlorothalonil"],
+            ["Prune and burn infected leaf tips", "Neem oil spray"],
+            "Moderate",
+            "Large oval or zig-zag necrotic patches on leaf margins with bright yellow borders."),
+
+        DiseaseInfo(41, "Banana — Panama Disease (Fusarium Wilt)", "Banana", False,
+            ["Carbendazim 50WP soil drench (2 g/L)", "Propiconazole"],
+            ["Trichoderma viride soil application in FYM", "Neem cake application"],
+            "Critical",
+            "Progressive yellowing of older leaves, leaf bucking along petiole, vascular discolouration."),
+
+        DiseaseInfo(42, "Banana — Sigatoka Leaf Spot", "Banana", False,
+            ["Propiconazole 25EC (1 ml/L)", "Carbendazim 50WP", "Mancozeb 75WP"],
+            ["Mineral oil spray (1%)", "Trichoderma viride foliar wash"],
+            "High",
+            "Spindle-shaped necrotic spots with yellow halos along secondary veins."),
+
+        DiseaseInfo(43, "Banana — Healthy", "Banana", True,
+            [],
+            [],
+            "None",
+            "Broad, intact, deep green banana leaves with smooth lamina and sturdy midrib."),
+
+        DiseaseInfo(44, "Sugarcane — Mosaic Virus", "Sugarcane", False,
+            ["No curative chemical; manage aphid vectors with Imidacloprid"],
+            ["Use certified virus-free setts", "Roughing of infected clumps"],
+            "High",
+            "Alternating patches of normal green and chlorotic pale yellowish green patterns."),
+
+        DiseaseInfo(45, "Sugarcane — Red Rot (Colletotrichum falcatum)", "Sugarcane", False,
+            ["Thiophanate Methyl sett treatment", "Carbendazim (1 g/L)"],
+            ["Sett dip in Trichoderma suspension", "Crop rotation with paddy"],
+            "Critical",
+            "Third or fourth leaf from top shows yellowing; internal cane pith shows red lesions with crosswise white patches."),
+
+        DiseaseInfo(46, "Sugarcane — Common Rust (Puccinia melanocephala)", "Sugarcane", False,
+            ["Mancozeb 75WP (2 g/L)", "Propiconazole 25EC (1 ml/L)"],
+            ["Sulfur dust application (25 kg/ha)"],
+            "Moderate",
+            "Small elongated yellowish spots turning reddish-brown pustules on both leaf surfaces."),
+
+        DiseaseInfo(47, "Sugarcane — Yellow Leaf Disease (SCYLV)", "Sugarcane", False,
+            ["Imidacloprid for vector control"],
+            ["Tissue-cultured disease-free planting material"],
+            "High",
+            "Intense yellowing of the midrib on the 3rd to 6th leaf from the top."),
+
+        DiseaseInfo(48, "Sugarcane — Healthy", "Sugarcane", True,
+            [],
+            [],
+            "None",
+            "Robust, deep green linear sugarcane leaves with clear central midrib and no rust lesions."),
+
+        DiseaseInfo(49, "Rice — Bacterial Leaf Blight (Xanthomonas oryzae)", "Rice", False,
+            ["Copper Hydroxide 77WP (2 g/L) + Streptocycline (100 ppm)"],
+            ["Neem oil spray (2%)", "Cow dung supernatant spray (5%)"],
+            "Critical",
+            "Water-soaked stripes starting from leaf tips/margins, enlarging into yellowish-white wavy lesions."),
+
+        DiseaseInfo(50, "Rice — Brown Spot (Bipolaris oryzae)", "Rice", False,
+            ["Mancozeb 75WP (2 g/L)", "Tricyclazole 75WP (0.6 g/L)"],
+            ["Pseudomonas fluorescens seed treatment (10 g/kg)"],
+            "High",
+            "Oval or circular brown spots with grey or whitish centers scattered across leaves."),
+
+        DiseaseInfo(51, "Rice — Leaf Smut (Entyloma oryzae)", "Rice", False,
+            ["Mancozeb 75WP (2 g/L)", "Copper Oxychloride"],
+            ["Balanced nitrogen fertilization", "Neem extract foliar spray"],
+            "Moderate",
+            "Small, slightly raised, angular black spots on both sides of the leaf."),
+
+        DiseaseInfo(52, "Turmeric — Dry Leaf (Blight)", "Turmeric", False,
+            ["Mancozeb 75WP (2 g/L)", "Copper Oxychloride (2.5 g/L)"],
+            ["Neem cake soil application", "Panchagavya spray"],
+            "Moderate",
+            "Extensive leaf margin drying and necrosis causing premature leaf senescence."),
+
+        DiseaseInfo(53, "Turmeric — Leaf Blotch (Taphrina maculans)", "Turmeric", False,
+            ["Mancozeb (2 g/L)", "Copper Oxychloride (2.5 g/L)"],
+            ["Panchagavya foliar spray (3%)", "Pseudomonas fluorescens"],
+            "Moderate",
+            "Small rectangular reddish-brown spots on both leaf surfaces coalescing into blotches."),
+
+        DiseaseInfo(54, "Turmeric — Rhizome Rot (Pythium / Collar Rot)", "Turmeric", False,
+            ["Metalaxyl + Mancozeb (Ridomil Gold 2 g/L drench)", "Copper Oxychloride"],
+            ["Seed rhizome treatment with Trichoderma viride", "Ensure good bed drainage"],
+            "Critical",
+            "Collar rot, yellowing of pseudostem, foul-smelling soft decaying rhizomes."),
+
+        DiseaseInfo(55, "Turmeric — Healthy", "Turmeric", True,
+            [],
+            [],
+            "None",
+            "Erect, glossy green turmeric leaves free from necrotic margins or spots."),
     ]
 
     # Build fast lookup dict once

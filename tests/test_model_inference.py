@@ -20,6 +20,7 @@ import pytest
 import numpy as np
 from PIL import Image
 
+import config
 from model.inference import InferenceService
 
 
@@ -95,7 +96,7 @@ class TestPredictReturnSchema:
         assert abs(total - 1.0) < 1e-3, f"Probabilities sum to {total}, expected ~1.0"
 
     def test_probabilities_length(self, result):
-        assert len(result["probabilities"]) == 38
+        assert len(result["probabilities"]) == config.NUM_DISEASE_CLASSES
 
     def test_low_confidence_is_bool(self, result):
         assert isinstance(result["low_confidence"], bool)

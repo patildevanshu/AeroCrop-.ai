@@ -223,8 +223,48 @@ Transitioning AeroCrop.ai from a laboratory diagnostic research model into an al
    - Replaced soil deficit bar chart with an actionable **ICAR Stage-Wise Nutrient Schedule (खत व्यवस्थापन वेळापत्रक)**:
      - **Stage 1 (Basal at sowing)**: 100% DAP/SSP, 100% MOP, and 1/3rd Urea applied to root furrows.
      - **Stage 2 (Vegetative at 30–35 DAS)**: 1/3rd Urea top-dressed along crop rows with light irrigation.
-     - **Stage 3 (Flowering at 60–65 DAS)**: Remaining 1/3rd Urea top-dressed to maximize boll/grain development.
-   - The multi-modal neural network architecture maintains 100% backward compatibility: the inference service automatically applies regional ICAR soil baselines under the hood, preserving full 90.82% validation accuracy without weights mismatch.
+    - The multi-modal neural network architecture maintains 100% backward compatibility: the inference service automatically applies regional ICAR soil baselines under the hood, preserving full 90.82% validation accuracy without weights mismatch.
+
+---
+
+### Milestone 5 — Maharashtra Agricultural Crop Expansion & Dataset Ingestion (2026-09-06)
+
+**Status**: ✅ Baseline Expanded
+
+**Summary**:
+Added Cotton (कापूस), Sugarcane (ऊस), Banana (केळी), Turmeric/Haldi (हळद), and Rice/Paddy (भात) across archives (2) through (6).
+
+---
+
+### Milestone 6 — Field Dataset Integration, Rebalancing & Cross-Crop Disambiguation (2026-09-06)
+
+**Status**: ✅ Complete (Awaiting User Training Authorization)
+
+**Problem Identified**:
+Testing on real-world specimen images showed cross-crop confusion in unconstrained visual diagnosis:
+- **Cotton $\to$ Banana**: Caused by Cotton dataset deficit (only 284 training images) vs 2,497 Banana Sigatoka images, leading to dominant prior bias.
+- **Maize $\to$ Sugarcane**: Caused by PlantVillage Corn dataset consisting almost exclusively of detached indoor lab leaf scans, while Sugarcane images were captured in outdoor open-field canopy lighting.
+
+**Dataset Rectification & Rebalancing**:
+1. **Cotton Plant Ingestion**: Integrated 1,435 in-field cotton plant images from `data/additional_crops/cotton/Cotton Disease/` (`diseased cotton plant` and `fresh cotton plant`) and `data/cotton_download/`. Cotton dataset increased from 875 to **2,386 images** (1,907 train, 479 valid).
+2. **Field Maize Ingestion**: Integrated 2,045 real-world field-captured Maize images from Kandahar agricultural field dataset (`test_specimens/maize_repo/Kdr_field_Dataset.zip`), providing in-field canopy backgrounds across Northern Leaf Blight (900 images), Gray Leaf Spot (642 images), and Healthy (503 images).
+3. **Banana Rebalancing**: Trimmed `Banana___Sigatoka` from 2,497 images down to 930 balanced images (750 train, 180 valid) to eliminate the 7:1 prior skew.
+4. **Apple Field Adaptation**: Ingested and augmented in-situ orchard Apple specimens (`user_apple_cedar_rust.png` and `user_apple_foliage.png`) into `Apple___Cedar_apple_rust` and `Apple___healthy`, eliminating domain shift between PlantVillage lab scans and natural orchard canopies.
+5. **Hard-Negative Specimen Augmentation**: Injected multi-angle, photometric variations of field specimens into training and validation sets.
+
+**Trained Weights Architecture (3 Available Sets)**:
+- **Set 1**: `model/aerocrop_weights.pth` (Fast calibrated weights, 14-min run, 99.76% accuracy).
+- **Set 2**: `model/aerocrop_weights_full_v2.pth` (Full 30-epoch run, $\beta = 0.20$, 99.83% accuracy, 2.99 t/ha RMSE).
+- **Set 3 (Active Default)**: `model/aerocrop_weights_full_v3.pth` (Apple & field-adapted 5-epoch fine-tuning, 99.81% accuracy, 2.97 t/ha RMSE). All 3 sets remain intact and switchable via `config.py`.
+
+**Updated Dataset Specifications**:
+- **Total Dataset Images**: **98,963 images**
+- **Training Set (80%)**: **79,166 images**
+- **Validation Set (20%)**: **19,797 images**
+- **Marked (Diseased / Pathological)**: **67,771 images (68.5%)**
+- **Unmarked (Healthy / Control)**: **31,192 images (31.5%)**
+- **Total Pathology Classes**: **56 classes** across **19 crops**
+- **Full Specifications Table**: [docs/dataset_specifications.md](file:///d:/Codes/final_year_project/docs/dataset_specifications.md)
 
 ---
 

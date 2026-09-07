@@ -66,14 +66,17 @@ export const RecentHistoryCard: React.FC = () => {
             value={filterCrop}
             onChange={(e) => setFilterCrop(e.target.value)}
           >
-            <option value="">All Crops</option>
-            <option value="cotton">Cotton</option>
-            <option value="wheat">Wheat</option>
-            <option value="maize">Maize</option>
-            <option value="rice">Rice</option>
-            <option value="potato">Potato</option>
-            <option value="tomato">Tomato</option>
-            <option value="soybean">Soybean</option>
+            <option value="">{t('all_crops')}</option>
+            <option value="cotton">Cotton (कापूस)</option>
+            <option value="sugarcane">Sugarcane (ऊस)</option>
+            <option value="banana">Banana (केळी)</option>
+            <option value="turmeric">Turmeric (हळद)</option>
+            <option value="soybean">Soybean (सोयाबीन)</option>
+            <option value="maize">Corn / Maize (मका)</option>
+            <option value="rice">Rice (भात)</option>
+            <option value="potato">Potato (बटाटा)</option>
+            <option value="wheat">Wheat (गहू)</option>
+            <option value="onion">Onion (कांदा)</option>
           </select>
           <button
             type="button"
@@ -88,20 +91,36 @@ export const RecentHistoryCard: React.FC = () => {
 
       <div className="history-list">
         {isLoading ? (
-          <p className="loading-text">Loading diagnostics…</p>
-        ) : records.length === 0 ? (
+          <p className="loading-text">{t('loading_diagnostics')}</p>
+        ) : (Array.isArray(records) ? records : []).length === 0 ? (
           <p className="no-history">{t('no_history')}</p>
         ) : (
-          records.map((r, idx) => {
-            const dateStr = new Date(r.created_at).toLocaleDateString('en-IN', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-            });
-            const timeStr = new Date(r.created_at).toLocaleTimeString('en-IN', {
-              hour: '2-digit',
-              minute: '2-digit',
-            });
+          (Array.isArray(records) ? records : []).map((r, idx) => {
+            let dateStr = '--';
+            let timeStr = '';
+            try {
+              if (r.created_at) {
+                const d = new Date(r.created_at);
+                if (!isNaN(d.getTime())) {
+                  dateStr = d.toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  });
+                  timeStr = d.toLocaleTimeString('en-IN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+                }
+              }
+            } catch {
+              dateStr = '--';
+            }
+
+            const cropName = (r.crop_type || 'Crop').toUpperCase();
+            const districtName = (r.district || 'Maharashtra').toUpperCase();
+            const confVal = r.confidence != null ? Number(r.confidence).toFixed(1) : '--';
+            const yieldVal = r.predicted_yield_t_ha != null ? r.predicted_yield_t_ha : '--';
 
             return (
               <div key={r.id || idx} className="history-item glass">
@@ -117,17 +136,17 @@ export const RecentHistoryCard: React.FC = () => {
                   </div>
                 )}
                 <div className="history-body">
-                  <p className="history-disease">{r.disease_name}</p>
+                  <p className="history-disease">{r.disease_name || 'Specimen Diagnosis'}</p>
                   <p className="history-meta">
-                    {r.crop_type.toUpperCase()} · {r.district.toUpperCase()}
-                    {r.plot_name ? ` · Plot: ${r.plot_name}` : ''} · {dateStr} {timeStr}
+                    {cropName} · {districtName}
+                    {r.plot_name ? ` · ${t('plot_label')} ${r.plot_name}` : ''} · {dateStr} {timeStr}
                   </p>
                   <p className="history-meta">
-                    Yield: {r.predicted_yield_t_ha} t/ha · Confidence: {r.confidence.toFixed(1)}%
+                    {t('yield_label')} {yieldVal} t/ha · {t('confidence_label')} {confVal}%
                   </p>
                 </div>
                 <span className={`severity-badge ${getSeverityClass(r.severity)}`}>
-                  {r.severity}
+                  {r.severity || 'None'}
                 </span>
               </div>
             );

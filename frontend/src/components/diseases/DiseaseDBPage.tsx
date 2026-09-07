@@ -6,8 +6,11 @@ import { DiseaseClassItem } from '../../types';
 export const DiseaseDBPage: React.FC = () => {
   const { t } = useI18n();
   const [diseases, setDiseases] = useState<DiseaseClassItem[]>([]);
+  const [filterMode, setFilterMode] = useState<'project' | 'all'>('project');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+
+  const PROJECT_CROPS = ['cotton', 'sugarcane', 'banana', 'turmeric', 'rice', 'paddy', 'maize', 'corn', 'soybean', 'potato'];
 
   useEffect(() => {
     fetchDiseaseClasses()
@@ -23,6 +26,11 @@ export const DiseaseDBPage: React.FC = () => {
   }, []);
 
   const filteredDiseases = diseases.filter((d) => {
+    if (filterMode === 'project') {
+      const cropLower = d.crop.toLowerCase();
+      const isProject = PROJECT_CROPS.some((c) => cropLower.includes(c));
+      if (!isProject) return false;
+    }
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
     return (
@@ -43,13 +51,29 @@ export const DiseaseDBPage: React.FC = () => {
           <h1 id="heading-diseases">{t('disease_db_title')}</h1>
           <p className="page-subtitle">{t('disease_db_subtitle')}</p>
         </div>
+        <div className="filter-pills" style={{ display: 'flex', gap: '8px' }}>
+          <button
+            type="button"
+            className={`btn btn-sm ${filterMode === 'project' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setFilterMode('project')}
+          >
+            🌾 Supported Model Crops
+          </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${filterMode === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setFilterMode('all')}
+          >
+            📚 Full Taxonomy
+          </button>
+        </div>
       </header>
 
       {/* Search Input */}
       <div className="search-row">
         <input
           type="search"
-          placeholder="Search disease, crop, or symptoms…"
+          placeholder={t('search_disease_placeholder')}
           aria-label="Search disease database"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -59,7 +83,7 @@ export const DiseaseDBPage: React.FC = () => {
       {/* Disease Cards Grid */}
       {isLoading ? (
         <p className="loading-text" style={{ padding: '24px 0' }}>
-          Loading disease knowledge database…
+          {t('loading_disease_db')}
         </p>
       ) : (
         <div className="disease-db-grid" aria-label="Disease database cards">

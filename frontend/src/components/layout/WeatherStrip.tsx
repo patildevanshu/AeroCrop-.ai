@@ -10,7 +10,7 @@ export const WeatherStrip: React.FC<WeatherStripProps> = ({ weather }) => {
   const { t } = useI18n();
 
   const sprayBadge = weather?.spray_window
-    ? (weather.spray_window.safe ? '🟢 Safe to Spray' : (weather.spray_window.status === 'warning' ? '🟡 Caution' : '🔴 Hold Spray'))
+    ? (weather.spray_window.safe ? t('spray_safe') : (weather.spray_window.status === 'warning' ? t('spray_caution') : t('spray_hold')))
     : null;
 
   return (
@@ -41,7 +41,7 @@ export const WeatherStrip: React.FC<WeatherStripProps> = ({ weather }) => {
         <span className="weather-val">
           {weather?.wind_speed ? `${weather.wind_speed} km/h` : '-- km/h'}
         </span>
-        <span className="weather-lbl">Wind</span>
+        <span className="weather-lbl">{t('weather_wind')}</span>
       </div>
       {sprayBadge && (
         <div className="weather-item" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '0.6rem' }}>

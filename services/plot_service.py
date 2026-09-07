@@ -37,20 +37,54 @@ class PlotService:
 
         output = []
         for p in plots:
-            # Query diagnosis count and latest diagnosis
+            # Query diagnoses for this plot (or matching crop if plot_id was null)
             diag_query = (
                 select(DiagnosisRecord)
-                .where(DiagnosisRecord.plot_id == p.id)
+                .where(
+                    DiagnosisRecord.user_id == user_id,
+                    (DiagnosisRecord.plot_id == p.id) | (
+                        (DiagnosisRecord.plot_id.is_(None)) &
+                        (func.lower(DiagnosisRecord.crop_type) == func.lower(p.crop_type))
+                    )
+                )
                 .order_by(DiagnosisRecord.created_at.desc())
-                .limit(1)
             )
             diag_res = await db.execute(diag_query)
-            latest_diag = diag_res.scalar_one_or_none()
+            all_diags = diag_res.scalars().all()
 
-            # Count total diagnoses
-            count_query = select(func.count(DiagnosisRecord.id)).where(DiagnosisRecord.plot_id == p.id)
-            count_res = await db.execute(count_query)
-            total_diagnoses = count_res.scalar_one() or 0
+            total_diagnoses = len(all_diags)
+            latest_diag = all_diags[0] if total_diagnoses > 0 else None
+
+            # Recent analyses list
+            analyses_summary = [
+                {
+                    "id": d.id,
+                    "disease_name": d.disease_name,
+                    "severity": d.severity or "None",
+                    "is_healthy": bool(d.is_healthy),
+                    "confidence": round(d.confidence, 1),
+                    "predicted_yield_t_ha": round(d.predicted_yield_t_ha, 2),
+                    "image_url": d.image_url,
+                    "created_at": d.created_at.isoformat() if d.created_at else None,
+                    "date_display": d.created_at.strftime("%d %b %Y") if d.created_at else "--",
+                }
+                for d in all_diags[:5]
+            ]
+
+            # Health score
+            if latest_diag:
+                if latest_diag.is_healthy:
+                    health_score = 100
+                elif latest_diag.severity == "Low":
+                    health_score = 75
+                elif latest_diag.severity == "Moderate":
+                    health_score = 50
+                elif latest_diag.severity == "High":
+                    health_score = 25
+                else:
+                    health_score = 10
+            else:
+                health_score = 100
 
             output.append({
                 "id": p.id,
@@ -65,6 +99,8 @@ class PlotService:
                 "notes": p.notes,
                 "created_at": p.created_at.isoformat() if p.created_at else None,
                 "total_diagnoses": total_diagnoses,
+                "health_score": health_score,
+                "recent_analyses": analyses_summary,
                 "latest_diagnosis": {
                     "id": latest_diag.id,
                     "disease_name": latest_diag.disease_name,

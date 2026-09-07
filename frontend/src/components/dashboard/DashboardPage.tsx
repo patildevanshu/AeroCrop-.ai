@@ -1,18 +1,25 @@
 import React from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { useAuth } from '../../context/AuthContext';
+import { ErrorBoundary } from '../common/ErrorBoundary';
+import { CropProgressCard } from './CropProgressCard';
 import { RecentHistoryCard } from './RecentHistoryCard';
 import { WeatherRadarCard } from './WeatherRadarCard';
 import { MandiDashboardCard } from './MandiDashboardCard';
 import { KVKCard } from './KVKCard';
 
-export const DashboardPage: React.FC = () => {
+interface DashboardPageProps {
+  onQuickDiagnose?: (plotId?: number | null) => void;
+}
+
+export const DashboardPage: React.FC<DashboardPageProps> = ({ onQuickDiagnose }) => {
   const { t } = useI18n();
   const { userPlots, isAuthenticated } = useAuth();
 
-  const activePlotsCount = isAuthenticated ? userPlots.length.toString() : '--';
+  const safePlots = Array.isArray(userPlots) ? userPlots : [];
+  const activePlotsCount = isAuthenticated ? safePlots.length.toString() : '--';
   const totalAcres = isAuthenticated
-    ? userPlots.reduce((sum, p) => sum + (p.area_acres || 0), 0).toFixed(1)
+    ? safePlots.reduce((sum, p) => sum + (p?.area_acres || 0), 0).toFixed(1)
     : '--';
 
   return (
@@ -59,17 +66,30 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Longitudinal Crop Health Progress per Analysis */}
+      <ErrorBoundary fallbackTitle="Crop Health Progress (पिकाची प्रगती)">
+        <CropProgressCard onQuickDiagnose={onQuickDiagnose} />
+      </ErrorBoundary>
+
       {/* Dashboard Body Grid */}
       <div className="dashboard-grid">
-        <RecentHistoryCard />
-        <WeatherRadarCard />
+        <ErrorBoundary fallbackTitle="Diagnostic History (निदान इतिहास)">
+          <RecentHistoryCard />
+        </ErrorBoundary>
+        <ErrorBoundary fallbackTitle="Weather Radar (हवामान रडार)">
+          <WeatherRadarCard />
+        </ErrorBoundary>
       </div>
 
       {/* Live APMC Mandi Rates Grid */}
-      <MandiDashboardCard />
+      <ErrorBoundary fallbackTitle="APMC Mandi Rates (बाजारभाव)">
+        <MandiDashboardCard />
+      </ErrorBoundary>
 
       {/* Krishi Vigyan Kendra Directory */}
-      <KVKCard />
+      <ErrorBoundary fallbackTitle="KVK Agronomist Directory (कृषी विज्ञान केंद्र)">
+        <KVKCard />
+      </ErrorBoundary>
     </section>
   );
 };

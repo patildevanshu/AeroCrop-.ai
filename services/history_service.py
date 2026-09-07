@@ -75,21 +75,21 @@ class HistoryService:
             image_url=image_url,
             disease_class_idx=disease_class_idx,
             disease_name=disease_name,
-            confidence=float(confidence),
-            severity=severity,
-            is_healthy=is_healthy,
-            predicted_yield_t_ha=float(predicted_yield_t_ha),
-            soil_N=float(soil_N),
-            soil_P=float(soil_P),
-            soil_K=float(soil_K),
-            fertilizer_urea_kg=float(fertilizer_urea_kg),
-            fertilizer_dap_kg=float(fertilizer_dap_kg),
-            fertilizer_mop_kg=float(fertilizer_mop_kg),
-            weather_temp=float(weather_temp),
-            weather_hum=float(weather_hum),
-            weather_rain=float(weather_rain),
-            mock_mode=mock_mode,
-            low_confidence=low_confidence,
+            confidence=float(confidence or 0.0),
+            severity=severity or "None",
+            is_healthy=bool(is_healthy),
+            predicted_yield_t_ha=float(predicted_yield_t_ha or 0.0),
+            soil_N=float(soil_N) if soil_N is not None else None,
+            soil_P=float(soil_P) if soil_P is not None else None,
+            soil_K=float(soil_K) if soil_K is not None else None,
+            fertilizer_urea_kg=float(fertilizer_urea_kg or 0.0),
+            fertilizer_dap_kg=float(fertilizer_dap_kg or 0.0),
+            fertilizer_mop_kg=float(fertilizer_mop_kg or 0.0),
+            weather_temp=float(weather_temp or 0.0),
+            weather_hum=float(weather_hum or 0.0),
+            weather_rain=float(weather_rain or 0.0),
+            mock_mode=bool(mock_mode),
+            low_confidence=bool(low_confidence),
         )
         db.add(record)
         await db.flush()
@@ -321,3 +321,189 @@ class HistoryService:
             "avg_yield_t_ha": avg_yield,
             "top_diseases": top_diseases,
         }
+
+    @staticmethod
+    async def get_crop_progress_for_user(
+        db: AsyncSession,
+        user_id: int,
+    ) -> List[Dict[str, Any]]:
+        """
+        Calculates longitudinal crop health, disease evolution, and yield trajectory
+        across consecutive analyses for each of the farmer's plots and crops.
+        """
+        # 1. Fetch user's registered plots
+        plot_stmt = (
+            select(FarmPlot)
+            .where(FarmPlot.user_id == user_id)
+            .order_by(FarmPlot.id.desc())
+        )
+        plots = (await db.execute(plot_stmt)).scalars().all()
+
+        output: List[Dict[str, Any]] = []
+        covered_diag_ids = set()
+
+        for p in plots:
+            diag_stmt = (
+                select(DiagnosisRecord)
+                .where(
+                    DiagnosisRecord.user_id == user_id,
+                    (DiagnosisRecord.plot_id == p.id) | (
+                        (DiagnosisRecord.plot_id.is_(None)) &
+                        (func.lower(DiagnosisRecord.crop_type) == func.lower(p.crop_type))
+                    )
+                )
+                .order_by(DiagnosisRecord.created_at.asc())
+            )
+            diags = (await db.execute(diag_stmt)).scalars().all()
+
+            for d in diags:
+                covered_diag_ids.add(d.id)
+
+            analyses_list = []
+            for idx, d in enumerate(diags):
+                analyses_list.append({
+                    "id": d.id,
+                    "analysis_number": idx + 1,
+                    "created_at": d.created_at.isoformat() if d.created_at else None,
+                    "date_display": d.created_at.strftime("%d %b %Y, %I:%M %p") if d.created_at else "--",
+                    "disease_name": d.disease_name,
+                    "severity": d.severity or "None",
+                    "is_healthy": bool(d.is_healthy),
+                    "confidence": round(d.confidence, 1),
+                    "predicted_yield_t_ha": round(d.predicted_yield_t_ha, 2),
+                    "image_url": d.image_url,
+                    "weather_temp": d.weather_temp,
+                    "weather_hum": d.weather_hum,
+                    "weather_rain": d.weather_rain,
+                    "fertilizers": {
+                        "urea_kg": d.fertilizer_urea_kg,
+                        "dap_kg": d.fertilizer_dap_kg,
+                        "mop_kg": d.fertilizer_mop_kg,
+                    },
+                })
+
+            total_an = len(analyses_list)
+            if total_an > 0:
+                first_diag = analyses_list[0]
+                latest_diag = analyses_list[-1]
+
+                if latest_diag["is_healthy"]:
+                    health_score = 100
+                elif latest_diag["severity"] == "Low":
+                    health_score = 75
+                elif latest_diag["severity"] == "Moderate":
+                    health_score = 50
+                elif latest_diag["severity"] == "High":
+                    health_score = 25
+                else:
+                    health_score = 10
+
+                if total_an == 1:
+                    trend = "baseline"
+                    status_text = "Baseline Recorded"
+                elif latest_diag["is_healthy"] and not first_diag["is_healthy"]:
+                    trend = "recovered"
+                    status_text = "Fully Recovered"
+                elif (
+                    (latest_diag["severity"] in ("Low", "None") and first_diag["severity"] in ("High", "Critical", "Moderate"))
+                    or (latest_diag["predicted_yield_t_ha"] > first_diag["predicted_yield_t_ha"])
+                ):
+                    trend = "improving"
+                    status_text = "Health Improving"
+                elif latest_diag["severity"] in ("High", "Critical") and first_diag["severity"] in ("Low", "None"):
+                    trend = "deteriorating"
+                    status_text = "Action Needed"
+                else:
+                    trend = "stable"
+                    status_text = "Monitoring Stable"
+            else:
+                health_score = 100
+                trend = "no_analyses"
+                status_text = "Awaiting First Analysis"
+                latest_diag = None
+
+            output.append({
+                "plot_id": p.id,
+                "plot_name": p.plot_name,
+                "crop_type": p.crop_type,
+                "area_acres": p.area_acres,
+                "soil_type": p.soil_type,
+                "sowing_date": p.sowing_date.isoformat() if p.sowing_date else None,
+                "total_analyses": total_an,
+                "health_score": health_score,
+                "trend": trend,
+                "status_text": status_text,
+                "latest_analysis": latest_diag,
+                "analyses": analyses_list,
+            })
+
+        # 2. Check for any unassigned diagnoses not tied to a registered plot
+        unassigned_stmt = (
+            select(DiagnosisRecord)
+            .where(
+                DiagnosisRecord.user_id == user_id,
+                DiagnosisRecord.id.not_in(covered_diag_ids) if covered_diag_ids else True
+            )
+            .order_by(DiagnosisRecord.created_at.asc())
+        )
+        unassigned_diags = (await db.execute(unassigned_stmt)).scalars().all()
+
+        if unassigned_diags:
+            from collections import defaultdict
+            by_crop = defaultdict(list)
+            for d in unassigned_diags:
+                by_crop[d.crop_type.lower()].append(d)
+
+            for crop_key, diags in by_crop.items():
+                analyses_list = []
+                for idx, d in enumerate(diags):
+                    analyses_list.append({
+                        "id": d.id,
+                        "analysis_number": idx + 1,
+                        "created_at": d.created_at.isoformat() if d.created_at else None,
+                        "date_display": d.created_at.strftime("%d %b %Y, %I:%M %p") if d.created_at else "--",
+                        "disease_name": d.disease_name,
+                        "severity": d.severity or "None",
+                        "is_healthy": bool(d.is_healthy),
+                        "confidence": round(d.confidence, 1),
+                        "predicted_yield_t_ha": round(d.predicted_yield_t_ha, 2),
+                        "image_url": d.image_url,
+                        "weather_temp": d.weather_temp,
+                        "weather_hum": d.weather_hum,
+                        "weather_rain": d.weather_rain,
+                        "fertilizers": {
+                            "urea_kg": d.fertilizer_urea_kg,
+                            "dap_kg": d.fertilizer_dap_kg,
+                            "mop_kg": d.fertilizer_mop_kg,
+                        },
+                    })
+
+                latest_diag = analyses_list[-1]
+                first_diag = analyses_list[0]
+                if latest_diag["is_healthy"]:
+                    health_score = 100
+                elif latest_diag["severity"] == "Low":
+                    health_score = 75
+                elif latest_diag["severity"] == "Moderate":
+                    health_score = 50
+                elif latest_diag["severity"] == "High":
+                    health_score = 25
+                else:
+                    health_score = 10
+
+                output.append({
+                    "plot_id": None,
+                    "plot_name": f"{crop_key.title()} (Unassigned Plot)",
+                    "crop_type": crop_key,
+                    "area_acres": 1.0,
+                    "soil_type": "Medium Black",
+                    "sowing_date": None,
+                    "total_analyses": len(analyses_list),
+                    "health_score": health_score,
+                    "trend": "improving" if latest_diag["is_healthy"] and not first_diag["is_healthy"] else "stable",
+                    "status_text": "Active Field",
+                    "latest_analysis": latest_diag,
+                    "analyses": analyses_list,
+                })
+
+        return output

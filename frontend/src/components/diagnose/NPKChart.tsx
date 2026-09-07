@@ -382,6 +382,288 @@ export const NPKChart: React.FC<NPKChartProps> = ({
       ];
     }
 
+    if (c.includes('banana')) {
+      return [
+        {
+          id: 'stage-1',
+          stageNum: 1,
+          icon: '🍌',
+          titleKey: 'STAGE 1: PLANTING & BASAL (केळी लागवड व बेसल डोस)',
+          timingDays: 'Day 0–30 (Planting)',
+          dasRange: [0, 45],
+          summary: 'Full Phosphorus + 1/3rd Nitrogen & Potash in planting pit ring',
+          instructions: 'Apply DAP, MOP, and Urea in circular bands 30 cm away from pseudostem. Add 10 kg FYM per pit to prevent rhizome rot.',
+          color: '#38bdf8',
+          pPct: 100,
+          kPct: 33,
+          nPct: 33,
+        },
+        {
+          id: 'stage-2',
+          stageNum: 2,
+          icon: '🌿',
+          titleKey: 'STAGE 2: RAPID SHOOTING & DESUCKERING (शाकीय वाढ व पिल्ले काढणे)',
+          timingDays: '75–90 DAP (Days After Planting)',
+          dasRange: [46, 120],
+          summary: '1st Top-Dressing for broad lamina and robust pseudostem girth',
+          instructions: 'Side-dress 1/3rd Urea and 1/3rd MOP around drip circle. Concurrently remove unwanted sword suckers to direct nutrients into main plant.',
+          color: '#10b981',
+          pPct: 0,
+          kPct: 33,
+          nPct: 33,
+        },
+        {
+          id: 'stage-3',
+          stageNum: 3,
+          icon: '🍌',
+          titleKey: 'STAGE 3: BUNCH EMERGENCE & FINGER BULKING (केळफूल व घड फुगवण)',
+          timingDays: '150–180 DAP (Shooting Stage)',
+          dasRange: [121, 300],
+          summary: '2nd Top-Dressing for heavy hand weight & optimum bunch grade',
+          instructions: 'Apply remaining 1/3rd Urea and 1/3rd MOP. Spray 0.5% Potassium Schoenite or SOP post-shooting to maximize finger size and sweetness.',
+          color: '#f59e0b',
+          pPct: 0,
+          kPct: 34,
+          nPct: 34,
+        },
+      ];
+    }
+
+    if (c.includes('turmeric') || c.includes('haldi')) {
+      return [
+        {
+          id: 'stage-1',
+          stageNum: 1,
+          icon: '🌿',
+          titleKey: 'STAGE 1: BASAL (हळद लागवड वेळ)',
+          timingDays: 'Day 0 (Rhizome Planting)',
+          dasRange: [0, 30],
+          summary: 'Full P + 1/3rd Nitrogen & Potash under raised beds',
+          instructions: 'Apply full DAP, 1/3rd MOP, and 1/3rd Urea before laying drip lines and mulch. Incorporate Trichoderma viride enriched FYM.',
+          color: '#38bdf8',
+          pPct: 100,
+          kPct: 33,
+          nPct: 33,
+        },
+        {
+          id: 'stage-2',
+          stageNum: 2,
+          icon: '🌱',
+          titleKey: 'STAGE 2: TILLERING & RHIZOME INITIATION (फुटवे व गड्डा फुटणे)',
+          timingDays: '45–60 DAS',
+          dasRange: [31, 80],
+          summary: '1st Top-Dressing right before 1st earthing-up (मातीची भर)',
+          instructions: 'Apply 1/3rd Urea and 1/3rd MOP on raised beds before covering with soil. Promotes vigorous tiller formation and daughter rhizome nodes.',
+          color: '#10b981',
+          pPct: 0,
+          kPct: 33,
+          nPct: 33,
+        },
+        {
+          id: 'stage-3',
+          stageNum: 3,
+          icon: '🪵',
+          titleKey: 'STAGE 3: RHIZOME BULKING & CURCUMIN ACCUMULATION (गड्डा फुगवण)',
+          timingDays: '90–105 DAS',
+          dasRange: [81, 210],
+          summary: '2nd Top-Dressing for dense rhizome density & curcumin content',
+          instructions: 'Apply final 1/3rd Urea and 1/3rd MOP. Maintain optimal soil moisture without waterlogging to avert Pythium rhizome rot.',
+          color: '#f59e0b',
+          pPct: 0,
+          kPct: 34,
+          nPct: 34,
+        },
+      ];
+    }
+
+    if (c.includes('sugarcane')) {
+      return [
+        {
+          id: 'stage-1',
+          stageNum: 1,
+          icon: '🎋',
+          titleKey: 'STAGE 1: BASAL (ऊस लागवड वेळ)',
+          timingDays: 'Day 0 (Planting / Furrow Placement)',
+          dasRange: [0, 35],
+          summary: 'Full P + 1/3rd N & K drilled in planting furrows',
+          instructions: 'Place full DAP, 1/3rd MOP, and 1/3rd Urea in the furrow bottom below setts. Supplement with 10 kg/acre Zinc Sulphate.',
+          color: '#38bdf8',
+          pPct: 100,
+          kPct: 33,
+          nPct: 33,
+        },
+        {
+          id: 'stage-2',
+          stageNum: 2,
+          icon: '🌿',
+          titleKey: 'STAGE 2: FORMATIVE & TILLERING (फुटवे अवस्था व बाळबांधणी)',
+          timingDays: '60–75 DAP',
+          dasRange: [36, 100],
+          summary: '1st Top-Dressing at formative tiller phase',
+          instructions: 'Side-dress 1/3rd Urea and 1/3rd MOP along rows followed by partial earthing-up (बाळबांधणी) and irrigation.',
+          color: '#10b981',
+          pPct: 0,
+          kPct: 33,
+          nPct: 33,
+        },
+        {
+          id: 'stage-3',
+          stageNum: 3,
+          icon: '🎋',
+          titleKey: 'STAGE 3: GRAND GROWTH & FINAL EARTHING UP (मोठी बांधणी)',
+          timingDays: '120–135 DAP',
+          dasRange: [101, 330],
+          summary: 'Final Top-Dressing before canopy closes',
+          instructions: 'Apply remaining 1/3rd Urea and 1/3rd MOP before heavy earthing-up (मोठी बांधणी). Prevents cane lodging and fuels high sucrose %.',
+          color: '#f59e0b',
+          pPct: 0,
+          kPct: 34,
+          nPct: 34,
+        },
+      ];
+    }
+
+    if (c.includes('onion')) {
+      return [
+        {
+          id: 'stage-1',
+          stageNum: 1,
+          icon: '🧅',
+          titleKey: 'STAGE 1: BASAL (कांदा पुनर्लागवड वेळ)',
+          timingDays: 'Day 0 (Transplanting)',
+          dasRange: [0, 20],
+          summary: 'Full P & K + 50% Nitrogen incorporated in flat/raised bed',
+          instructions: 'Broadcast and incorporate full DAP, full MOP, and 50% Urea into soil before transplanting seedlings. Ensure good organic matter.',
+          color: '#38bdf8',
+          pPct: 100,
+          kPct: 100,
+          nPct: 50,
+        },
+        {
+          id: 'stage-2',
+          stageNum: 2,
+          icon: '🌿',
+          titleKey: 'STAGE 2: VEGETATIVE VIGOR (शाकीय वाढ व मान जाड होणे)',
+          timingDays: '30 DAT (Days After Transplanting)',
+          dasRange: [21, 45],
+          summary: '1st Top-Dressing for strong neck and leaf canopy',
+          instructions: 'Side-dress 25% Urea along rows followed immediately by light irrigation. Avoid excessive water stagnancy.',
+          color: '#10b981',
+          pPct: 0,
+          kPct: 0,
+          nPct: 25,
+        },
+        {
+          id: 'stage-3',
+          stageNum: 3,
+          icon: '🧅',
+          titleKey: 'STAGE 3: BULB BULKING & SIZING (कांदा फुगवण अवस्था)',
+          timingDays: '45–60 DAT',
+          dasRange: [46, 110],
+          summary: 'Final Top-Dressing for compact, high-grade bulbs',
+          instructions: 'Apply remaining 25% Urea. Stop nitrogen after 60 DAT to prevent thick neck onions (डेंगळे) and enhance storage longevity.',
+          color: '#f59e0b',
+          pPct: 0,
+          kPct: 0,
+          nPct: 25,
+        },
+      ];
+    }
+
+    if (c.includes('rice') || c.includes('paddy')) {
+      return [
+        {
+          id: 'stage-1',
+          stageNum: 1,
+          icon: '🌾',
+          titleKey: 'STAGE 1: BASAL (भात पुनर्लागवड वेळ)',
+          timingDays: 'Day 0 (Transplanting)',
+          dasRange: [0, 15],
+          summary: 'Full P + 50% K + 1/3rd Nitrogen in puddled soil',
+          instructions: 'Incorporate full DAP, half MOP, and 1/3rd Urea into the final puddle before transplanting 21-day old seedlings.',
+          color: '#38bdf8',
+          pPct: 100,
+          kPct: 50,
+          nPct: 33,
+        },
+        {
+          id: 'stage-2',
+          stageNum: 2,
+          icon: '🌱',
+          titleKey: 'STAGE 2: ACTIVE TILLERING (फुटवे फुटणे)',
+          timingDays: '20–25 DAT',
+          dasRange: [16, 35],
+          summary: '1st Top-Dressing for maximum productive tillers',
+          instructions: 'Broadcast 1/3rd Urea in standing water (2-3 cm depth) after hand weeding or cono-weeder operation.',
+          color: '#10b981',
+          pPct: 0,
+          kPct: 0,
+          nPct: 33,
+        },
+        {
+          id: 'stage-3',
+          stageNum: 3,
+          icon: '🌾',
+          titleKey: 'STAGE 3: PANICLE INITIATION (पोंगा / लोंबी भरण्याची अवस्था)',
+          timingDays: '40–45 DAT',
+          dasRange: [36, 120],
+          summary: '2nd Top-Dressing for long grain panicles and filled spikelets',
+          instructions: 'Apply remaining 1/3rd Urea and remaining 50% MOP. Potash here ensures bold grains and disease resistance against blast.',
+          color: '#f59e0b',
+          pPct: 0,
+          kPct: 50,
+          nPct: 34,
+        },
+      ];
+    }
+
+    if (c.includes('wheat')) {
+      return [
+        {
+          id: 'stage-1',
+          stageNum: 1,
+          icon: '🌾',
+          titleKey: 'STAGE 1: BASAL (गहू पेरणीच्या वेळी)',
+          timingDays: 'Day 0 (Sowing)',
+          dasRange: [0, 15],
+          summary: 'Full P & K + 50% Nitrogen drilled with seed',
+          instructions: 'Drill 100% DAP and 100% MOP with 50% Urea at sowing depth 5 cm using seed-cum-fertilizer drill.',
+          color: '#38bdf8',
+          pPct: 100,
+          kPct: 100,
+          nPct: 50,
+        },
+        {
+          id: 'stage-2',
+          stageNum: 2,
+          icon: '🌱',
+          titleKey: 'STAGE 2: CROWN ROOT INITIATION - CRI (मुकुट मुळे फुटणे)',
+          timingDays: '20–25 DAS (1st Irrigation)',
+          dasRange: [16, 35],
+          summary: '1st Top-Dressing at critical crown root formation',
+          instructions: 'Top-dress 25% Urea immediately prior to the first irrigation (मुकुट मुळे फुटण्याची वेळ). Most critical stage for yield.',
+          color: '#10b981',
+          pPct: 0,
+          kPct: 0,
+          nPct: 25,
+        },
+        {
+          id: 'stage-3',
+          stageNum: 3,
+          icon: '🌾',
+          titleKey: 'STAGE 3: JOINTING & BOOTING (कांडी अवस्था व लोंबी भरणे)',
+          timingDays: '40–45 DAS (2nd/3rd Irrigation)',
+          dasRange: [36, 115],
+          summary: 'Final Top-Dressing for spikelet fertility & grain count',
+          instructions: 'Apply remaining 25% Urea before jointing stage irrigation to avert spikelet abortion and boost test weight.',
+          color: '#f59e0b',
+          pPct: 0,
+          kPct: 0,
+          nPct: 25,
+        },
+      ];
+    }
+
     // Generic standard 3-stage ICAR schedule for all other crops
     return [
       {
@@ -564,7 +846,7 @@ END:VCALENDAR`;
 
         {/* Land Area & Unit Controls */}
         <div className="fert-sched-controls">
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>📐 Land Size:</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>📐 {t('land_size')}</span>
           <input
             type="number"
             min="0.1"

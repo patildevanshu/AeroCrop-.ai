@@ -18,14 +18,14 @@ from services.disease_service import DiseaseService
 
 
 class TestDiseaseServiceCount:
-    def test_exactly_38_diseases(self):
-        """Exactly 38 PlantVillage classes must be registered."""
-        assert DiseaseService.get_class_count() == 38
+    def test_exactly_56_diseases(self):
+        """All 56 pathology classes must be registered."""
+        assert DiseaseService.get_class_count() == 56
 
-    def test_indices_are_zero_to_37(self):
-        """Indices must form a contiguous 0..37 range."""
+    def test_indices_are_zero_to_55(self):
+        """Indices must form a contiguous 0..55 range."""
         indices = [d.class_idx for d in DiseaseService.DISEASES]
-        assert indices == list(range(38)), "Indices must be 0..37 in order"
+        assert indices == list(range(56)), "Indices must be 0..55 in order"
 
 
 class TestDiseaseServiceOrdering:
@@ -117,7 +117,7 @@ class TestDiseaseServiceLookup:
 
     def test_get_all_names_length(self):
         names = DiseaseService.get_all_names()
-        assert len(names) == 38
+        assert len(names) == 56
 
     def test_all_healthy_classes_have_no_treatments(self):
         """Healthy classes should have empty treatment lists."""

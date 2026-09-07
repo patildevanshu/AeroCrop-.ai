@@ -15,7 +15,7 @@ const RADAR_DISTRICTS = [
 ];
 
 export const WeatherRadarCard: React.FC = () => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [radarData, setRadarData] = useState<Record<string, WeatherData | null>>({});
   const [loading, setLoading] = useState(true);
 
@@ -44,6 +44,28 @@ export const WeatherRadarCard: React.FC = () => {
     };
   }, []);
 
+  const DISTRICT_NAMES_MR: Record<string, string> = {
+    pune: 'पुणे',
+    nagpur: 'नागपूर',
+    nashik: 'नाशिक',
+    aurangabad: 'छ. संभाजीनगर',
+    amravati: 'अमरावती',
+    kolhapur: 'कोल्हापूर',
+    solapur: 'सोलापूर',
+    akola: 'अकोला',
+  };
+
+  const DISTRICT_NAMES_HI: Record<string, string> = {
+    pune: 'पुणे',
+    nagpur: 'नागपुर',
+    nashik: 'नासिक',
+    aurangabad: 'छ. संभाजीनगर',
+    amravati: 'अमरावती',
+    kolhapur: 'कोल्हापुर',
+    solapur: 'सोलापुर',
+    akola: 'अकोला',
+  };
+
   return (
     <div className="card glass dash-card">
       <h2 className="card-title">
@@ -59,24 +81,31 @@ export const WeatherRadarCard: React.FC = () => {
         ) : (
           RADAR_DISTRICTS.map((district) => {
             const data = radarData[district];
-            const label = district.charAt(0).toUpperCase() + district.slice(1);
+            const localizedDistrict = language === 'mr'
+              ? (DISTRICT_NAMES_MR[district] || district)
+              : (language === 'hi' ? (DISTRICT_NAMES_HI[district] || district) : (district.charAt(0).toUpperCase() + district.slice(1)));
 
             if (!data) {
               return (
                 <div key={district} className="radar-card glass">
-                  <p className="radar-district">{label}</p>
+                  <p className="radar-district">{localizedDistrict}</p>
                   <p className="no-history" style={{ fontSize: '0.75rem' }}>
-                    Unavailable
+                    {t('unavailable')}
                   </p>
                 </div>
               );
             }
 
+            const temp = data.temperature != null ? `${data.temperature}°C` : '--';
+            const hum = data.humidity != null ? `${data.humidity}%` : '--';
+            const rain = data.rainfall != null ? `${data.rainfall} mm` : '--';
+            const wind = data.wind_speed != null ? `${data.wind_speed} km/h` : '8 km/h';
+
             return (
               <div key={district} className="radar-card glass">
-                <p className="radar-district">{label}</p>
-                <p className="radar-temp">🌡️ {data.temperature}°C &bull; 💧 {data.humidity}%</p>
-                <p className="radar-rain">🌧️ {data.rainfall} mm &bull; 💨 {data.wind_speed || 8} km/h</p>
+                <p className="radar-district">{localizedDistrict}</p>
+                <p className="radar-temp">🌡️ {temp} &bull; 💧 {hum}</p>
+                <p className="radar-rain">🌧️ {rain} &bull; 💨 {wind}</p>
                 {data.spray_window && (
                   <span style={{
                     display: 'inline-block',
@@ -88,7 +117,7 @@ export const WeatherRadarCard: React.FC = () => {
                     background: data.spray_window.safe ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                     color: data.spray_window.safe ? '#34d399' : '#f87171'
                   }}>
-                    {data.spray_window.safe ? '🟢 Safe Spray' : '🔴 Hold Spray'}
+                    {data.spray_window.safe ? t('spray_safe') : t('spray_hold')}
                   </span>
                 )}
                 {data.source === 'mock' && (

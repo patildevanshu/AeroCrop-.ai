@@ -31,6 +31,10 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '' }
 
   const resultsRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    setSelectedPlotId(initialPlotId);
+  }, [initialPlotId]);
+
   // Load districts on mount
   useEffect(() => {
     fetchDistricts()

@@ -18,6 +18,7 @@ import io
 import pytest
 from PIL import Image
 from fastapi.testclient import TestClient
+import config
 from main import app
 
 client = TestClient(app)
@@ -92,8 +93,8 @@ class TestDiseaseClassesEndpoint:
     def test_disease_classes_count(self):
         r = client.get("/api/disease/classes")
         data = r.json()
-        assert data["count"] == 38
-        assert len(data["diseases"]) == 38
+        assert data["count"] == config.NUM_DISEASE_CLASSES
+        assert len(data["diseases"]) == config.NUM_DISEASE_CLASSES
 
     def test_each_disease_has_required_fields(self):
         r = client.get("/api/disease/classes")

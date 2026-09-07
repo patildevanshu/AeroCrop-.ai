@@ -65,7 +65,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const user = await getCurrentUser();
       setCurrentUser(user);
-      if (user.preferred_language) {
+      const savedLang = localStorage.getItem('aerocrop_lang');
+      if (!savedLang && user.preferred_language) {
         setLanguage(user.preferred_language);
       }
       await refreshPlots();
@@ -96,7 +97,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const data = await loginFarmer(payload);
     setAuthToken(data.access_token);
     setCurrentUser(data.user);
-    if (data.user.preferred_language) {
+    const savedLang = localStorage.getItem('aerocrop_lang');
+    if (!savedLang && data.user.preferred_language) {
       setLanguage(data.user.preferred_language);
     }
     setIsAuthModalOpen(false);

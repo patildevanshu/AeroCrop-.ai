@@ -150,6 +150,38 @@ COMMODITY_METADATA: dict[str, dict[str, Any]] = {
         "default_modal": 1850.0,
         "unit": "₹ / Quintal (100 kg)",
     },
+    "banana": {
+        "name_en": "Banana",
+        "name_mr": "केळी",
+        "name_hi": "केला",
+        "msp_inr_quintal": 0.0,
+        "default_modal": 1750.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
+    "turmeric": {
+        "name_en": "Turmeric (Haldi)",
+        "name_mr": "हळद",
+        "name_hi": "हल्दी",
+        "msp_inr_quintal": 0.0,
+        "default_modal": 14200.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
+    "sugarcane": {
+        "name_en": "Sugarcane",
+        "name_mr": "ऊस",
+        "name_hi": "गन्ना",
+        "msp_inr_quintal": 315.0,  # Statutory FRP per quintal (₹3,150/tonne)
+        "default_modal": 340.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
+    "onion": {
+        "name_en": "Onion",
+        "name_mr": "कांदा",
+        "name_hi": "प्याज",
+        "msp_inr_quintal": 0.0,
+        "default_modal": 2150.0,
+        "unit": "₹ / Quintal (100 kg)",
+    },
 }
 
 # Major APMC Hubs for Maharashtra Districts

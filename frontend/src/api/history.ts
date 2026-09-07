@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import { HistoryRecord } from '../types';
+import { HistoryRecord, CropProgressResponse } from '../types';
 
 const LOCAL_HISTORY_KEY = 'aerocrop_history';
 
@@ -8,6 +8,10 @@ export async function fetchFarmerHistory(cropType?: string): Promise<{ count: nu
     ? `/api/farmer/history?crop_type=${encodeURIComponent(cropType)}`
     : '/api/farmer/history';
   return apiFetch<{ count: number; records: HistoryRecord[] }>(url);
+}
+
+export async function fetchCropProgress(): Promise<CropProgressResponse> {
+  return apiFetch<CropProgressResponse>('/api/farmer/crop-progress');
 }
 
 export function getLocalHistory(): HistoryRecord[] {

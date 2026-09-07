@@ -37,6 +37,16 @@ export interface FarmPlot {
   notes: string | null;
   created_at: string;
   total_diagnoses: number;
+  health_score?: number;
+  recent_analyses?: Array<{
+    id: number;
+    disease_name: string;
+    is_healthy: boolean;
+    severity: string;
+    confidence: number;
+    predicted_yield_t_ha: number;
+    created_at: string | null;
+  }>;
   latest_diagnosis: LatestPlotDiagnosis | null;
 }
 
@@ -164,3 +174,45 @@ export interface DiseaseClassItem {
   chemical_treatment: string[];
   organic_treatment: string[];
 }
+
+export interface AnalysisProgressItem {
+  id: number;
+  analysis_number: number;
+  created_at: string | null;
+  date_display: string;
+  disease_name: string;
+  severity: string;
+  is_healthy: boolean;
+  confidence: number;
+  predicted_yield_t_ha: number;
+  image_url: string | null;
+  weather_temp?: number | null;
+  weather_hum?: number | null;
+  weather_rain?: number | null;
+  fertilizers?: {
+    urea_kg?: number | null;
+    dap_kg?: number | null;
+    mop_kg?: number | null;
+  };
+}
+
+export interface CropProgressPlot {
+  plot_id: number | null;
+  plot_name: string;
+  crop_type: string;
+  area_acres: number;
+  soil_type: string;
+  sowing_date: string | null;
+  total_analyses: number;
+  health_score: number;
+  trend: 'baseline' | 'improving' | 'recovered' | 'deteriorating' | 'stable' | 'no_analyses';
+  status_text: string;
+  latest_analysis: AnalysisProgressItem | null;
+  analyses: AnalysisProgressItem[];
+}
+
+export interface CropProgressResponse {
+  count: number;
+  crops: CropProgressPlot[];
+}
+

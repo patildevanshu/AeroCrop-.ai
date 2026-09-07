@@ -12,12 +12,15 @@ interface ResultsAreaProps {
 }
 
 export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const { mock_mode, low_confidence, saved_record_id, disease, fertilizer, weather, mandi } = result;
 
   const sprayWindow = weather?.spray_window;
   const sprayReason = sprayWindow
     ? (language === 'mr' ? sprayWindow.reason_mr : (language === 'hi' ? sprayWindow.reason_hi : sprayWindow.reason))
+    : '';
+  const sprayBadgeLocalized = sprayWindow
+    ? (sprayWindow.safe ? t('spray_safe') : (sprayWindow.status === 'warning' ? t('spray_caution') : t('spray_hold')))
     : '';
 
   return (
@@ -26,10 +29,7 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
       {mock_mode && (
         <div className="mock-banner" role="alert">
           <span aria-hidden="true">⚡</span>
-          <span>
-            Running in <strong>Smart Mock Mode</strong> — results are agronomically derived estimates.
-            Train and load neural weights for live neural inference.
-          </span>
+          <span>{t('mock_mode_notice')}</span>
         </div>
       )}
 
@@ -37,9 +37,7 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
       {saved_record_id && (
         <div className="saved-history-banner" role="status">
           <span aria-hidden="true">💾</span>
-          <span>
-            <strong>Saved to Your Farm Records</strong> — Successfully linked to your farmer account history.
-          </span>
+          <span>{t('saved_records_notice')}</span>
         </div>
       )}
 
@@ -47,9 +45,7 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
       {low_confidence && (
         <div className="low-conf-banner" role="alert">
           <span aria-hidden="true">⚠️</span>
-          <span>
-            <strong>Low Confidence</strong> — The model is uncertain about this leaf image. Ensure the leaf is clearly photographed against a neutral background.
-          </span>
+          <span>{t('low_confidence_notice')}</span>
         </div>
       )}
 
@@ -82,7 +78,7 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
               fontSize: '0.95rem',
               color: sprayWindow.status === 'danger' ? '#f87171' : (sprayWindow.status === 'warning' ? '#fbbf24' : '#34d399')
             }}>
-              {sprayWindow.badge}
+              {sprayBadgeLocalized || sprayWindow.badge}
             </strong>
             <span style={{ fontSize: '0.88rem', color: '#e2e8f0' }}>{sprayReason}</span>
           </div>

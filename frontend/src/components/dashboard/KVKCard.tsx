@@ -41,7 +41,7 @@ export const KVKCard: React.FC = () => {
         </h2>
         <input
           type="search"
-          placeholder="Search district or center…"
+          placeholder={t('kvk_search_placeholder')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{
@@ -57,7 +57,7 @@ export const KVKCard: React.FC = () => {
       </div>
 
       <p style={{ margin: '0.5rem 0 1rem 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-        Direct contact directory for Indian Council of Agricultural Research (ICAR) Krishi Vigyan Kendras for second opinions and severe field outbreaks.
+        {t('kvk_subtitle')}
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>

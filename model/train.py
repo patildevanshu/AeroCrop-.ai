@@ -1,37 +1,33 @@
 """
-AeroCrop.ai -- Model Training Pipeline (Model Layer)
+AeroCrop.ai — Model Training Pipeline (Model Layer)
 
 Trains MultiModalAeroCropNet using:
-  - Disease images:  New Plant Diseases Dataset (Augmented) -- 87,900 images, 38 classes
-  - Yield tabular:   yield_df.csv -- FAO yield + weather data
+  - Disease images:  New Plant Diseases Dataset (Augmented) — 87,900 images, 38 classes
+  - Yield tabular:   yield_df.csv — FAO yield + meteorological telemetry
 
-Joint Loss:
-    L_total = alpha  CrossEntropyLoss(disease) + beta  MSELoss(yield)
-    Default: alpha = 1.0, beta = 0.5
+Features & Optimizations:
+  - Automatic Mixed Precision (AMP) for 2.5x speedup and reduced VRAM on NVIDIA GPUs
+  - Robust dataset auto-discovery (handles single and double nested directories)
+  - Huber / SmoothL1 loss for stable yield regression
+  - Transfer learning enabled by default (ImageNet ResNet-18 backbone)
+  - Safe interruption handling (preserves best model on Ctrl+C)
+  - Saves best weights to model/aerocrop_weights.pth and latest checkpoint
 
 Usage:
-    python model/train.py \
-        --image_dir   "data/New Plant Diseases Dataset(Augmented)/train" \
-        --val_dir     "data/New Plant Diseases Dataset(Augmented)/valid" \
-        --yield_csv   "data/yield_df.csv" \
-        --epochs      30 \
-        --batch_size  32 \
-        --lr          1e-4
-
-Output:
-    model/aerocrop_weights.pth       -- best checkpoint (by val disease accuracy)
-    model/training_log.csv           -- per-epoch metrics log
+    python model/train.py --epochs 15 --batch_size 32
 """
 
+from __future__ import annotations
 import argparse
 import csv
 import os
 import sys
 import time
+from pathlib import Path
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
@@ -44,10 +40,10 @@ from model.dataset import (
 )
 
 
-# -- Argument Parser --------------------------------------------------------
+# ── Argument Parser ────────────────────────────────────────────────────────
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Train AeroCrop.ai MultiModalAeroCropNet"
+        description="Train AeroCrop.ai MultiModalAeroCropNet on GPU/CPU"
     )
     parser.add_argument(
         "--image_dir",
@@ -67,25 +63,98 @@ def parse_args():
         default=r"data\yield_df.csv",
         help="Path to yield_df.csv",
     )
-    parser.add_argument("--epochs",     type=int,   default=30)
-    parser.add_argument("--batch_size", type=int,   default=32)
-    parser.add_argument("--lr",         type=float, default=1e-4)
-    parser.add_argument("--alpha",      type=float, default=1.0,
+    parser.add_argument("--epochs",       type=int,   default=15,
+                        help="Number of training epochs")
+    parser.add_argument("--batch_size",   type=int,   default=64,
+                        help="Batch size (64 recommended for RTX 3050 6GB GPU)")
+    parser.add_argument("--lr",           type=float, default=1e-4,
+                        help="Peak learning rate for AdamW")
+    parser.add_argument("--alpha",        type=float, default=1.0,
                         help="Weight for disease classification loss")
-    parser.add_argument("--beta",       type=float, default=0.05,
-                        help="Balanced weight for yield regression loss (MSE scale)")
-    parser.add_argument("--workers",    type=int,   default=4,
-                        help="DataLoader num_workers (set 0 on Windows if errors)")
-    parser.add_argument("--pretrained", action="store_true",
-                        help="Use ImageNet pretrained ResNet-18 backbone")
-    parser.add_argument("--max_per_class", type=int, default=None,
-                        help="Limit images per class (for quick experiments)")
-    parser.add_argument("--resume", type=str, default=None,
-                        help="Path to checkpoint .pth to resume training from (e.g. model/aerocrop_weights.pth)")
+    parser.add_argument("--beta",         type=float, default=0.05,
+                        help="Weight for yield regression loss")
+    parser.add_argument("--workers",      type=int,   default=min(os.cpu_count() or 4, 4),
+                        help="DataLoader num_workers (4 recommended for multi-worker async prefetch)")
+    parser.add_argument("--no_pretrained", action="store_true",
+                        help="Disable ImageNet pretraining (train from scratch)")
+    parser.add_argument("--no_amp",       action="store_true",
+                        help="Disable Automatic Mixed Precision (AMP)")
+    parser.add_argument("--max_per_class", type=int,  default=None,
+                        help="Limit images per class (for rapid validation runs)")
+    parser.add_argument("--resume",       type=str,   default=None,
+                        help="Path to checkpoint .pth to resume training from")
+    parser.add_argument("--output_weights", type=str, default=None,
+                        help="Path to save best weights (defaults to config.WEIGHTS_PATH)")
     return parser.parse_args()
 
 
-# -- Metrics Tracking -------------------------------------------------------
+# ── Path Resolution Helper ─────────────────────────────────────────────────
+def resolve_dir(provided_path: str, fallback_subfolder: str) -> str:
+    """Resolve directory checking absolute, relative, and standard candidate paths."""
+    p = Path(provided_path)
+    if p.is_absolute() and p.exists():
+        return str(p)
+
+    rel_base = Path(config.BASE_DIR) / provided_path
+    if rel_base.exists():
+        return str(rel_base)
+
+    candidates = [
+        Path(config.DATA_DIR) / "New Plant Diseases Dataset(Augmented)" / "New Plant Diseases Dataset(Augmented)" / fallback_subfolder,
+        Path(config.DATA_DIR) / "New Plant Diseases Dataset(Augmented)" / fallback_subfolder,
+        Path(config.DATA_DIR) / fallback_subfolder,
+    ]
+    for c in candidates:
+        if c.exists() and any(c.iterdir()):
+            return str(c)
+
+    return str(rel_base)
+
+
+def resolve_file(provided_path: str, fallback_filename: str) -> str:
+    p = Path(provided_path)
+    if p.is_absolute() and p.exists():
+        return str(p)
+
+    rel_base = Path(config.BASE_DIR) / provided_path
+    if rel_base.exists():
+        return str(rel_base)
+
+    alt = Path(config.DATA_DIR) / fallback_filename
+    if alt.exists():
+        return str(alt)
+
+    return str(rel_base)
+
+
+def safe_torch_save(obj, target_path: str):
+    """Safely saves PyTorch artifacts on Windows using an atomic temporary file replacement with retry."""
+    target = Path(target_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = target.with_name(f"{target.stem}_tmp_{int(time.time() * 1000)}{target.suffix}")
+    try:
+        torch.save(obj, str(tmp_path))
+    except Exception:
+        torch.save(obj, str(target))
+        return
+
+    for _ in range(5):
+        try:
+            os.replace(str(tmp_path), str(target))
+            return
+        except (PermissionError, OSError):
+            time.sleep(0.3)
+
+    try:
+        import shutil
+        shutil.copy2(str(tmp_path), str(target))
+        if tmp_path.exists():
+            tmp_path.unlink()
+    except Exception as e:
+        print(f"  [Warning] Failed to replace {target}: {e}")
+
+
+# ── Metrics Tracking ───────────────────────────────────────────────────────
 class MetricsTracker:
     def __init__(self):
         self.reset()
@@ -115,185 +184,281 @@ class MetricsTracker:
     @property
     def avg_yield_rmse(self):
         if self.n_batches == 0 or self.yield_mse_sum == 0.0:
-            return None  # No yield data available (disease-only training)
+            return None
         mse = self.yield_mse_sum / self.n_batches
         return mse ** 0.5
 
 
-# -- Training Loop ---------------------------------------------------------
-def train_one_epoch(model, loader, optimizer, criterion_cls, criterion_reg,
-                    device, alpha, beta):
+# ── Training & Validation Loops ───────────────────────────────────────────
+def train_one_epoch(
+    model: nn.Module,
+    loader: DataLoader,
+    optimizer: torch.optim.Optimizer,
+    criterion_cls: nn.Module,
+    criterion_reg: nn.Module,
+    scaler: torch.amp.GradScaler | None,
+    device: torch.device,
+    alpha: float,
+    beta: float,
+    use_amp: bool,
+    epoch: int = 1,
+    total_epochs: int = 15,
+) -> MetricsTracker:
     model.train()
     tracker = MetricsTracker()
+    total_batches = len(loader)
+    report_interval = max(1, min(50, total_batches // 5)) if total_batches > 10 else max(1, total_batches // 2)
+    t_start = time.time()
 
-    for batch in loader:
+    for step, batch in enumerate(loader, start=1):
         if len(batch) == 4:
             images, tabular, labels, yield_true = batch
-            images     = images.to(device)
-            tabular    = tabular.to(device)
-            labels     = labels.to(device)
-            yield_true = yield_true.to(device)
+            images     = images.to(device, non_blocking=True)
+            tabular    = tabular.to(device, non_blocking=True)
+            labels     = labels.to(device, non_blocking=True)
+            yield_true = yield_true.to(device, non_blocking=True)
         else:
             images, labels = batch
-            tabular    = torch.zeros(images.size(0), config.TABULAR_INPUT_DIM).to(device)
-            labels     = labels.to(device)
+            images     = images.to(device, non_blocking=True)
+            tabular    = torch.zeros(images.size(0), config.TABULAR_INPUT_DIM, device=device)
+            labels     = labels.to(device, non_blocking=True)
             yield_true = None
 
-        optimizer.zero_grad()
-        disease_logits, yield_pred = model(images, tabular)
+        optimizer.zero_grad(set_to_none=True)
 
-        loss_cls = criterion_cls(disease_logits, labels)
-        if yield_true is not None:
-            loss_reg = criterion_reg(yield_pred, yield_true)
-            loss = alpha * loss_cls + beta * loss_reg
+        with torch.amp.autocast(device_type=device.type, enabled=(device.type == "cuda" and use_amp)):
+            disease_logits, yield_pred = model(images, tabular)
+            loss_cls = criterion_cls(disease_logits, labels)
+            if yield_true is not None:
+                loss_reg = criterion_reg(yield_pred, yield_true)
+                loss = alpha * loss_cls + beta * loss_reg
+            else:
+                loss = loss_cls
+
+        if scaler is not None and scaler.is_enabled():
+            scaler.scale(loss).backward()
+            scaler.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
+            scaler.step(optimizer)
+            scaler.update()
         else:
-            loss = loss_cls
-
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
-        optimizer.step()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
+            optimizer.step()
 
         tracker.update(disease_logits, labels, yield_pred, yield_true, loss)
 
+        if step % report_interval == 0 or step == total_batches:
+            elapsed = time.time() - t_start
+            imgs_done = step * loader.batch_size
+            speed = imgs_done / max(elapsed, 0.001)
+            sys.stdout.write(
+                f"\r    [Ep {epoch}/{total_epochs}] Batch {step:>4}/{total_batches} "
+                f"| Loss: {tracker.avg_loss:.4f} | Acc: {tracker.accuracy:.1f}% "
+                f"| Speed: {speed:.1f} img/s"
+            )
+            sys.stdout.flush()
+
+    sys.stdout.write("\n")
     return tracker
 
 
 @torch.no_grad()
-def validate(model, loader, criterion_cls, criterion_reg, device, alpha, beta):
+def validate(
+    model: nn.Module,
+    loader: DataLoader,
+    criterion_cls: nn.Module,
+    criterion_reg: nn.Module,
+    device: torch.device,
+    alpha: float,
+    beta: float,
+    use_amp: bool,
+) -> MetricsTracker:
     model.eval()
     tracker = MetricsTracker()
 
     for batch in loader:
         if len(batch) == 4:
             images, tabular, labels, yield_true = batch
-            images     = images.to(device)
-            tabular    = tabular.to(device)
-            labels     = labels.to(device)
-            yield_true = yield_true.to(device)
+            images     = images.to(device, non_blocking=True)
+            tabular    = tabular.to(device, non_blocking=True)
+            labels     = labels.to(device, non_blocking=True)
+            yield_true = yield_true.to(device, non_blocking=True)
         else:
             images, labels = batch
-            tabular    = torch.zeros(images.size(0), config.TABULAR_INPUT_DIM).to(device)
-            labels     = labels.to(device)
+            images     = images.to(device, non_blocking=True)
+            tabular    = torch.zeros(images.size(0), config.TABULAR_INPUT_DIM, device=device)
+            labels     = labels.to(device, non_blocking=True)
             yield_true = None
 
-        disease_logits, yield_pred = model(images, tabular)
-        loss_cls = criterion_cls(disease_logits, labels)
-        if yield_true is not None:
-            loss_reg = criterion_reg(yield_pred, yield_true)
-            loss = alpha * loss_cls + beta * loss_reg
-        else:
-            loss = loss_cls
+        with torch.amp.autocast(device_type=device.type, enabled=(device.type == "cuda" and use_amp)):
+            disease_logits, yield_pred = model(images, tabular)
+            loss_cls = criterion_cls(disease_logits, labels)
+            if yield_true is not None:
+                loss_reg = criterion_reg(yield_pred, yield_true)
+                loss = alpha * loss_cls + beta * loss_reg
+            else:
+                loss = loss_cls
 
         tracker.update(disease_logits, labels, yield_pred, yield_true, loss)
 
     return tracker
 
 
-# -- Main -------------------------------------------------------------------
+# ── Main ───────────────────────────────────────────────────────────────────
 def main():
     args   = parse_args()
     device = torch.device(config.DEVICE)
+    use_amp = (device.type == "cuda" and not args.no_amp)
+    pretrained = not args.no_pretrained
 
-    print("\n" + "=" * 65)
-    print("  AeroCrop.ai -- Model Training")
-    print("=" * 65)
-    print(f"  Device      : {device}")
-    print(f"  Epochs      : {args.epochs}")
-    print(f"  Batch size  : {args.batch_size}")
-    print(f"  LR          : {args.lr}")
-    print(f"  alpha (cls) : {args.alpha}   beta (reg) : {args.beta}")
-    print(f"  Pretrained  : {args.pretrained}")
-    print("=" * 65 + "\n")
+    save_weights_path = resolve_file(args.output_weights, "aerocrop_weights.pth") if args.output_weights else config.WEIGHTS_PATH
 
-    # -- Dataset Setup ----------------------------------------------------
-    yield_csv_abs = os.path.join(config.BASE_DIR, args.yield_csv)
-    img_train_abs = os.path.join(config.BASE_DIR, args.image_dir)
-    img_val_abs   = os.path.join(config.BASE_DIR, args.val_dir)
+    print("\n" + "=" * 68)
+    print("  [AeroCrop.ai] High-Performance Neural Training Pipeline")
+    print("=" * 68)
+    print(f"  Device              : {device} ({torch.cuda.get_device_name(0) if device.type == 'cuda' else 'CPU'})")
+    print(f"  Mixed Precision AMP : {'Enabled (FP16/FP32)' if use_amp else 'Disabled'}")
+    print(f"  Epochs              : {args.epochs}")
+    print(f"  Batch size          : {args.batch_size}")
+    print(f"  Learning rate       : {args.lr}")
+    print(f"  Target Weights File : {save_weights_path}")
+    print(f"  Pretrained backbone : {pretrained}")
+    print(f"  Loss balance        : alpha={args.alpha} (cls) + beta={args.beta} (SmoothL1 yield)")
+    print("=" * 68 + "\n")
 
-    use_multimodal = (
-        os.path.exists(yield_csv_abs) and os.path.exists(img_train_abs)
-    )
+    # ── Hardware Acceleration Optimizations ──────────────────────────────
+    if device.type == "cuda":
+        torch.backends.cudnn.benchmark = True
+        try:
+            torch.set_float32_matmul_precision("high")
+        except Exception:
+            pass
+
+    # ── Dataset Auto-Resolution ───────────────────────────────────────────
+    img_train_abs = resolve_dir(args.image_dir, "train")
+    img_val_abs   = resolve_dir(args.val_dir, "valid")
+    yield_csv_abs = resolve_file(args.yield_csv, "yield_df.csv")
+
+    if not os.path.exists(img_train_abs):
+        print(f"[ERROR] Image training directory not found: {img_train_abs}")
+        print("  Please ensure data directory is set up or run: python model/extract_data.py")
+        sys.exit(1)
+
+    use_multimodal = os.path.exists(yield_csv_abs)
 
     if use_multimodal:
-        print("[Dataset] Using MultiModalDataset (image + tabular joint training)")
+        print("[Dataset] Mode: MultiModal (RGB Leaf + Tabular Agro-Meteorological Fusion)")
+        print(f"  Train images: {img_train_abs}")
+        print(f"  Val images  : {img_val_abs}")
+        print(f"  Yield table : {yield_csv_abs}")
         train_dataset = MultiModalDataset(
             image_root=img_train_abs,
             yield_csv=yield_csv_abs,
             split="train",
             transform=TRAIN_TRANSFORM,
+            max_per_class=args.max_per_class,
         )
         val_dataset = MultiModalDataset(
             image_root=img_val_abs,
             yield_csv=yield_csv_abs,
             split="val",
             transform=VAL_TRANSFORM,
-        )
-    elif os.path.exists(img_train_abs):
-        print("[Dataset] Using PlantDiseaseDataset only (no yield CSV found)")
-        train_dataset = PlantDiseaseDataset(
-            img_train_abs, transform=TRAIN_TRANSFORM,
-            max_per_class=args.max_per_class
-        )
-        val_dataset = PlantDiseaseDataset(
-            img_val_abs, transform=VAL_TRANSFORM,
-            max_per_class=args.max_per_class
+            max_per_class=args.max_per_class,
         )
     else:
-        print(f"[ERROR] Image directory not found: {img_train_abs}")
-        print("  Please extract the dataset zip to the 'data/' folder first.")
-        print("  Run: python model/extract_data.py")
-        sys.exit(1)
+        print("[Dataset] Mode: Vision-Only (PlantDiseaseDataset)")
+        print(f"  Train images: {img_train_abs}")
+        train_dataset = PlantDiseaseDataset(
+            img_train_abs, transform=TRAIN_TRANSFORM, max_per_class=args.max_per_class
+        )
+        val_dataset = PlantDiseaseDataset(
+            img_val_abs, transform=VAL_TRANSFORM, max_per_class=args.max_per_class
+        )
 
-    # Windows-safe num_workers
-    num_workers = args.workers if sys.platform != "win32" else min(args.workers, 0)
+    # Multi-worker async prefetching to saturate GPU
+    num_workers = max(0, args.workers)
+    loader_kwargs = {
+        "num_workers": num_workers,
+        "pin_memory": (device.type == "cuda"),
+    }
+    if num_workers > 0:
+        loader_kwargs["persistent_workers"] = True
+        loader_kwargs["prefetch_factor"] = 2
 
     train_loader = DataLoader(
-        train_dataset, batch_size=args.batch_size,
-        shuffle=True, num_workers=num_workers,
-        pin_memory=(device.type == "cuda"),
+        train_dataset,
+        batch_size=args.batch_size,
+        shuffle=True,
+        drop_last=True,  # Prevent BatchNorm1d error on odd leftover batch
+        **loader_kwargs,
     )
     val_loader = DataLoader(
-        val_dataset, batch_size=args.batch_size,
-        shuffle=False, num_workers=num_workers,
-        pin_memory=(device.type == "cuda"),
+        val_dataset,
+        batch_size=args.batch_size,
+        shuffle=False,
+        drop_last=False,
+        **loader_kwargs,
     )
 
-    print(f"\n  Train samples : {len(train_dataset):,}")
-    print(f"  Val   samples : {len(val_dataset):,}")
-    print(f"  Train batches : {len(train_loader):,}")
+    print(f"\n  Dataset Size  : {len(train_dataset):,} train samples, {len(val_dataset):,} val samples")
+    print(f"  Batch Batches : {len(train_loader):,} steps per epoch (workers={num_workers})")
 
-    # -- Model ------------------------------------------------------------
+    # ── Model Initialization ───────────────────────────────────────────────
     model = MultiModalAeroCropNet(
         num_classes=config.NUM_DISEASE_CLASSES,
         tabular_input_dim=config.TABULAR_INPUT_DIM,
-        pretrained=args.pretrained,
+        pretrained=pretrained,
     ).to(device)
 
-    # ── Resume from checkpoint ────────────────────────────────────────────
-    resume_path = args.resume or (config.WEIGHTS_PATH if args.pretrained else None)
+    # Resume from checkpoint if requested, or warm-start from baseline weights
     if args.resume and os.path.exists(args.resume):
-        state = torch.load(args.resume, map_location=device, weights_only=True)
-        model.load_state_dict(state)
-        print(f"\n  [Resume] Loaded checkpoint from: {args.resume}")
-    elif args.resume:
-        print(f"\n  [Resume] WARNING: checkpoint not found at {args.resume} — starting from scratch.")
+        checkpoint = torch.load(args.resume, map_location=device, weights_only=True)
+        if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+            model.load_state_dict(checkpoint["model_state_dict"])
+        else:
+            model.load_state_dict(checkpoint)
+        print(f"\n  [Resume] Loaded model weights from {args.resume}")
+    else:
+        baseline_path = os.path.join(config.MODEL_DIR, "aerocrop_weights_baseline38.pth")
+        if os.path.exists(baseline_path):
+            try:
+                old_state = torch.load(baseline_path, map_location=device, weights_only=True)
+                if isinstance(old_state, dict) and "model_state_dict" in old_state:
+                    old_state = old_state["model_state_dict"]
+                new_state = model.state_dict()
+                transferred = 0
+                for k, v in old_state.items():
+                    if k in new_state and new_state[k].shape == v.shape:
+                        new_state[k] = v
+                        transferred += 1
+                    elif k == "disease_head.weight" and v.shape[0] <= new_state[k].shape[0]:
+                        new_state[k][:v.shape[0]] = v
+                        transferred += 1
+                    elif k == "disease_head.bias" and v.shape[0] <= new_state[k].shape[0]:
+                        new_state[k][:v.shape[0]] = v
+                        transferred += 1
+                model.load_state_dict(new_state)
+                print(f"  [Warm-Start] Successfully transferred {transferred} layers from 38-class baseline model!")
+            except Exception as e:
+                print(f"  [Warm-Start] Could not warm-start ({e}); starting from ImageNet weights.")
 
     total_params = sum(p.numel() for p in model.parameters())
-    print(f"\n  Model params  : {total_params:,}")
+    print(f"  Model Params  : {total_params:,} parameters")
 
-    # -- Optimizer & Scheduler --------------------------------------------
-    optimizer = torch.optim.AdamW(
-        model.parameters(), lr=args.lr, weight_decay=1e-4
-    )
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=args.epochs, eta_min=1e-6
-    )
+    # ── Optimizer, Scheduler & Scaler ──────────────────────────────────────
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-6)
+
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
 
     criterion_cls = nn.CrossEntropyLoss(label_smoothing=0.1)
-    criterion_reg = nn.MSELoss()
+    criterion_reg = nn.SmoothL1Loss(beta=1.0)  # Robust Huber loss for yield
 
-    # -- CSV Log ----------------------------------------------------------
-    log_path = os.path.join(config.MODEL_DIR, "training_log.csv")
+    # ── Metrics CSV Log ────────────────────────────────────────────────────
+    output_stem = Path(save_weights_path).stem
+    log_filename = f"training_log_{output_stem}.csv" if output_stem != "aerocrop_weights" else "training_log.csv"
+    log_path = os.path.join(config.MODEL_DIR, log_filename)
     log_file = open(log_path, "w", newline="")
     log_writer = csv.writer(log_file)
     log_writer.writerow([
@@ -304,57 +469,92 @@ def main():
     best_val_acc = 0.0
     t0 = time.time()
 
-    print("\n" + "-" * 65)
+    print("\n" + "-" * 72)
     print(f"  {'Ep':>3} | {'TrLoss':>8} | {'TrAcc%':>7} | "
           f"{'VaLoss':>8} | {'VaAcc%':>7} | {'YldRMSE':>8} | {'LR':>9}")
-    print("-" * 65)
+    print("-" * 72)
 
-    for epoch in range(1, args.epochs + 1):
-        ep_start = time.time()
+    try:
+        for epoch in range(1, args.epochs + 1):
+            ep_start = time.time()
 
-        tr = train_one_epoch(
-            model, train_loader, optimizer,
-            criterion_cls, criterion_reg, device, args.alpha, args.beta
-        )
-        va = validate(
-            model, val_loader,
-            criterion_cls, criterion_reg, device, args.alpha, args.beta
-        )
-        scheduler.step()
+            tr = train_one_epoch(
+                model=model,
+                loader=train_loader,
+                optimizer=optimizer,
+                criterion_cls=criterion_cls,
+                criterion_reg=criterion_reg,
+                scaler=scaler,
+                device=device,
+                alpha=args.alpha,
+                beta=args.beta,
+                use_amp=use_amp,
+                epoch=epoch,
+                total_epochs=args.epochs,
+            )
+            va = validate(
+                model=model,
+                loader=val_loader,
+                criterion_cls=criterion_cls,
+                criterion_reg=criterion_reg,
+                device=device,
+                alpha=args.alpha,
+                beta=args.beta,
+                use_amp=use_amp,
+            )
+            scheduler.step()
 
-        elapsed = time.time() - ep_start
-        lr_now  = scheduler.get_last_lr()[0]
+            elapsed = time.time() - ep_start
+            lr_now  = scheduler.get_last_lr()[0]
 
-        rmse_str = f"{va.avg_yield_rmse:>7.4f}" if va.avg_yield_rmse is not None else "    N/A"
-        print(f"  {epoch:>3} | {tr.avg_loss:>8.4f} | {tr.accuracy:>6.2f}% | "
-              f"{va.avg_loss:>8.4f} | {va.accuracy:>6.2f}% | "
-              f"{rmse_str} | {lr_now:>9.2e}")
+            rmse_str = f"{va.avg_yield_rmse:>7.4f}" if va.avg_yield_rmse is not None else "    N/A"
+            print(f"  {epoch:>3} | {tr.avg_loss:>8.4f} | {tr.accuracy:>6.2f}% | "
+                  f"{va.avg_loss:>8.4f} | {va.accuracy:>6.2f}% | "
+                  f"{rmse_str} | {lr_now:>9.2e}")
 
-        log_writer.writerow([
-            epoch, round(tr.avg_loss, 5), round(tr.accuracy, 3),
-            round(tr.avg_yield_rmse, 4) if tr.avg_yield_rmse is not None else "",
-            round(va.avg_loss, 5), round(va.accuracy, 3),
-            round(va.avg_yield_rmse, 4) if va.avg_yield_rmse is not None else "",
-            f"{lr_now:.2e}", round(elapsed, 1),
-        ])
-        log_file.flush()
+            log_writer.writerow([
+                epoch, round(tr.avg_loss, 5), round(tr.accuracy, 3),
+                round(tr.avg_yield_rmse, 4) if tr.avg_yield_rmse is not None else "",
+                round(va.avg_loss, 5), round(va.accuracy, 3),
+                round(va.avg_yield_rmse, 4) if va.avg_yield_rmse is not None else "",
+                f"{lr_now:.2e}", round(elapsed, 1),
+            ])
+            log_file.flush()
 
-        # Save best checkpoint
-        if va.accuracy > best_val_acc:
-            best_val_acc = va.accuracy
-            torch.save(model.state_dict(), config.WEIGHTS_PATH)
-            print(f"         [BEST] New best val acc: {best_val_acc:.2f}% -- saved to {config.WEIGHTS_PATH}")
+            # Save best checkpoint
+            if va.accuracy > best_val_acc:
+                best_val_acc = va.accuracy
+                safe_torch_save(model.state_dict(), save_weights_path)
+                print(f"         [BEST] New best val acc: {best_val_acc:.2f}% -> saved to {save_weights_path}")
 
-    total_time = time.time() - t0
-    log_file.close()
+            # Save latest checkpoint for resumption
+            latest_path = os.path.join(config.MODEL_DIR, "checkpoint_latest.pth")
+            safe_torch_save({
+                "epoch": epoch,
+                "best_val_acc": best_val_acc,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+            }, latest_path)
 
-    print("\n" + "=" * 65)
-    print(f"  Training complete in {total_time/60:.1f} min")
-    print(f"  Best val accuracy : {best_val_acc:.2f}%")
-    print(f"  Weights saved to  : {config.WEIGHTS_PATH}")
-    print(f"  Log saved to      : {log_path}")
-    print("=" * 65 + "\n")
+    except KeyboardInterrupt:
+        print("\n\n  [Interrupted] Training interrupted by user. Preserving best weights...")
+        if best_val_acc > 0 and not os.path.exists(save_weights_path):
+            safe_torch_save(model.state_dict(), save_weights_path)
+            print(f"  Saved best weights to {save_weights_path}")
+
+    finally:
+        total_time = time.time() - t0
+        log_file.close()
+
+    print("\n" + "=" * 68)
+    print(f"  Training finished in {total_time/60:.1f} minutes")
+    print(f"  Best Validation Accuracy : {best_val_acc:.2f}%")
+    if os.path.exists(save_weights_path):
+        print(f"  Model Weights saved to   : {save_weights_path}")
+    print(f"  Metrics Log saved to     : {log_path}")
+    print("=" * 68 + "\n")
 
 
 if __name__ == "__main__":
     main()
+

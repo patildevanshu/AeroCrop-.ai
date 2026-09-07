@@ -1,7 +1,7 @@
 # AeroCrop.ai 🌿
 
 > **Multi-Modal Deep Learning & Field Economics Platform for Maharashtra Agriculture**  
-> *Cotton · Soybean · Wheat · Maize · Potato · Tomato · Rice · Grape · Pepper*
+> *Cotton · Sugarcane · Banana · Turmeric · Soybean · Maize · Wheat · Rice · Onion · Potato · Tomato · Grape*
 
 ---
 
@@ -11,8 +11,9 @@
 
 ### Key Capabilities
 
-1. **🔬 Multi-Modal Disease Diagnosis (90.82% Accuracy)**:
-   - Vision backbone: **ResNet-18** extracting deep spatial disease patterns across 38 PlantVillage classes.
+1. **🔬 Multi-Modal Disease Diagnosis (56 Classes, 19 Crops, 96,839 Images)**:
+   - Vision backbone: **ResNet-18** extracting deep spatial disease patterns across 56 classes (PlantVillage + Maharashtra cash crops).
+   - Dataset: 96,839 images (66,734 marked/diseased, 30,105 unmarked/healthy).
    - Tabular backbone: **3-layer MLP** encoding soil nutrients ($N, P, K$) and Open-Meteo microclimate ($T, H, R$).
    - Dual-head output: Simultaneous disease classification and non-negative harvest yield regression ($t/\text{ha}$).
 

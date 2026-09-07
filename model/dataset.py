@@ -78,6 +78,25 @@ DISEASE_CLASSES: list[str] = [
     "Tomato___Target_Spot",                                       # 35
     "Tomato___Tomato_mosaic_virus",                               # 36
     "Tomato___Tomato_Yellow_Leaf_Curl_Virus",                     # 37
+    # ── Maharashtra Cash & Field Crops Expansion (Classes 38-55) ──
+    "Cotton___Bacterial_blight",                                  # 38
+    "Cotton___healthy",                                           # 39
+    "Banana___Cordana_leaf_spot",                                 # 40
+    "Banana___Panama_disease",                                    # 41
+    "Banana___Sigatoka",                                          # 42
+    "Banana___healthy",                                           # 43
+    "Sugarcane___Mosaic",                                         # 44
+    "Sugarcane___Red_rot",                                        # 45
+    "Sugarcane___Rust",                                           # 46
+    "Sugarcane___Yellow_leaf",                                    # 47
+    "Sugarcane___healthy",                                        # 48
+    "Rice___Bacterial_leaf_blight",                               # 49
+    "Rice___Brown_spot",                                          # 50
+    "Rice___Leaf_smut",                                           # 51
+    "Turmeric___Dry_leaf",                                        # 52
+    "Turmeric___Leaf_blotch",                                     # 53
+    "Turmeric___Rhizome_rot",                                     # 54
+    "Turmeric___healthy",                                         # 55
 ]
 
 CLASS_TO_IDX: dict[str, int] = {c: i for i, c in enumerate(DISEASE_CLASSES)}
@@ -98,6 +117,13 @@ FOLDER_TO_CROP: dict[str, str] = {
     "Raspberry":    "raspberry",
     "Squash":       "squash",
     "Orange":       "orange",
+    "Cotton":       "cotton",
+    "Banana":       "banana",
+    "Turmeric":     "turmeric",
+    "Sugarcane":    "sugarcane",
+    "Onion":        "onion",
+    "Rice":         "rice",
+    "Wheat":        "wheat",
 }
 
 #  Image transforms 
@@ -138,7 +164,19 @@ class PlantDiseaseDataset(Dataset):
     """
 
     def __init__(self, root_dir: str, transform=None, max_per_class: int = None):
-        self.root_dir  = Path(root_dir)
+        target_path = Path(root_dir)
+        if not target_path.exists():
+            candidates = [
+                Path(config.DATA_DIR) / "New Plant Diseases Dataset(Augmented)" / "New Plant Diseases Dataset(Augmented)" / target_path.name,
+                Path(config.DATA_DIR) / "New Plant Diseases Dataset(Augmented)" / target_path.name,
+                Path(config.DATA_DIR) / target_path.name,
+                Path(config.BASE_DIR) / root_dir,
+            ]
+            for c in candidates:
+                if c.exists() and any(c.iterdir()):
+                    target_path = c
+                    break
+        self.root_dir  = target_path
         self.transform = transform or VAL_TRANSFORM
         self.samples: list[tuple[Path, int]] = []
 
@@ -182,16 +220,18 @@ class PlantDiseaseDataset(Dataset):
 #   2. YieldDataset                                                         
 # 
 
-# Crop names in yield_df.csv  our internal keys
+# Crop names in yield_df.csv -> our internal keys
 YIELD_CROP_MAP: dict[str, str] = {
-    "Maize":     "maize",
-    "Potatoes":  "potato",
-    "Rice, paddy": "rice",
-    "Wheat":     "wheat",
-    "Cotton":    "cotton",
-    "Tomatoes":  "tomato",
+    "Maize":          "maize",
+    "Potatoes":       "potato",
+    "Rice, paddy":    "rice",
+    "Wheat":          "wheat",
+    "Cotton":         "cotton",
+    "Soybeans":       "soybean",
+    "Soybean":        "soybean",
     "Sweet potatoes": "potato",
-    "Cassava":   "maize",   # proxy
+    "Cassava":        "potato",
+    "Sorghum":        "maize",
 }
 
 
@@ -200,7 +240,7 @@ class YieldDataset(Dataset):
     Tabular dataset for yield regression from yield_df.csv.
 
     Features (6 after selecting relevant columns):
-        N, P, K   imputed from ICAR targets (no per-sample soil data)
+        N, P, K — imputed from ICAR targets (no per-sample soil data)
         avg_temp, average_rain_fall_mm_per_year, pesticides_tonnes
 
     Target:
@@ -214,7 +254,7 @@ class YieldDataset(Dataset):
     def __init__(self, csv_path: str, split: str = "train", val_fraction: float = 0.15):
         df = pd.read_csv(csv_path)
 
-        #  Column clean-up 
+        # ── Column clean-up ──────────────────────────────────────────────────
         df.columns = [c.strip() for c in df.columns]
         if df.columns[0] == "" or df.columns[0].startswith("Unnamed"):
             df = df.iloc[:, 1:]   # drop unnamed index column
@@ -240,7 +280,55 @@ class YieldDataset(Dataset):
         df["P"] = df["crop_key"].apply(lambda c: targets.get(c, default_npk)["P"])
         df["K"] = df["crop_key"].apply(lambda c: targets.get(c, default_npk)["K"])
 
-        #  Train / Val split 
+        # ── Horticultural & Specialty Crops Agronomic Calibration ─────────────
+        # Synthesize microclimate-conditioned distributions for crops present in
+        # PlantVillage but not in FAO field crop tables.
+        horticultural_baselines = {
+            "tomato":     {"base": 32.0, "opt_temp": 26.0, "opt_rain": 4.0},
+            "apple":      {"base": 22.0, "opt_temp": 20.0, "opt_rain": 3.5},
+            "grape":      {"base": 20.0, "opt_temp": 25.0, "opt_rain": 2.5},
+            "orange":     {"base": 24.0, "opt_temp": 28.0, "opt_rain": 3.0},
+            "pepper":     {"base": 18.0, "opt_temp": 26.0, "opt_rain": 3.0},
+            "peach":      {"base": 16.0, "opt_temp": 22.0, "opt_rain": 3.0},
+            "strawberry": {"base": 16.0, "opt_temp": 22.0, "opt_rain": 3.5},
+            "cherry":     {"base": 12.0, "opt_temp": 20.0, "opt_rain": 3.0},
+            "blueberry":  {"base": 9.0,  "opt_temp": 21.0, "opt_rain": 3.0},
+            "raspberry":  {"base": 8.0,  "opt_temp": 20.0, "opt_rain": 3.0},
+            "squash":     {"base": 22.0, "opt_temp": 27.0, "opt_rain": 3.5},
+            "banana":     {"base": 52.0, "opt_temp": 28.0, "opt_rain": 5.0},
+            "sugarcane":  {"base": 92.0, "opt_temp": 30.0, "opt_rain": 6.0},
+            "turmeric":   {"base": 26.0, "opt_temp": 27.0, "opt_rain": 4.5},
+            "maize":      {"base": 6.2,  "opt_temp": 28.0, "opt_rain": 4.5},
+            "cotton":     {"base": 2.8,  "opt_temp": 30.0, "opt_rain": 3.5},
+        }
+
+        synthetic_rows = []
+        for h_crop, h_cfg in horticultural_baselines.items():
+            sample_w = df[["avg_temp", "average_rain_fall_mm_per_year"]].sample(
+                n=min(len(df), 600),
+                random_state=42 + abs(hash(h_crop)) % 10000,
+                replace=True,
+            ).copy()
+            sample_w["crop_key"] = h_crop
+            rain_daily = sample_w["average_rain_fall_mm_per_year"] / 365.0
+            temp_eff = 1.0 - np.abs(sample_w["avg_temp"] - h_cfg["opt_temp"]) * 0.015
+            rain_eff = 1.0 - np.abs(rain_daily - h_cfg["opt_rain"]) * 0.025
+            mod = np.clip(temp_eff * rain_eff, 0.65, 1.35)
+            rng = np.random.default_rng(abs(hash(h_crop)) % 10000)
+            noise = rng.normal(0.0, 0.06, size=len(sample_w))
+            sample_w["yield_t_ha"] = np.clip(h_cfg["base"] * (mod + noise), 1.0, 130.0)
+            sample_w["pesticides_tonnes"] = 0.0
+
+            c_target = targets.get(h_crop, default_npk)
+            sample_w["N"] = float(c_target["N"])
+            sample_w["P"] = float(c_target["P"])
+            sample_w["K"] = float(c_target["K"])
+            synthetic_rows.append(sample_w)
+
+        if synthetic_rows:
+            df = pd.concat([df] + synthetic_rows, ignore_index=True)
+
+        # ── Train / Val split ────────────────────────────────────────────────
         df = df.sample(frac=1.0, random_state=42).reset_index(drop=True)
         n_val = int(len(df) * val_fraction)
         if split == "val":
@@ -316,8 +404,9 @@ class MultiModalDataset(Dataset):
         yield_csv:  str,
         split:      str = "train",
         transform=None,
+        max_per_class: int | None = None,
     ):
-        self.img_dataset   = PlantDiseaseDataset(image_root, transform=transform)
+        self.img_dataset   = PlantDiseaseDataset(image_root, transform=transform, max_per_class=max_per_class)
         self.yield_dataset = YieldDataset(yield_csv, split=split)
 
         # Build crop  [tabular_indices] lookup
