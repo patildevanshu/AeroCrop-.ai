@@ -114,7 +114,8 @@ export function printAdvisoryReport(
 
   <div class="footer">
     Verified report generated under ICAR nutrient guidelines and computer vision leaf pathology inference.<br>
-    Govt of India NBS fertilizer pricing benchmarks applied. For certified claims, submit to nearest Krishi Seva Kendra / KVK office.
+    Govt of India NBS fertilizer pricing benchmarks applied. For certified claims, submit to nearest Krishi Seva Kendra / KVK office.<br>
+    Agronomic &amp; Platform Support: <a href="mailto:support@devanshupatil.tech" style="color: #15803d; text-decoration: none; font-weight: 600;">support@devanshupatil.tech</a>
   </div>
 </body>
 </html>`;

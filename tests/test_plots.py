@@ -181,3 +181,35 @@ class TestPlotManagement:
         target = next(p for p in plots_list_a if p["id"] == plot_a["id"])
         assert target["total_diagnoses"] == 0
 
+    def test_create_and_update_plot_with_sowing_date_string(self, farmer_a_token):
+        headers = {"Authorization": f"Bearer {farmer_a_token}"}
+        res = client.post(
+            "/api/farmer/plots",
+            headers=headers,
+            json={
+                "plot_name": "Sowing Date Test Field",
+                "crop_type": "sugarcane",
+                "area_acres": 3.0,
+                "sowing_date": "2026-02-15",
+                "soil_type": "Medium Black",
+            },
+        )
+        assert res.status_code == 201, f"Failed: {res.text}"
+        data = res.json()["plot"]
+        assert data["sowing_date"] == "2026-02-15"
+
+        # Test GET single plot with sowing_date
+        get_res = client.get(f"/api/farmer/plots/{data['id']}", headers=headers)
+        assert get_res.status_code == 200
+        assert get_res.json()["sowing_date"] == "2026-02-15"
+
+        # Test PUT single plot with sowing_date
+        put_res = client.put(
+            f"/api/farmer/plots/{data['id']}",
+            headers=headers,
+            json={"sowing_date": "2026-03-01"},
+        )
+        assert put_res.status_code == 200
+        assert put_res.json()["plot"]["sowing_date"] == "2026-03-01"
+
+

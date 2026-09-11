@@ -92,7 +92,7 @@ export const AddPlotModal: React.FC<AddPlotModalProps> = ({ isOpen, onClose, onS
                 onChange={(e) => setCropType(e.target.value)}
                 required
               >
-                <optgroup label={t('cash_crops_group')}>
+                <optgroup label={t('cash_crops_group', 'Crops')}>
                   <option value="cotton">🌱 Cotton (कापूस / कपास)</option>
                   <option value="sugarcane">🎋 Sugarcane (ऊस / गन्ना)</option>
                   <option value="banana">🍌 Banana (केळी / केला)</option>
@@ -102,7 +102,8 @@ export const AddPlotModal: React.FC<AddPlotModalProps> = ({ isOpen, onClose, onS
                   <option value="rice">🌾 Rice / Paddy (भात / धान)</option>
                   <option value="potato">🥔 Potato (बटाटा / आलू)</option>
                   <option value="wheat">🌾 Wheat (गहू / गेहूं)</option>
-                  <option value="onion">🧅 Onion (कांदा / प्याज)</option>
+                  <option value="tomato">🍅 Tomato (टोमॅटो / टमाटर)</option>
+                  <option value="orange">🍊 Orange / Citrus (संत्रे / संतरा)</option>
                 </optgroup>
               </select>
             </div>

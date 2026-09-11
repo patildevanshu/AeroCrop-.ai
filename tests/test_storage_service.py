@@ -44,6 +44,18 @@ class TestLocalStorageProvider:
         deleted = run(provider.delete_image(123, "nonexistent.jpg"))
         assert deleted is False
 
+    def test_delete_image_path_traversal_prevention(self, tmp_path):
+        provider = LocalStorageProvider(base_upload_dir=str(tmp_path))
+        sensitive_file = tmp_path / "sensitive.txt"
+        sensitive_file.write_text("classified data")
+        assert sensitive_file.exists()
+
+        # Attempt to delete the file outside user_id dir via path traversal
+        deleted = run(provider.delete_image(123, "../sensitive.txt"))
+        assert deleted is False
+        assert sensitive_file.exists()
+
     def test_factory_returns_local_provider(self):
         provider = get_storage_provider()
         assert isinstance(provider, LocalStorageProvider)
+

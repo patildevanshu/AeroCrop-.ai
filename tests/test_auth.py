@@ -195,4 +195,57 @@ class TestAuthAPIEndpoints:
         assert login_res.status_code == 200
         assert "access_token" in login_res.json()
 
+    def test_change_password_flow(self):
+        uid = uuid.uuid4().hex[:7]
+        phone = f"987{uid}"
+        # Register user
+        reg_res = client.post(
+            "/api/auth/register",
+            json={
+                "full_name": "Ramesh Pawar",
+                "phone_number": phone,
+                "password": "OldPassword123",
+                "district": "pune",
+            },
+        )
+        assert reg_res.status_code == 200
+        token = reg_res.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # 1. Wrong current password
+        bad_res = client.put(
+            "/api/auth/change-password",
+            headers=headers,
+            json={"current_password": "WrongPassword!", "new_password": "NewSecretPassword123"},
+        )
+        assert bad_res.status_code == 400
+        assert "Current password does not match" in bad_res.json()["detail"]
+
+        # 2. Successful password change
+        good_res = client.put(
+            "/api/auth/change-password",
+            headers=headers,
+            json={"current_password": "OldPassword123", "new_password": "NewSecretPassword123"},
+        )
+        assert good_res.status_code == 200
+        data = good_res.json()
+        assert data["status"] == "success"
+        new_token = data["access_token"]
+
+        # 3. Old token should now be invalidated
+        old_token_res = client.get("/api/auth/me", headers=headers)
+        assert old_token_res.status_code == 401
+
+        # 4. New token works
+        new_token_res = client.get("/api/auth/me", headers={"Authorization": f"Bearer {new_token}"})
+        assert new_token_res.status_code == 200
+        assert new_token_res.json()["full_name"] == "Ramesh Pawar"
+
+        # 5. Login with new password succeeds
+        login_new = client.post(
+            "/api/auth/login",
+            json={"identifier": phone, "password": "NewSecretPassword123"},
+        )
+        assert login_new.status_code == 200
+
 

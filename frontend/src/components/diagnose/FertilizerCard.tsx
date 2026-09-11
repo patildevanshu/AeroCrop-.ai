@@ -3,6 +3,7 @@ import { PredictionResult } from '../../types';
 import { useI18n } from '../../context/I18nContext';
 import { useAuth } from '../../context/AuthContext';
 import { printAdvisoryReport } from './PrintReport';
+import { EmailReportModal } from './EmailReportModal';
 
 interface FertilizerCardProps {
   result: PredictionResult;
@@ -15,6 +16,7 @@ export const FertilizerCard: React.FC<FertilizerCardProps> = ({ result }) => {
 
   const [unit, setUnit] = useState<'acre' | 'guntha' | 'ha'>('acre');
   const [area, setArea] = useState<number>(1.0);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   // 1 ha = 2.47105 acres = 100 gunthas
   const multiplier = unit === 'ha' ? area : (unit === 'acre' ? area / 2.47105 : area / 100.0);
@@ -72,12 +74,12 @@ Generated via AeroCrop.ai Precision Agriculture Platform`;
             step="0.5"
             value={area}
             onChange={(e) => setArea(Math.max(0.1, parseFloat(e.target.value) || 0.1))}
-            style={{ width: '56px', padding: '0.2rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.2)', color: '#fff' }}
+            style={{ width: '56px', padding: '0.2rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(140,195,165,0.4)', background: '#fff', color: 'var(--text-primary)' }}
           />
           <select
             value={unit}
             onChange={(e) => setUnit(e.target.value as any)}
-            style={{ padding: '0.2rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.2)', color: '#fff' }}
+            style={{ padding: '0.2rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(140,195,165,0.4)', background: '#fff', color: 'var(--text-primary)' }}
           >
             <option value="acre">{t('unit_acre')}</option>
             <option value="guntha">{t('unit_guntha')}</option>
@@ -135,16 +137,18 @@ Generated via AeroCrop.ai Precision Agriculture Platform`;
         style={{
           marginTop: '0.75rem',
           padding: '0.6rem 0.9rem',
-          borderRadius: '6px',
-          background: 'rgba(255,255,255,0.05)',
+          borderRadius: '8px',
+          background: 'rgba(240, 253, 244, 0.85)',
+          border: '1px solid rgba(140, 195, 165, 0.35)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: '0.9rem',
+          color: 'var(--text-primary)',
         }}
       >
         <span>💰 {t('est_cost')} ({area} {t(`unit_${unit}` as any)}):</span>
-        <strong style={{ fontSize: '1.1rem', color: '#10b981' }}>
+        <strong style={{ fontSize: '1.1rem', color: '#15803d' }}>
           ₹{totalCost.toLocaleString('en-IN')}
         </strong>
       </div>
@@ -174,6 +178,17 @@ Generated via AeroCrop.ai Precision Agriculture Platform`;
 
         <button
           className="btn btn-secondary btn-sm"
+          onClick={() => setIsEmailModalOpen(true)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+          title="Email Advisory PDF"
+          aria-label="Email Advisory PDF"
+        >
+          <span aria-hidden="true">📧</span>
+          <span>Email PDF</span>
+        </button>
+
+        <button
+          className="btn btn-secondary btn-sm"
           onClick={() => handlePrint(true)}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
           title={t('pmfby_report')}
@@ -183,6 +198,12 @@ Generated via AeroCrop.ai Precision Agriculture Platform`;
           <span>{t('pmfby_report')}</span>
         </button>
       </div>
+
+      <EmailReportModal
+        isOpen={isEmailModalOpen}
+        result={result}
+        onClose={() => setIsEmailModalOpen(false)}
+      />
     </div>
   );
 };

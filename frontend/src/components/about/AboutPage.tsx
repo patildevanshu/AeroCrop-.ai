@@ -5,16 +5,17 @@ export const AboutPage: React.FC = () => {
   const { t } = useI18n();
 
   const crops = [
+    '🌾 Wheat (गहू)',
+    '🌾 Rice / Paddy (भात / धान)',
     '🌱 Cotton (कापूस)',
     '🎋 Sugarcane (ऊस)',
-    '🍌 Banana (केळी)',
-    '🌿 Turmeric (हळद)',
-    '🌽 Maize / Corn (मका)',
-    '🍚 Rice / Paddy (भात)',
     '🫘 Soybean (सोयाबीन)',
+    '🌽 Maize / Corn (मका)',
     '🥔 Potato (बटाटा)',
-    '🌾 Wheat (गहू)',
-    '🧅 Onion (कांदा)',
+    '🍅 Tomato (टोमॅटो)',
+    '🍌 Banana (केळी)',
+    '🌿 Turmeric / Haldi (हळद)',
+    '🍊 Orange / Citrus (संत्रे)',
   ];
 
   return (
@@ -108,6 +109,43 @@ export const AboutPage: React.FC = () => {
           <p className="about-note">
             {t('mh_target_zones')}
           </p>
+        </div>
+
+        {/* Support & Farmer Helpline Card */}
+        <div className="card glass about-card" style={{ gridColumn: '1 / -1' }}>
+          <h2>💬 Support &amp; Farmer Assistance</h2>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '14px' }}>
+            Need assistance with leaf disease diagnoses, soil NPK interpretations, PMFBY insurance reports, or technical issues? Our support team is here to help.
+          </p>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 18px',
+              borderRadius: '10px',
+              background: 'rgba(16, 185, 129, 0.08)',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+            }}
+          >
+            <span style={{ fontSize: '1.4rem' }}>✉️</span>
+            <div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Official Support Desk
+              </div>
+              <a
+                href="mailto:support@devanshupatil.tech"
+                style={{
+                  fontWeight: 600,
+                  color: 'var(--accent-green, #16a34a)',
+                  textDecoration: 'none',
+                  fontSize: '1rem',
+                }}
+              >
+                support@devanshupatil.tech
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { useAuth } from '../../context/AuthContext';
 import { Language } from '../../types';
+import { ProfileModal } from '../auth/ProfileModal';
 
 export type PageTab = 'diagnose' | 'crops' | 'dashboard' | 'diseases' | 'about';
 
@@ -13,6 +14,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { language, setLanguage, t } = useI18n();
   const { currentUser, isAuthenticated, logout, openAuthModal } = useAuth();
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const navItems: { id: PageTab; labelKey: string; icon: string }[] = [
     { id: 'diagnose', labelKey: 'nav_diagnose', icon: '🔬' },
@@ -75,8 +77,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           </div>
         ) : (
           <div className="user-card glass">
-            <div className="user-avatar" aria-hidden="true">🌾</div>
-            <div className="user-info">
+            <div
+              className="user-avatar"
+              aria-hidden="true"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setIsProfileModalOpen(true)}
+              title="Click to view profile & settings"
+            >
+              🌾
+            </div>
+            <div
+              className="user-info"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setIsProfileModalOpen(true)}
+              title="Click to edit profile & change password"
+            >
               <p className="user-name" title={currentUser?.full_name}>
                 {currentUser?.full_name}
               </p>
@@ -84,17 +99,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                 📍 {currentUser?.district ? currentUser.district.charAt(0).toUpperCase() + currentUser.district.slice(1) : 'Maharashtra'}
               </p>
             </div>
-            <button
-              className="btn-icon-sm"
-              onClick={logout}
-              title="Log out"
-              aria-label="Log out"
-            >
-              🚪
-            </button>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                className="btn-icon-sm"
+                onClick={() => setIsProfileModalOpen(true)}
+                title="Profile & Settings"
+                aria-label="Profile & Settings"
+              >
+                ⚙️
+              </button>
+              <button
+                className="btn-icon-sm"
+                onClick={logout}
+                title="Log out"
+                aria-label="Log out"
+              >
+                🚪
+              </button>
+            </div>
           </div>
         )}
       </div>
+
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
 
       {/* Navigation Links */}
       <nav className="sidebar-nav">
@@ -118,6 +148,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           <span>ResNet-18 · Multi-Crop</span>
         </div>
         <p className="sidebar-ver">v2.0.0 — Maharashtra Multi-Tenant</p>
+        <div style={{ marginTop: '8px', fontSize: '0.74rem' }}>
+          <a
+            href="mailto:support@devanshupatil.tech"
+            style={{
+              color: 'var(--text-secondary)',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              transition: 'color 0.2s',
+            }}
+            title="Technical & Agronomy Support"
+          >
+            ✉️ support@devanshupatil.tech
+          </a>
+        </div>
       </div>
     </aside>
   );

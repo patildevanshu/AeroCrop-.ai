@@ -105,19 +105,19 @@ class TestDiseaseClassesEndpoint:
             missing = required - d.keys()
             assert missing == set(), f"Disease idx {d.get('class_index')} missing: {missing}"
 
-    def test_potato_healthy_at_21(self):
+    def test_potato_healthy_at_13(self):
         r = client.get("/api/disease/classes")
         diseases = r.json()["diseases"]
-        d = diseases[21]
-        assert d["class_index"] == 21
-        assert d["is_healthy"] is True, f"Index 21 should be healthy potato, got: {d['name']}"
+        d = diseases[13]
+        assert d["class_index"] == 13
+        assert d["is_healthy"] is True, f"Index 13 should be healthy potato, got: {d['name']}"
 
-    def test_potato_late_blight_at_22(self):
+    def test_potato_late_blight_at_12(self):
         r = client.get("/api/disease/classes")
         diseases = r.json()["diseases"]
-        d = diseases[22]
-        assert d["class_index"] == 22
-        assert d["is_healthy"] is False, f"Index 22 should be Potato Late Blight, got: {d['name']}"
+        d = diseases[12]
+        assert d["class_index"] == 12
+        assert d["is_healthy"] is False, f"Index 12 should be Potato Late Blight, got: {d['name']}"
 
 
 # ── Predict ───────────────────────────────────────────────────────────────────
@@ -199,6 +199,34 @@ class TestPredictEndpoint:
                 files={"image": ("leaf.jpg", JPEG_BYTES, "image/jpeg")},
             )
             assert r.status_code == 200, f"Crop '{crop}' returned {r.status_code}: {r.text}"
+
+    def test_predict_image_oversized_rejected_413(self):
+        """Images exceeding 15MB should be rejected with HTTP 413 Payload Too Large."""
+        # 16 MB dummy payload
+        big_bytes = b"0" * (16 * 1024 * 1024)
+        r = client.post(
+            "/api/predict",
+            data={"crop": "tomato", "district": "pune"},
+            files={"image": ("huge.jpg", big_bytes, "image/jpeg")},
+        )
+        assert r.status_code == 413
+        assert "too large" in r.json()["detail"].lower()
+
+    def test_email_report_invalid_email_rejected_422(self):
+        """Calling email report endpoint with malformed email should fail validation."""
+        r = client.post(
+            "/api/predict/email-report",
+            json={
+                "email": "not-an-email",
+                "name": "Test Farmer",
+                "crop": "Tomato",
+                "district": "Pune",
+                "disease": {"name": "Healthy"},
+                "fertilizer": {},
+            },
+        )
+        assert r.status_code == 422
+
 
 
 # ── Model Reload ──────────────────────────────────────────────────────────────

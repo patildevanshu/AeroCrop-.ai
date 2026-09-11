@@ -38,43 +38,27 @@ IMAGE_TRANSFORM = transforms.Compose([
 ])
 
 
-# ─── Crop to Disease Class Mapping ──────────────────────────────────────────
+# ─── Crop to Disease Class Mapping (Aligned with model/classes.json) ────────
 CROP_TO_CLASSES: dict[str, list[int]] = {
-    "apple": [0, 1, 2, 3],
-    "blueberry": [4],
-    "cherry": [5, 6],
-    "maize": [7, 8, 9, 10],
-    "corn": [7, 8, 9, 10],
-    "grape": [11, 12, 13, 14],
-    "orange": [15],
-    "peach": [16, 17],
-    "pepper": [18, 19],
-    "potato": [20, 21, 22],
-    "raspberry": [23],
-    "soybean": [24],
-    "squash": [25],
-    "strawberry": [26, 27],
-    "tomato": [28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
-    "cotton": [38, 39],
-    "banana": [40, 41, 42, 43],
-    "sugarcane": [44, 45, 46, 47, 48],
-    "rice": [49, 50, 51],
-    "paddy": [49, 50, 51],
-    "turmeric": [52, 53, 54, 55],
-    "haldi": [52, 53, 54, 55],
+    "banana": [0, 1, 2, 3],
+    "corn": [4, 5, 6, 7],
+    "maize": [4, 5, 6, 7],
+    "cotton": [8, 9],
+    "citrus": [10],
+    "orange": [10],
+    "potato": [11, 12, 13],
+    "rice": [14, 15, 16, 17, 18],
+    "paddy": [14, 15, 16, 17, 18],
+    "soybean": [19],
+    "sugarcane": [20, 21, 22, 23, 24],
+    "tomato": [25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+    "turmeric": [35, 36, 37, 38],
+    "haldi": [35, 36, 37, 38],
+    "wheat": [39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
 }
 
-# ─── Supported Agricultural Crops in Active Scope ───────────────────────────
-SUPPORTED_CROP_CLASSES: list[int] = [
-    7, 8, 9, 10,        # Corn / Maize
-    20, 21, 22,         # Potato
-    24,                 # Soybean
-    38, 39,             # Cotton
-    40, 41, 42, 43,     # Banana
-    44, 45, 46, 47, 48, # Sugarcane
-    49, 50, 51,         # Rice
-    52, 53, 54, 55,     # Turmeric
-]
+# ─── Supported Agricultural Crops in Active Scope (All 50 classes) ──────────
+SUPPORTED_CROP_CLASSES: list[int] = list(range(50))
 
 
 
@@ -97,6 +81,7 @@ class InferenceService:
         self.device = torch.device(config.DEVICE)
         self.model: MultiModalAeroCropNet | None = None
         self.mock_mode: bool = True
+        self.classes: list[str] = []
         self._load_model()
         self._initialised = True
 
@@ -104,39 +89,65 @@ class InferenceService:
 
     def _load_model(self, weights_path: str | None = None):
         """Attempt to load saved weights; fall back to mock mode if unavailable."""
-        self.model = MultiModalAeroCropNet(
-            num_classes=config.NUM_DISEASE_CLASSES,
-            tabular_input_dim=config.TABULAR_INPUT_DIM,
-            pretrained=False,
-        ).to(self.device)
-
         resolved_path = weights_path or os.environ.get("AEROCROP_WEIGHTS_PATH") or config.WEIGHTS_PATH
         if not os.path.exists(resolved_path):
             alt = os.path.join(config.MODEL_DIR, str(resolved_path))
             if os.path.exists(alt):
                 resolved_path = alt
 
+        # Load class names from model/classes.json if present
+        classes_path = os.path.join(config.MODEL_DIR, "classes.json")
+        if os.path.exists(classes_path):
+            try:
+                import json
+                with open(classes_path, "r", encoding="utf-8") as f:
+                    self.classes = json.load(f)
+            except Exception:
+                self.classes = []
+
+        num_classes = len(self.classes) if self.classes else getattr(config, "NUM_DISEASE_CLASSES", 50)
+
         if os.path.exists(resolved_path):
             try:
                 state = torch.load(
                     resolved_path,
                     map_location=self.device,
-                    weights_only=True,
+                    weights_only=False,
                 )
+                if "disease_head.weight" in state:
+                    num_classes = state["disease_head.weight"].shape[0]
+
+                self.model = MultiModalAeroCropNet(
+                    num_classes=num_classes,
+                    tabular_input_dim=config.TABULAR_INPUT_DIM,
+                    pretrained=False,
+                ).to(self.device)
+
                 self.model.load_state_dict(state)
                 self.model.eval()
                 self.mock_mode = False
+                self.num_classes = num_classes
                 self.active_weights_path = str(resolved_path)
-                logger.info("[InferenceService] Loaded weights from %s", resolved_path)
+                logger.info("[InferenceService] Loaded weights from %s (%d classes)", resolved_path, num_classes)
             except Exception as exc:
                 logger.warning("[InferenceService] Failed to load weights: %s — using mock mode", exc)
                 self.mock_mode = True
+                self.model = MultiModalAeroCropNet(
+                    num_classes=num_classes,
+                    tabular_input_dim=config.TABULAR_INPUT_DIM,
+                    pretrained=False,
+                ).to(self.device)
         else:
             logger.info(
                 "[InferenceService] No weights at %s — running in mock inference mode.",
                 resolved_path,
             )
             self.mock_mode = True
+            self.model = MultiModalAeroCropNet(
+                num_classes=num_classes,
+                tabular_input_dim=config.TABULAR_INPUT_DIM,
+                pretrained=False,
+            ).to(self.device)
 
     @staticmethod
     def _normalise_tabular(N: float, P: float, K: float,
@@ -247,14 +258,16 @@ class InferenceService:
         crop_lower = crop.lower().strip() if crop else "auto"
         fingerprint = int(abs(N * 3.1 + P * 7.3 + K * 5.7 + temperature * 2.3 + humidity * 1.7 + rainfall * 4.1))
 
+        num_classes = getattr(config, "NUM_DISEASE_CLASSES", 38)
         if crop_lower != "auto" and crop_lower in CROP_TO_CLASSES:
             candidates = CROP_TO_CLASSES[crop_lower]
             seed_val = candidates[fingerprint % len(candidates)]
         else:
-            seed_val = fingerprint % 38
+            seed_val = fingerprint % num_classes
 
+        seed_val = seed_val % num_classes
         np.random.seed(seed_val)
-        probs_raw = np.random.dirichlet(np.ones(38) * 0.5)
+        probs_raw = np.random.dirichlet(np.ones(num_classes) * 0.5)
         # Boost the seeded class to simulate a confident prediction
         probs_raw[seed_val] += 1.5
         probs_raw /= probs_raw.sum()

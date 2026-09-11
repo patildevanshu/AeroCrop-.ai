@@ -16,9 +16,11 @@ import { FarmPlot } from './types';
 const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PageTab>('diagnose');
   const [activePlotId, setActivePlotId] = useState<string>('');
+  const [activeCrop, setActiveCrop] = useState<string>('');
 
   const handleQuickDiagnose = (plot: FarmPlot) => {
     setActivePlotId(plot.id.toString());
+    setActiveCrop(plot.crop_type);
     setActiveTab('diagnose');
   };
 
@@ -27,12 +29,18 @@ const MainApp: React.FC = () => {
     setActiveTab('diagnose');
   };
 
+  const handleDiagnoseCrop = (cropName: string) => {
+    setActiveCrop(cropName);
+    setActivePlotId('');
+    setActiveTab('diagnose');
+  };
+
   return (
     <AppShell activeTab={activeTab} onTabChange={setActiveTab}>
-      {activeTab === 'diagnose' && <DiagnosePage initialPlotId={activePlotId} />}
+      {activeTab === 'diagnose' && <DiagnosePage initialPlotId={activePlotId} initialCrop={activeCrop} />}
       {activeTab === 'crops' && <CropsPage onQuickDiagnose={handleQuickDiagnose} />}
       {activeTab === 'dashboard' && <DashboardPage onQuickDiagnose={handleQuickDiagnoseFromId} />}
-      {activeTab === 'diseases' && <DiseaseDBPage />}
+      {activeTab === 'diseases' && <DiseaseDBPage onDiagnoseCrop={handleDiagnoseCrop} />}
       {activeTab === 'about' && <AboutPage />}
 
       <AuthModal />

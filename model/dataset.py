@@ -163,10 +163,17 @@ class PlantDiseaseDataset(Dataset):
         label  : int  class index (037)
     """
 
-    def __init__(self, root_dir: str, transform=None, max_per_class: int = None):
+    def __init__(
+        self,
+        root_dir: str,
+        transform=None,
+        max_per_class: int = None,
+        classes: list[str] | None = None,
+    ):
         target_path = Path(root_dir)
         if not target_path.exists():
             candidates = [
+                Path(config.DATA_DIR) / "main dataset" / target_path.name,
                 Path(config.DATA_DIR) / "New Plant Diseases Dataset(Augmented)" / "New Plant Diseases Dataset(Augmented)" / target_path.name,
                 Path(config.DATA_DIR) / "New Plant Diseases Dataset(Augmented)" / target_path.name,
                 Path(config.DATA_DIR) / target_path.name,
@@ -178,6 +185,24 @@ class PlantDiseaseDataset(Dataset):
                     break
         self.root_dir  = target_path
         self.transform = transform or VAL_TRANSFORM
+
+        # Dynamic or explicit class indexing
+        if classes is not None:
+            self.classes = list(classes)
+            self.class_to_idx = {c: i for i, c in enumerate(self.classes)}
+        else:
+            folder_dirs = sorted([d.name for d in self.root_dir.iterdir() if d.is_dir()])
+            unknown_folders = [
+                f for f in folder_dirs
+                if f not in CLASS_TO_IDX and f.replace(" ", "_") not in CLASS_TO_IDX
+            ]
+            if not unknown_folders and len(folder_dirs) == len(DISEASE_CLASSES):
+                self.classes = list(DISEASE_CLASSES)
+                self.class_to_idx = dict(CLASS_TO_IDX)
+            else:
+                self.classes = folder_dirs
+                self.class_to_idx = {c: i for i, c in enumerate(self.classes)}
+
         self.samples: list[tuple[Path, int]] = []
 
         for folder in sorted(self.root_dir.iterdir()):
@@ -185,11 +210,10 @@ class PlantDiseaseDataset(Dataset):
                 continue
 
             # Try exact match first, then fuzzy match
-            class_idx = CLASS_TO_IDX.get(folder.name)
+            class_idx = self.class_to_idx.get(folder.name)
             if class_idx is None:
-                # Try matching by normalizing underscores/spaces
                 normalized = folder.name.replace(" ", "_")
-                class_idx = CLASS_TO_IDX.get(normalized)
+                class_idx = self.class_to_idx.get(normalized)
             if class_idx is None:
                 print(f"  [Dataset] Warning: unknown class folder '{folder.name}'  skipped.")
                 continue
@@ -204,7 +228,11 @@ class PlantDiseaseDataset(Dataset):
             for img_path in images:
                 self.samples.append((img_path, class_idx))
 
-        print(f"  [PlantDiseaseDataset] Loaded {len(self.samples)} images from {self.root_dir.name}/")
+        print(f"  [PlantDiseaseDataset] Loaded {len(self.samples)} images across {len(self.classes)} classes from {self.root_dir.name}/")
+
+    @property
+    def num_classes(self) -> int:
+        return len(self.classes)
 
     def __len__(self) -> int:
         return len(self.samples)
@@ -405,12 +433,21 @@ class MultiModalDataset(Dataset):
         split:      str = "train",
         transform=None,
         max_per_class: int | None = None,
+        classes: list[str] | None = None,
     ):
-        self.img_dataset   = PlantDiseaseDataset(image_root, transform=transform, max_per_class=max_per_class)
+        self.img_dataset   = PlantDiseaseDataset(image_root, transform=transform, max_per_class=max_per_class, classes=classes)
         self.yield_dataset = YieldDataset(yield_csv, split=split)
 
         # Build crop  [tabular_indices] lookup
         self._build_crop_index()
+
+    @property
+    def classes(self) -> list[str]:
+        return self.img_dataset.classes
+
+    @property
+    def num_classes(self) -> int:
+        return self.img_dataset.num_classes
 
     def _build_crop_index(self):
         """Index yield rows by crop key for efficient lookup."""

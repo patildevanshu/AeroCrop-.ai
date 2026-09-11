@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { PlotCard } from './PlotCard';
 import { AddPlotModal } from './AddPlotModal';
+import { EditPlotModal } from './EditPlotModal';
 import { deleteFarmerPlot } from '../../api/plots';
 import { FarmPlot } from '../../types';
 
@@ -16,6 +17,7 @@ export const CropsPage: React.FC<CropsPageProps> = ({ onQuickDiagnose }) => {
   const { userPlots, isAuthenticated, openAuthModal, refreshPlots } = useAuth();
   const { showToast } = useToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingPlot, setEditingPlot] = useState<FarmPlot | null>(null);
 
   const handleAddPlotClick = () => {
     if (!isAuthenticated) {
@@ -102,6 +104,7 @@ export const CropsPage: React.FC<CropsPageProps> = ({ onQuickDiagnose }) => {
               key={plot.id}
               plot={plot}
               onQuickDiagnose={onQuickDiagnose}
+              onEdit={(p) => setEditingPlot(p)}
               onDelete={handleDeletePlot}
             />
           ))
@@ -111,6 +114,13 @@ export const CropsPage: React.FC<CropsPageProps> = ({ onQuickDiagnose }) => {
       <AddPlotModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {}}
+      />
+
+      <EditPlotModal
+        isOpen={!!editingPlot}
+        plot={editingPlot}
+        onClose={() => setEditingPlot(null)}
         onSuccess={() => {}}
       />
     </section>

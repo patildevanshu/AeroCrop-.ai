@@ -11,6 +11,14 @@ interface ParamsCardProps {
   districts: string[];
   selectedPlotId: string;
   setSelectedPlotId: (id: string) => void;
+  soilN: number | '';
+  setSoilN: (val: number | '') => void;
+  soilP: number | '';
+  setSoilP: (val: number | '') => void;
+  soilK: number | '';
+  setSoilK: (val: number | '') => void;
+  farmerEmail: string;
+  setFarmerEmail: (val: string) => void;
   onAnalyze: () => void;
   isLoading: boolean;
 }
@@ -23,6 +31,14 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
   districts,
   selectedPlotId,
   setSelectedPlotId,
+  soilN,
+  setSoilN,
+  soilP,
+  setSoilP,
+  soilK,
+  setSoilK,
+  farmerEmail,
+  setFarmerEmail,
   onAnalyze,
   isLoading,
 }) => {
@@ -38,7 +54,10 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
       const plot = userPlots.find((p) => p.id === parseInt(plotIdStr, 10));
       if (plot) {
         setCrop(plot.crop_type);
-        showToast(`Linked to ${plot.plot_name} (${plot.crop_type})`, 'info');
+        if (plot.baseline_N != null) setSoilN(plot.baseline_N);
+        if (plot.baseline_P != null) setSoilP(plot.baseline_P);
+        if (plot.baseline_K != null) setSoilK(plot.baseline_K);
+        showToast(`Linked to ${plot.plot_name} (${plot.crop_type}) — NPK baselines loaded`, 'info');
       }
     }
   };
@@ -83,7 +102,7 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
           aria-label="Select crop type"
         >
           <option value="auto">{t('crop_auto_detect')}</option>
-          <optgroup label={t('cash_crops_group')}>
+          <optgroup label={t('cash_crops_group', 'Crops')}>
             <option value="cotton">🌱 Cotton (कापूस / कपास)</option>
             <option value="sugarcane">🎋 Sugarcane (ऊस / गन्ना)</option>
             <option value="banana">🍌 Banana (केळी / केला)</option>
@@ -93,7 +112,8 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
             <option value="rice">🌾 Rice / Paddy (भात / धान)</option>
             <option value="potato">🥔 Potato (बटाटा / आलू)</option>
             <option value="wheat">🌾 Wheat (गहू / गेहूं)</option>
-            <option value="onion">🧅 Onion (कांदा / प्याज)</option>
+            <option value="tomato">🍅 Tomato (टोमॅटो / टमाटर)</option>
+            <option value="orange">🍊 Orange / Citrus (संत्रे / संतरा)</option>
           </optgroup>
         </select>
       </div>
@@ -115,6 +135,68 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
         </select>
       </div>
 
+      {/* Precision Soil Test NPK (Optional) */}
+      <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+        <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>🧪 Soil Test N-P-K (kg/ha)</span>
+          <span className="badge-optional">{t('optional', 'Optional')}</span>
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+          <div>
+            <input
+              type="number"
+              placeholder="N (kg/ha)"
+              min={0}
+              value={soilN}
+              onChange={(e) => setSoilN(e.target.value === '' ? '' : Number(e.target.value))}
+              aria-label="Soil Nitrogen in kg/ha"
+              style={{ fontSize: '0.85rem', padding: '6px 8px' }}
+            />
+          </div>
+          <div>
+            <input
+              type="number"
+              placeholder="P (kg/ha)"
+              min={0}
+              value={soilP}
+              onChange={(e) => setSoilP(e.target.value === '' ? '' : Number(e.target.value))}
+              aria-label="Soil Phosphorus in kg/ha"
+              style={{ fontSize: '0.85rem', padding: '6px 8px' }}
+            />
+          </div>
+          <div>
+            <input
+              type="number"
+              placeholder="K (kg/ha)"
+              min={0}
+              value={soilK}
+              onChange={(e) => setSoilK(e.target.value === '' ? '' : Number(e.target.value))}
+              aria-label="Soil Potassium in kg/ha"
+              style={{ fontSize: '0.85rem', padding: '6px 8px' }}
+            />
+          </div>
+        </div>
+        <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+          Auto-filled from plot baseline or enter laboratory soil report values.
+        </p>
+      </div>
+
+      {/* Optional Email for Direct PDF Report */}
+      <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+        <label htmlFor="farmer-email" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>📧 {t('email_optional') || 'Email (for PDF Report)'}</span>
+          <span className="optional-tag" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t('optional')}</span>
+        </label>
+        <input
+          id="farmer-email"
+          type="email"
+          placeholder="e.g. farmer@example.com"
+          value={farmerEmail}
+          onChange={(e) => setFarmerEmail(e.target.value)}
+          style={{ fontSize: '0.85rem' }}
+        />
+      </div>
+
       {/* Instant Agronomic Guidance Notice */}
       <div style={{
         padding: '0.65rem 0.85rem',
@@ -122,7 +204,7 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
         background: 'rgba(16, 185, 129, 0.08)',
         border: '1px solid rgba(16, 185, 129, 0.25)',
         fontSize: '0.82rem',
-        color: '#94a3b8',
+        color: 'var(--text-secondary)',
         margin: '0.75rem 0 1.25rem 0',
         lineHeight: 1.4
       }}>

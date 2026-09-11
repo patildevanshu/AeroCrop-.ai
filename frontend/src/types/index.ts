@@ -142,6 +142,8 @@ export interface PredictionResult {
   district: string;
   mock_mode: boolean;
   low_confidence: boolean;
+  out_of_distribution?: boolean;
+  ood_reason?: string;
   saved_record_id: number | null;
   image_url: string | null;
   disease: DiseaseInfo;
@@ -149,6 +151,8 @@ export interface PredictionResult {
   fertilizer: FertilizerAdvice;
   weather: WeatherData;
   mandi?: MandiRateInfo;
+  email_status?: 'queued' | 'sent' | null;
+  email_recipient?: string | null;
 }
 
 export interface HistoryRecord {
@@ -214,5 +218,42 @@ export interface CropProgressPlot {
 export interface CropProgressResponse {
   count: number;
   crops: CropProgressPlot[];
+}
+
+export interface FarmerAnalytics {
+  total_plots: number;
+  total_acres: number;
+  total_diagnoses: number;
+  health_rate_percent: number;
+  avg_yield_t_ha: number;
+  top_diseases: Array<{ name: string; count: number }>;
+}
+
+export interface DiagnosisDetail {
+  id: number;
+  plot_id: number | null;
+  plot_name: string | null;
+  crop: string;
+  district: string;
+  image_url: string | null;
+  disease: DiseaseInfo;
+  yield_t_ha: number;
+  fertilizer: FertilizerAdvice;
+  weather: WeatherData;
+  low_confidence: boolean;
+  mock_mode: boolean;
+  created_at: string | null;
+}
+
+export interface ProfileUpdatePayload {
+  full_name?: string;
+  district?: string;
+  taluka_village?: string;
+  preferred_language?: Language;
+}
+
+export interface ChangePasswordPayload {
+  current_password: string;
+  new_password: string;
 }
 

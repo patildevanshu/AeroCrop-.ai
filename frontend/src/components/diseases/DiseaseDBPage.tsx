@@ -2,15 +2,37 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { fetchDiseaseClasses } from '../../api/predict';
 import { DiseaseClassItem } from '../../types';
+import { DiseaseDetailModal } from './DiseaseDetailModal';
 
-export const DiseaseDBPage: React.FC = () => {
+interface DiseaseDBPageProps {
+  onDiagnoseCrop?: (crop: string) => void;
+}
+
+export const DiseaseDBPage: React.FC<DiseaseDBPageProps> = ({ onDiagnoseCrop }) => {
   const { t } = useI18n();
   const [diseases, setDiseases] = useState<DiseaseClassItem[]>([]);
   const [filterMode, setFilterMode] = useState<'project' | 'all'>('project');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedDisease, setSelectedDisease] = useState<DiseaseClassItem | null>(null);
 
-  const PROJECT_CROPS = ['cotton', 'sugarcane', 'banana', 'turmeric', 'rice', 'paddy', 'maize', 'corn', 'soybean', 'potato'];
+  const PROJECT_CROPS = [
+    'cotton',
+    'sugarcane',
+    'banana',
+    'turmeric',
+    'haldi',
+    'rice',
+    'paddy',
+    'wheat',
+    'maize',
+    'corn',
+    'soybean',
+    'potato',
+    'tomato',
+    'orange',
+    'citrus',
+  ];
 
   useEffect(() => {
     fetchDiseaseClasses()
@@ -94,7 +116,13 @@ export const DiseaseDBPage: React.FC = () => {
             ];
 
             return (
-              <div key={idx} className="disease-db-card">
+              <div
+                key={idx}
+                className="disease-db-card"
+                style={{ cursor: 'pointer' }}
+                onClick={() => setSelectedDisease(d)}
+                title="Click to view detailed pathology & treatments"
+              >
                 <div className="db-card-header">
                   <div>
                     <p className="db-card-name">
@@ -122,6 +150,13 @@ export const DiseaseDBPage: React.FC = () => {
           })}
         </div>
       )}
+
+      <DiseaseDetailModal
+        isOpen={!!selectedDisease}
+        disease={selectedDisease}
+        onClose={() => setSelectedDisease(null)}
+        onDiagnoseCrop={onDiagnoseCrop}
+      />
     </section>
   );
 };

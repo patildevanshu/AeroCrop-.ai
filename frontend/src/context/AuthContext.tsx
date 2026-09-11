@@ -25,6 +25,7 @@ interface AuthContextType {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
+  updateCurrentUser: (user: User) => void;
   isAuthModalOpen: boolean;
   authModalTab: 'login' | 'register';
   openAuthModal: (tab?: 'login' | 'register') => void;
@@ -142,6 +143,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsAuthModalOpen(false);
   };
 
+  const updateCurrentUser = (user: User) => {
+    setCurrentUser(user);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -153,6 +158,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         register,
         logout,
+        updateCurrentUser,
         isAuthModalOpen,
         authModalTab,
         openAuthModal,

@@ -44,11 +44,11 @@ export const WeatherStrip: React.FC<WeatherStripProps> = ({ weather }) => {
         <span className="weather-lbl">{t('weather_wind')}</span>
       </div>
       {sprayBadge && (
-        <div className="weather-item" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '0.6rem' }}>
+        <div className="weather-item" style={{ borderLeft: '1px solid rgba(140, 195, 165, 0.35)', paddingLeft: '0.6rem' }}>
           <span className="weather-val" style={{
             fontSize: '0.82rem',
             fontWeight: 700,
-            color: weather?.spray_window?.safe ? '#34d399' : (weather?.spray_window?.status === 'warning' ? '#fbbf24' : '#f87171')
+            color: weather?.spray_window?.safe ? '#15803d' : (weather?.spray_window?.status === 'warning' ? '#b45309' : '#b91c1c')
           }}>
             {sprayBadge}
           </span>

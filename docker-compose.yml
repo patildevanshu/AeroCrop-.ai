@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  aerocrop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aerocrop-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - ENVIRONMENT=production
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB_NAME=aerocrop
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-aerocrop-maharashtra-farm-secret-key-2026}
+      - EMAIL_SERVICE_URL=http://email-service:5000/send-email
+      - VALIDATOR_SERVICE_URL=http://validator-service:5005/api/v1/validate
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8000,http://localhost:3000}
+    volumes:
+      - aerocrop_data:/app/data
+      - aerocrop_uploads:/app/uploads
+    depends_on:
+      - mongodb
+      - email-service
+      - validator-service
+
+  mongodb:
+    image: mongo:7.0
+    container_name: aerocrop-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - aerocrop_mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=aerocrop
+
+  email-service:
+    build:
+      context: ./backend/email_service
+      dockerfile: Dockerfile
+    container_name: aerocrop-email-service
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_SECURE=${SMTP_SECURE:-true}
+      - EMAIL_USER=${EMAIL_USER:-}
+      - EMAIL_PASS=${EMAIL_PASS:-}
+
+  validator-service:
+    build:
+      context: ./validator_service
+      dockerfile: Dockerfile
+    container_name: aerocrop-validator
+    restart: unless-stopped
+    ports:
+      - "5005:5005"
+    environment:
+      - PORT=5005
+      - VALIDATOR_API_KEY=${VALIDATOR_API_KEY:-}
+      - VALIDATOR_MODEL=${VALIDATOR_MODEL:-gemini-3.1-flash-lite-preview}
+
+volumes:
+  aerocrop_data:
+  aerocrop_uploads:
+  aerocrop_mongodb_data:

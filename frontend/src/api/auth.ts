@@ -40,8 +40,22 @@ export async function getCurrentUser(): Promise<User> {
   return apiFetch<User>('/api/auth/me');
 }
 
-export async function updateProfile(payload: Partial<User>): Promise<User> {
-  return apiFetch<User>('/api/auth/profile', {
+export async function updateProfile(payload: Partial<User>): Promise<{ status: string; message: string; user: User }> {
+  return apiFetch<{ status: string; message: string; user: User }>('/api/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export interface ChangePasswordResponse {
+  status: string;
+  message: string;
+  access_token: string;
+  token_type: string;
+}
+
+export async function changeFarmerPassword(payload: { current_password: string; new_password: string }): Promise<ChangePasswordResponse> {
+  return apiFetch<ChangePasswordResponse>('/api/auth/change-password', {
     method: 'PUT',
     body: JSON.stringify(payload),
   });

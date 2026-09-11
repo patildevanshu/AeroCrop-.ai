@@ -114,8 +114,8 @@ export const WeatherRadarCard: React.FC = () => {
                     padding: '2px 6px',
                     borderRadius: '4px',
                     fontWeight: 600,
-                    background: data.spray_window.safe ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                    color: data.spray_window.safe ? '#34d399' : '#f87171'
+                    background: data.spray_window.safe ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                    color: data.spray_window.safe ? '#15803d' : '#b91c1c'
                   }}>
                     {data.spray_window.safe ? t('spray_safe') : t('spray_hold')}
                   </span>

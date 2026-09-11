@@ -37,11 +37,11 @@ export class ErrorBoundary extends Component<Props, State> {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '1.4rem' }}>⚠️</span>
-            <h3 style={{ margin: 0, color: '#f87171', fontSize: '1rem' }}>
+            <h3 style={{ margin: 0, color: '#b91c1c', fontSize: '1rem', fontWeight: 600 }}>
               {this.props.fallbackTitle || 'Component Error (घटक त्रुटी)'}
             </h3>
           </div>
-          <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.84rem', color: '#cbd5e1' }}>
+          <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
             A temporary display error occurred while rendering this section. Your data is safe.
           </p>
           <button

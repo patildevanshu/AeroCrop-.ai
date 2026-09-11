@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { fetchFarmerHistory, getLocalHistory, clearLocalHistory } from '../../api/history';
+import { fetchFarmerHistory, getLocalHistory, clearLocalHistory, deleteHistoryRecord } from '../../api/history';
 import { HistoryRecord } from '../../types';
+import { DiagnosisDetailModal } from './DiagnosisDetailModal';
 
 export const RecentHistoryCard: React.FC = () => {
   const { t } = useI18n();
@@ -13,6 +14,9 @@ export const RecentHistoryCard: React.FC = () => {
   const [records, setRecords] = useState<HistoryRecord[]>([]);
   const [filterCrop, setFilterCrop] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedRecordId, setSelectedRecordId] = useState<number | null>(null);
+  const [selectedLocalRecord, setSelectedLocalRecord] = useState<HistoryRecord | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const loadHistory = useCallback(async () => {
     setIsLoading(true);
@@ -49,6 +53,36 @@ export const RecentHistoryCard: React.FC = () => {
     showToast('Diagnostic history cleared.', 'info');
   };
 
+  const handleRowClick = (r: HistoryRecord) => {
+    setSelectedRecordId(r.id || null);
+    setSelectedLocalRecord(r);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleDeleteRecord = async (e: React.MouseEvent, r: HistoryRecord, idx: number) => {
+    e.stopPropagation();
+    if (!window.confirm('Delete this diagnosis record?')) {
+      return;
+    }
+
+    if (isAuthenticated && r.id) {
+      try {
+        await deleteHistoryRecord(r.id);
+        showToast('Diagnosis record deleted.', 'info');
+        loadHistory();
+      } catch (err: any) {
+        showToast(`Failed to delete record: ${err.message}`, 'error');
+      }
+    } else {
+      // Local history removal
+      const local = getLocalHistory();
+      local.splice(idx, 1);
+      localStorage.setItem('aerocrop_history', JSON.stringify(local));
+      setRecords([...local]);
+      showToast('Diagnosis record removed.', 'info');
+    }
+  };
+
   const getSeverityClass = (sev: string) => {
     return `severity-${(sev || 'none').toLowerCase()}`;
   };
@@ -76,7 +110,8 @@ export const RecentHistoryCard: React.FC = () => {
             <option value="rice">Rice (भात)</option>
             <option value="potato">Potato (बटाटा)</option>
             <option value="wheat">Wheat (गहू)</option>
-            <option value="onion">Onion (कांदा)</option>
+            <option value="tomato">Tomato (टोमॅटो)</option>
+            <option value="orange">Orange (संत्रे)</option>
           </select>
           <button
             type="button"
@@ -123,7 +158,13 @@ export const RecentHistoryCard: React.FC = () => {
             const yieldVal = r.predicted_yield_t_ha != null ? r.predicted_yield_t_ha : '--';
 
             return (
-              <div key={r.id || idx} className="history-item glass">
+              <div
+                key={r.id || idx}
+                className="history-item glass"
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleRowClick(r)}
+                title="Click to view full diagnosis report"
+              >
                 {r.image_url ? (
                   <img
                     src={r.image_url}
@@ -145,14 +186,33 @@ export const RecentHistoryCard: React.FC = () => {
                     {t('yield_label')} {yieldVal} t/ha · {t('confidence_label')} {confVal}%
                   </p>
                 </div>
-                <span className={`severity-badge ${getSeverityClass(r.severity)}`}>
-                  {r.severity || 'None'}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className={`severity-badge ${getSeverityClass(r.severity)}`}>
+                    {r.severity || 'None'}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-icon-sm"
+                    style={{ fontSize: '0.85rem', padding: '4px 6px', opacity: 0.8 }}
+                    onClick={(e) => handleDeleteRecord(e, r, idx)}
+                    title="Delete record"
+                    aria-label="Delete record"
+                  >
+                    🗑️
+                  </button>
+                </div>
               </div>
             );
           })
         )}
       </div>
+
+      <DiagnosisDetailModal
+        isOpen={isDetailModalOpen}
+        recordId={selectedRecordId}
+        localRecord={selectedLocalRecord}
+        onClose={() => setIsDetailModalOpen(false)}
+      />
     </div>
   );
 };

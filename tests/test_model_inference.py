@@ -83,7 +83,7 @@ class TestPredictReturnSchema:
         assert "probabilities" in result
 
     def test_disease_class_in_range(self, result):
-        assert 0 <= result["disease_class"] <= 37
+        assert 0 <= result["disease_class"] <= 49
 
     def test_confidence_in_unit_range(self, result):
         assert 0.0 <= result["confidence"] <= 1.0

@@ -50,6 +50,7 @@ data/
 datasets/
 uploads/*
 !uploads/.gitkeep
+*.pdf
 *.db
 *.sqlite
 *.sqlite3

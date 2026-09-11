@@ -1,7 +1,7 @@
 # AeroCrop.ai 🌿
 
 > **Multi-Modal Deep Learning & Field Economics Platform for Maharashtra Agriculture**  
-> *Cotton · Sugarcane · Banana · Turmeric · Soybean · Maize · Wheat · Rice · Onion · Potato · Tomato · Grape*
+> *Wheat · Rice · Cotton · Sugarcane · Soybean · Maize · Potato · Tomato · Banana · Turmeric · Orange*
 
 ---
 
@@ -11,9 +11,9 @@
 
 ### Key Capabilities
 
-1. **🔬 Multi-Modal Disease Diagnosis (56 Classes, 19 Crops, 96,839 Images)**:
-   - Vision backbone: **ResNet-18** extracting deep spatial disease patterns across 56 classes (PlantVillage + Maharashtra cash crops).
-   - Dataset: 96,839 images (66,734 marked/diseased, 30,105 unmarked/healthy).
+1. **🔬 Multi-Modal Disease Diagnosis (50 Canonical Classes, 11 Final Project Crops, 62,836 Images)**:
+   - Vision backbone: **ResNet-18** extracting deep spatial disease patterns across 50 canonical pathology classes.
+   - Dataset: **62,836 clean, unique images** partitioned strictly 80% train (50,294) / 20% valid (12,542) with zero data leakage.
    - Tabular backbone: **3-layer MLP** encoding soil nutrients ($N, P, K$) and Open-Meteo microclimate ($T, H, R$).
    - Dual-head output: Simultaneous disease classification and non-negative harvest yield regression ($t/\text{ha}$).
 
@@ -54,7 +54,7 @@
 |---|---|
 | **Deep Learning** | PyTorch 2.x · torchvision (ResNet-18) · NumPy · Pillow |
 | **Backend API** | FastAPI · Uvicorn (ASGI) · Python 3.12 |
-| **Database** | SQLite · SQLAlchemy (Async `aiosqlite`) · Passlib (bcrypt) · PyJWT |
+| **Database** | MongoDB · Motor (Async `pymongo`) · Pydantic V2 · bcrypt · PyJWT |
 | **Frontend** | React 18 · TypeScript · Vite · Lucide Icons · Chart.js |
 | **Legacy Fallback** | Vanilla HTML5 / CSS3 / JavaScript SPA |
 | **Microclimate** | Open-Meteo REST API (hourly temperature, humidity, rainfall, wind) |
@@ -108,70 +108,45 @@ Open **http://localhost:8000** in your browser.
 
 ---
 
-## Project Structure
+### Project Structure
 
 ```
 final_year_project/
 │
-├── main.py                     # FastAPI application entry point
-├── config.py                   # Central configuration, MSP, subsidized bag prices
-├── requirements.txt            # Python dependencies
-├── documentation.md            # In-depth technical architecture document
-├── PROJECT_REVIEW_QUESTIONS_AND_ANSWERS.md # Viva voce examination master guide
+├── backend/                    # ── FASTAPI BACKEND & BUSINESS SERVICES ─────
+│   ├── controllers/            # REST API routers (predict, weather, mandi, auth, plots, history)
+│   ├── services/               # Core business services (pathology, fertilizer, weather, mandi, etc.)
+│   ├── database/               # Async SQLite engine, connection pooling, and SQLAlchemy models
+│   ├── email_service/          # Node.js PDF & SMTP email dispatch microservice
+│   ├── config.py               # Backend configuration, thresholds, MSP, and subsidized prices
+│   ├── main.py                 # FastAPI application bootstrap, middleware, and SPA server
+│   └── requirements.txt        # Backend Python dependencies
 │
-├── database/                   # ── DATABASE & ORM LAYER ────────────────────
-│   ├── connection.py           # Async SQLite engine & session factory
-│   └── models.py               # User, FarmerPlot, DiagnosisRecord schemas
+├── frontend/                   # ── MODERN REACT 18 + VITE CLIENT ───────────
+│   ├── src/                    # React components, context, translations (EN, MR, HI)
+│   ├── dist/                   # Production compiled assets (HTML, CSS, JS)
+│   ├── legacy/                 # Migrated legacy vanilla HTML/CSS/JS fallback views
+│   ├── package.json            # Node dependencies & Vite build scripts
+│   └── vite.config.ts          # Vite build & proxy configuration
 │
-├── model/                      # ── DEEP LEARNING MODEL LAYER ───────────────
-│   ├── architecture.py         # MultiModalAeroCropNet (ResNet-18 + MLP)
-│   ├── dataset.py              # Multi-modal PlantVillage PyTorch Dataset
+├── model/                      # ── DEEP LEARNING & MODEL INFERENCE ─────────
+│   ├── architecture.py         # MultiModalAeroCropNet (ResNet-18 vision + 3-layer MLP tabular)
+│   ├── dataset.py              # PyTorch Dataset loaders, image transforms, and normalisation
 │   ├── train.py                # Multi-task training pipeline (CosineAnnealingLR)
-│   ├── inference.py            # Singleton InferenceService (90.82% weights / mock)
-│   └── aerocrop_weights.pth    # Trained weights checkpoint
+│   ├── inference.py            # Singleton InferenceService (weights inference + mock fallback)
+│   ├── ingest_crops.py         # Multi-crop dataset ingestion utilities
+│   └── extract_data.py         # Data extraction scripts
 │
-├── services/                   # ── BUSINESS & DOMAIN SERVICES ─────────────
-│   ├── disease_service.py      # 38-class pathology database & dual prescriptions
-│   ├── fertilizer_service.py   # NPK deficits, 50kg commercial bags, retail costs
-│   ├── weather_service.py      # Open-Meteo telemetry & foliar spray decision tree
-│   ├── mandi_service.py        # APMC market rates, trends, and revenue forecasting
-│   ├── auth_service.py         # JWT tokens & bcrypt password hashing
-│   ├── plot_service.py         # Plot CRUD & ownership verification
-│   ├── history_service.py      # Diagnosis analytics & persistence
-│   └── storage_service.py      # Local file & leaf photo storage provider
-│
-├── controllers/                # ── REST API CONTROLLERS ───────────────────
-│   ├── predict_controller.py   # POST /api/predict
-│   ├── weather_controller.py   # GET  /api/weather/{district}
-│   ├── mandi_controller.py     # GET  /api/mandi/{district}/{crop}, overview
-│   ├── auth_controller.py      # POST /api/auth/register, login, me, logout
-│   ├── plot_controller.py      # CRUD /api/plots
-│   └── history_controller.py   # GET  /api/history
-│
-├── frontend/                   # ── MODERN REACT 18 + VITE FRONTEND ─────────
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── dashboard/      # Weather Radar, Mandi table, KVK directory
-│   │   │   ├── diagnose/       # Image upload, Spray alert, Mandi card, Bags
-│   │   │   ├── plots/          # Land plot management & cadastral cards
-│   │   │   └── auth/           # Login / Register modals
-│   │   ├── context/            # AuthContext, I18nContext (EN, MR, HI)
-│   │   ├── utils/speech.ts     # Vernacular Web Speech API synthesis
-│   │   └── types/index.ts      # TypeScript interfaces
-│   └── dist/                   # Production build artifact
-│
-├── views/                      # ── LEGACY VANILLA SPA FALLBACK ─────────────
-│   ├── index.html              # Glassmorphic HTML5 interface
-│   └── static/css & js/        # Stylesheets and app.js logic
-│
-└── tests/                      # ── AUTOMATED TEST SUITE (146 TESTS) ────────
-    ├── test_farmer_features.py # Spray windows, 50kg bags, APMC mandi, end-to-end
-    ├── test_model_inference.py # Neural network inference, tensor shapes
-    ├── test_fertilizer_service.py # Deficits, splits, SSP alternatives
-    ├── test_weather_service.py # Open-Meteo API, caching, mock fallbacks
-    ├── test_plots.py           # Multi-tenant plot isolation
-    ├── test_auth.py            # Authentication & JWT security
-    └── test_farmer_history.py  # Diagnosis analytics & pagination
+├── data/                       # Local SQLite database (aerocrop.db)
+├── uploads/                    # Farmer uploaded specimen images
+├── tests/                      # Automated test suite (154 passed tests)
+├── docs/                       # Architectural and technical documentation
+├── Dockerfile                  # Multi-stage production container build
+├── docker-compose.yml          # Unified container orchestration
+├── DEPLOYMENT.md               # Complete single-command deployment guide
+├── main.py                     # Root runner bridge (uvicorn main:app --reload)
+├── config.py                   # Root configuration re-export bridge
+└── requirements.txt            # Root dependencies list
 ```
 
 ---
@@ -196,7 +171,7 @@ final_year_project/
 
 ## Automated Test Suite
 
-AeroCrop.ai features a comprehensive automated test suite with **147 unit, integration, and security tests**:
+AeroCrop.ai features a comprehensive automated test suite with **155 unit, integration, and security tests** with 100% pass rate:
 
 ```bash
 # Run all tests
@@ -208,10 +183,27 @@ pytest tests/test_farmer_features.py -v
 
 ---
 
+## Official Reference Datasets & Verified Kaggle Links
+
+All agricultural pathology imagery and agro-meteorological telemetry used across AeroCrop.ai are derived from public peer-reviewed datasets:
+
+| # | Dataset | Source / Author | Volume & Content | Download Link |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | **20k Multi-Class Crop Disease Images** | Jawad Ali | 2.51 GB (Wheat rusts, blight, pests; Rice blast, bacterial blight, tungro) | [jawadali1045/20k-multi-class-crop-disease-images](https://www.kaggle.com/datasets/jawadali1045/20k-multi-class-crop-disease-images) |
+| 2 | **New Plant Diseases Dataset (Augmented)** | Vipul Patel / PlantVillage | 2.89 GB (Tomato, Potato, Corn, Orange, Soybean) | [vipoooool/new-plant-diseases-dataset](https://www.kaggle.com/datasets/vipoooool/new-plant-diseases-dataset) |
+| 3 | **Banana Leaf Disease Dataset v4** | Rayhan Arlistya | 430 MB (Panama disease, Sigatoka, Cordana) | [rayhanarlistya/banana-leaf-disease-dataset-v4](https://www.kaggle.com/datasets/rayhanarlistya/banana-leaf-disease-dataset-v4) |
+| 4 | **Turmeric Datasets for CNN** | Hitesh Patil | 172 MB (Leaf blotch, Dry leaf, Rhizome rot, Healthy) | [hiteshpatil95/turmeric-datasets-for-cnn-model-training-and-test](https://www.kaggle.com/datasets/hiteshpatil95/turmeric-datasets-for-cnn-model-training-and-test) |
+| 5 | **Cotton Leaf Diseases Dataset** | Janmejay Bhoi | 155 MB (Bacterial blight, healthy) | [janmejaybhoi/cotton-disease-dataset](https://www.kaggle.com/datasets/janmejaybhoi/cotton-disease-dataset) |
+| 6 | **Sugarcane Leaf Disease Dataset** | Nirmal Sankalana | 160 MB (Red rot, Rust, Mosaic, Yellow leaf, Healthy) | [nirmalsankalana/sugarcane-leaf-disease-dataset](https://www.kaggle.com/datasets/nirmalsankalana/sugarcane-leaf-disease-dataset) |
+| 7 | **Rice Leaf Diseases Dataset** | Vbookshelf | 37 MB (Bacterial leaf blight, brown spot, leaf smut) | [vbookshelf/rice-leaf-diseases](https://www.kaggle.com/datasets/vbookshelf/rice-leaf-diseases) |
+| 8 | **Crop Yield Prediction Dataset** | Rikin Patel / FAO | 1.56 MB (`yield_df.csv`, 28,242 rows + India records) | [patelris/crop-yield-prediction-dataset](https://www.kaggle.com/datasets/patelris/crop-yield-prediction-dataset) |
+| 9 | **Crop Production in India** | Abhinand / MoA&FW | 2 MB (`crop_production.csv`, 246,000+ district rows) | [abhinand05/crop-production-in-india](https://www.kaggle.com/datasets/abhinand05/crop-production-in-india) |
+
+---
+
 ## Academic Verification & Model Performance
 
-- **Trained Model Accuracy**: **90.82%** validation accuracy across 38 PlantVillage classes.
-- **Yield Forecasting Error**: **6.72 t/ha** RMSE.
-- **Weights File**: `model/aerocrop_weights.pth` (11.3M parameters, 45.1 MB).
 - **Target Geography**: All 36 districts of Maharashtra, India.
+- **Final Crop Scope**: 11 Field Crops (**Wheat, Rice, Cotton, Sugarcane, Soybean, Maize, Potato, Tomato, Banana, Turmeric, Orange**).
+- **Taxonomy Volume**: 50 Canonical Classes, 62,836 Unique Images (50,294 Train / 12,542 Valid, 0 duplicates).
 - **Exam / Viva Defense Guide**: Comprehensive technical Q&A covering model design, commercial stoichiometry, spray safety math, and rural deployment is documented in [PROJECT_REVIEW_QUESTIONS_AND_ANSWERS.md](file:///d:/Codes/final_year_project/PROJECT_REVIEW_QUESTIONS_AND_ANSWERS.md).

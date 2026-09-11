@@ -47,16 +47,16 @@ export const KVKCard: React.FC = () => {
           style={{
             padding: '0.35rem 0.75rem',
             borderRadius: '6px',
-            border: '1px solid rgba(255,255,255,0.2)',
-            background: 'rgba(0,0,0,0.3)',
-            color: '#fff',
+            border: '1px solid rgba(140,195,165,0.4)',
+            background: '#fff',
+            color: 'var(--text-primary)',
             fontSize: '0.85rem',
             width: '220px',
           }}
         />
       </div>
 
-      <p style={{ margin: '0.5rem 0 1rem 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+      <p style={{ margin: '0.5rem 0 1rem 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
         {t('kvk_subtitle')}
       </p>
 
@@ -69,10 +69,10 @@ export const KVKCard: React.FC = () => {
           >
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
-                <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: '0.92rem' }}>📍 {kvk.district}</span>
+                <span style={{ fontWeight: 700, color: '#0369a1', fontSize: '0.92rem' }}>📍 {kvk.district}</span>
               </div>
-              <p style={{ margin: '0.2rem 0', fontWeight: 600, fontSize: '0.88rem' }}>{kvk.name}</p>
-              <p style={{ margin: '0.1rem 0 0.5rem 0', fontSize: '0.78rem', color: '#94a3b8' }}>{kvk.location}</p>
+              <p style={{ margin: '0.2rem 0', fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-primary)' }}>{kvk.name}</p>
+              <p style={{ margin: '0.1rem 0 0.5rem 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{kvk.location}</p>
             </div>
             <a
               href={`tel:${kvk.phone.replace(/\s+/g, '')}`}
@@ -84,6 +84,36 @@ export const KVKCard: React.FC = () => {
             </a>
           </div>
         ))}
+      </div>
+
+      <div
+        style={{
+          marginTop: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '8px',
+          padding: '10px 14px',
+          borderRadius: '8px',
+          background: 'rgba(16, 185, 129, 0.08)',
+          border: '1px solid rgba(16, 185, 129, 0.25)',
+        }}
+      >
+        <span style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
+          ✉️ AeroCrop Central Agronomy &amp; Platform Support:
+        </span>
+        <a
+          href="mailto:support@devanshupatil.tech"
+          style={{
+            fontSize: '0.86rem',
+            fontWeight: 600,
+            color: 'var(--accent-green, #16a34a)',
+            textDecoration: 'none',
+          }}
+        >
+          support@devanshupatil.tech
+        </a>
       </div>
     </div>
   );

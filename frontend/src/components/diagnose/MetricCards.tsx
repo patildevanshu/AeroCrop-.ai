@@ -51,6 +51,9 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ result }) => {
               style={{ width: `${Math.min(disease.confidence, 100)}%` }}
             />
           </div>
+          <p className="metric-sub" style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+            {t('confidence_desc', 'Certainty score for detected disease')}
+          </p>
         </div>
       </div>
 

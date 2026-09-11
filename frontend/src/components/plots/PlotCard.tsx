@@ -5,6 +5,7 @@ import { useI18n } from '../../context/I18nContext';
 interface PlotCardProps {
   plot: FarmPlot;
   onQuickDiagnose: (plot: FarmPlot) => void;
+  onEdit?: (plot: FarmPlot) => void;
   onDelete: (plotId: number) => void;
 }
 
@@ -33,7 +34,7 @@ const CROP_ICONS: Record<string, string> = {
   raspberry: '🫐',
 };
 
-export const PlotCard: React.FC<PlotCardProps> = ({ plot, onQuickDiagnose, onDelete }) => {
+export const PlotCard: React.FC<PlotCardProps> = ({ plot, onQuickDiagnose, onEdit, onDelete }) => {
   const { t } = useI18n();
   const icon = CROP_ICONS[plot.crop_type.toLowerCase()] || '🌱';
 
@@ -107,6 +108,17 @@ export const PlotCard: React.FC<PlotCardProps> = ({ plot, onQuickDiagnose, onDel
         >
           {t('quick_diagnose')}
         </button>
+        {onEdit && (
+          <button
+            type="button"
+            className="btn-icon-sm"
+            onClick={() => onEdit(plot)}
+            title="Edit Plot"
+            aria-label="Edit Plot"
+          >
+            ✏️
+          </button>
+        )}
         <button
           type="button"
           className="btn-icon-sm"

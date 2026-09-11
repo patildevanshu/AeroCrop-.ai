@@ -991,7 +991,7 @@ END:VCALENDAR`;
           >
             <span style={{ fontSize: '1.5rem' }}>{activeStage.icon}</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#34d399', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#15803d', textTransform: 'uppercase' }}>
                 📍 {t('active_stage_now', 'Active Stage Now')}: {activeStage.titleKey} ({activeStage.timingDays})
               </div>
               <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
@@ -1013,7 +1013,7 @@ END:VCALENDAR`;
             marginBottom: '1.25rem',
           }}
         >
-          <h3 style={{ fontSize: '0.95rem', color: '#38bdf8', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <h3 style={{ fontSize: '0.95rem', color: '#0369a1', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span>🧪</span> Why Split Nitrogen into 3 Stages? (नत्र विभाजन का आवश्यक आहे?)
           </h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '0.85rem' }}>
@@ -1021,30 +1021,30 @@ END:VCALENDAR`;
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-            <div style={{ background: 'rgba(255,255,255,0.8)', padding: '0.75rem', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 600 }}>🟡 Nitrogen (N) Distribution</div>
-              <div style={{ height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', margin: '6px 0', overflow: 'hidden', display: 'flex' }}>
-                <div style={{ width: '33%', background: '#38bdf8' }} title="Stage 1: 33%" />
-                <div style={{ width: '33%', background: '#10b981' }} title="Stage 2: 33%" />
-                <div style={{ width: '34%', background: '#f59e0b' }} title="Stage 3: 34%" />
+            <div style={{ background: 'rgba(255,255,255,0.9)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(140,195,165,0.25)' }}>
+              <div style={{ fontSize: '0.8rem', color: '#0369a1', fontWeight: 600 }}>🟡 Nitrogen (N) Distribution</div>
+              <div style={{ height: '8px', background: 'rgba(140,195,165,0.2)', borderRadius: '4px', margin: '6px 0', overflow: 'hidden', display: 'flex' }}>
+                <div style={{ width: '33%', background: '#0284c7' }} title="Stage 1: 33%" />
+                <div style={{ width: '33%', background: '#15803d' }} title="Stage 2: 33%" />
+                <div style={{ width: '34%', background: '#d97706' }} title="Stage 3: 34%" />
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>33% Basal &bull; 33% Veg &bull; 34% Flower</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>33% Basal &bull; 33% Veg &bull; 34% Flower</div>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.8)', padding: '0.75rem', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 600 }}>🟤 Phosphorus (P₂O₅) Distribution</div>
-              <div style={{ height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', margin: '6px 0', overflow: 'hidden' }}>
-                <div style={{ width: '100%', background: '#10b981' }} title="100% at Basal" />
+            <div style={{ background: 'rgba(255,255,255,0.9)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(140,195,165,0.25)' }}>
+              <div style={{ fontSize: '0.8rem', color: '#15803d', fontWeight: 600 }}>🟤 Phosphorus (P₂O₅) Distribution</div>
+              <div style={{ height: '8px', background: 'rgba(140,195,165,0.2)', borderRadius: '4px', margin: '6px 0', overflow: 'hidden' }}>
+                <div style={{ width: '100%', background: '#15803d' }} title="100% at Basal" />
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>100% Basal (Immobile in soil, builds roots)</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>100% Basal (Immobile in soil, builds roots)</div>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.8)', padding: '0.75rem', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.8rem', color: '#f59e0b', fontWeight: 600 }}>🔴 Potassium (K₂O) Distribution</div>
-              <div style={{ height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', margin: '6px 0', overflow: 'hidden' }}>
-                <div style={{ width: '100%', background: '#f59e0b' }} title="100% at Basal" />
+            <div style={{ background: 'rgba(255,255,255,0.9)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(140,195,165,0.25)' }}>
+              <div style={{ fontSize: '0.8rem', color: '#d97706', fontWeight: 600 }}>🔴 Potassium (K₂O) Distribution</div>
+              <div style={{ height: '8px', background: 'rgba(140,195,165,0.2)', borderRadius: '4px', margin: '6px 0', overflow: 'hidden' }}>
+                <div style={{ width: '100%', background: '#d97706' }} title="100% at Basal" />
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>100% Basal (Aids water regulation & disease immunity)</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>100% Basal (Aids water regulation & disease immunity)</div>
             </div>
           </div>
         </div>
@@ -1061,33 +1061,33 @@ END:VCALENDAR`;
             marginBottom: '1.25rem',
           }}
         >
-          <h3 style={{ fontSize: '0.95rem', color: '#10b981', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <h3 style={{ fontSize: '0.95rem', color: '#15803d', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span>📜</span> {t('fert_rules_title')}
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem' }}>
-            <div style={{ background: 'rgba(255,255,255,0.8)', padding: '0.75rem', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#38bdf8' }}>💧 Soil Moisture Rule</div>
+            <div style={{ background: 'rgba(255,255,255,0.9)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(140,195,165,0.25)' }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#0369a1' }}>💧 Soil Moisture Rule</div>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.4 }}>
                 Never apply dry granular Urea on dry soil or in baking afternoon heat. Always broadcast in moist soil and follow with light irrigation.
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.8)', padding: '0.75rem', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#10b981' }}>🌿 Neem-Coated Urea (NCU)</div>
+            <div style={{ background: 'rgba(255,255,255,0.9)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(140,195,165,0.25)' }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#15803d' }}>🌿 Neem-Coated Urea (NCU)</div>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.4 }}>
                 Always insist on Neem-Coated Urea (NCU). Neem oil inhibits nitrifying bacteria, resulting in a 15–20% boost in grain uptake.
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.8)', padding: '0.75rem', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fbbf24' }}>🌾 Inter-Cultivation &amp; Weeding</div>
+            <div style={{ background: 'rgba(255,255,255,0.9)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(140,195,165,0.25)' }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#d97706' }}>🌾 Inter-Cultivation &amp; Weeding</div>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.4 }}>
                 Perform weeding (खुरपणी) 2–3 days prior to top-dressing so fertilizers nourish your crop rather than opportunistic weeds.
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.8)', padding: '0.75rem', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#f43f5e' }}>🚜 Band Placement vs Broadcast</div>
+            <div style={{ background: 'rgba(255,255,255,0.9)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(140,195,165,0.25)' }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#b91c1c' }}>🚜 Band Placement vs Broadcast</div>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.4 }}>
                 Placing fertilizers 5–7 cm below the soil surface delivers 30% higher nutrient absorption than broad surface broadcasting.
               </div>
@@ -1147,22 +1147,22 @@ END:VCALENDAR`;
                     background: isCompleted
                       ? '#10b981'
                       : isCurrent
-                      ? 'rgba(6,182,212,0.9)'
-                      : 'rgba(13,26,32,0.9)',
-                    border: `2px solid ${isCompleted ? '#10b981' : isCurrent ? '#06b6d4' : 'rgba(255,255,255,0.2)'}`,
+                      ? '#0284c7'
+                      : '#ffffff',
+                    border: `2px solid ${isCompleted ? '#10b981' : isCurrent ? '#0284c7' : 'rgba(140,195,165,0.6)'}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '0.9rem',
-                    color: '#152922',
+                    color: isCompleted || isCurrent ? '#ffffff' : 'var(--text-primary)',
                     fontWeight: 700,
-                    boxShadow: isCurrent ? '0 0 12px rgba(6,182,212,0.6)' : 'none',
+                    boxShadow: isCurrent ? '0 0 10px rgba(2,132,199,0.4)' : 'none',
                     transition: 'all 0.2s ease',
                   }}
                 >
                   {isCompleted ? '✓' : stg.stageNum}
                 </div>
-                <span style={{ fontSize: '0.72rem', color: isCurrent ? 'var(--accent-cyan)' : 'var(--text-secondary)', marginTop: '4px', fontWeight: isCurrent ? 700 : 400 }}>
+                <span style={{ fontSize: '0.72rem', color: isCurrent ? '#0284c7' : 'var(--text-secondary)', marginTop: '4px', fontWeight: isCurrent ? 700 : 500 }}>
                   {stg.timingDays.split(' ')[0]} {stg.timingDays.split(' ')[1] || ''}
                 </span>
               </div>
@@ -1192,11 +1192,12 @@ END:VCALENDAR`;
                 style={{
                   fontSize: '0.74rem',
                   padding: '3px 8px',
-                  background: completedStages['stage-1'] ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${completedStages['stage-1'] ? '#10b981' : 'rgba(140,195,165,0.4)'}`,
-                  color: completedStages['stage-1'] ? '#34d399' : 'var(--text-secondary)',
+                  background: completedStages['stage-1'] ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.8)',
+                  border: `1px solid ${completedStages['stage-1'] ? '#10b981' : 'rgba(140,195,165,0.5)'}`,
+                  color: completedStages['stage-1'] ? '#15803d' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   borderRadius: '6px',
+                  fontWeight: 600,
                 }}
               >
                 {completedStages['stage-1'] ? `✓ Done (${completedStages['stage-1']})` : `[ ] ${t('fert_mark_done')}`}
@@ -1208,22 +1209,22 @@ END:VCALENDAR`;
             </p>
 
             {/* Dosages Pill Container */}
-            <div style={{ background: 'rgba(240,253,244,0.7)', padding: '0.65rem 0.8rem', borderRadius: '8px', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '5px', margin: '0.4rem 0' }}>
+            <div style={{ background: 'rgba(240,253,244,0.7)', padding: '0.65rem 0.8rem', borderRadius: '8px', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '5px', margin: '0.4rem 0', border: '1px solid rgba(140,195,165,0.25)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>🟤 <strong>DAP (18-46-0):</strong></span>
-                <strong style={{ color: '#38bdf8' }}>
+                <strong style={{ color: '#0369a1' }}>
                   {stage1DapKg.toFixed(1)} kg <span style={{ fontSize: '0.74rem', fontWeight: 400, color: 'var(--text-muted)' }}>({(stage1DapKg / 50).toFixed(1)} bags)</span>
                 </strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>🔴 <strong>MOP (60% K):</strong></span>
-                <strong style={{ color: '#fbbf24' }}>
+                <strong style={{ color: '#d97706' }}>
                   {stage1MopKg.toFixed(1)} kg <span style={{ fontSize: '0.74rem', fontWeight: 400, color: 'var(--text-muted)' }}>({(stage1MopKg / 50).toFixed(1)} bags)</span>
                 </strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>🟡 <strong>Urea (46% N):</strong></span>
-                <strong style={{ color: '#34d399' }}>
+                <strong style={{ color: '#15803d' }}>
                   {stage1UreaKg.toFixed(1)} kg <span style={{ fontSize: '0.74rem', fontWeight: 400, color: 'var(--text-muted)' }}>({(stage1UreaKg / 50).toFixed(1)} bags)</span>
                 </strong>
               </div>
@@ -1255,11 +1256,12 @@ END:VCALENDAR`;
                 style={{
                   fontSize: '0.74rem',
                   padding: '3px 8px',
-                  background: completedStages['stage-2'] ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${completedStages['stage-2'] ? '#10b981' : 'rgba(140,195,165,0.4)'}`,
-                  color: completedStages['stage-2'] ? '#34d399' : 'var(--text-secondary)',
+                  background: completedStages['stage-2'] ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.8)',
+                  border: `1px solid ${completedStages['stage-2'] ? '#10b981' : 'rgba(140,195,165,0.5)'}`,
+                  color: completedStages['stage-2'] ? '#15803d' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   borderRadius: '6px',
+                  fontWeight: 600,
                 }}
               >
                 {completedStages['stage-2'] ? `✓ Done (${completedStages['stage-2']})` : `[ ] ${t('fert_mark_done')}`}
@@ -1271,10 +1273,10 @@ END:VCALENDAR`;
             </p>
 
             {/* Dosages Pill Container */}
-            <div style={{ background: 'rgba(240,253,244,0.7)', padding: '0.65rem 0.8rem', borderRadius: '8px', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '5px', margin: '0.4rem 0' }}>
+            <div style={{ background: 'rgba(240,253,244,0.7)', padding: '0.65rem 0.8rem', borderRadius: '8px', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '5px', margin: '0.4rem 0', border: '1px solid rgba(140,195,165,0.25)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>🟡 <strong>Urea (46% N):</strong></span>
-                <strong style={{ color: '#34d399' }}>
+                <strong style={{ color: '#15803d' }}>
                   {stage2UreaKg.toFixed(1)} kg <span style={{ fontSize: '0.74rem', fontWeight: 400, color: 'var(--text-muted)' }}>({(stage2UreaKg / 50).toFixed(1)} bags)</span>
                 </strong>
               </div>
@@ -1314,11 +1316,12 @@ END:VCALENDAR`;
                 style={{
                   fontSize: '0.74rem',
                   padding: '3px 8px',
-                  background: completedStages['stage-3'] ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${completedStages['stage-3'] ? '#10b981' : 'rgba(140,195,165,0.4)'}`,
-                  color: completedStages['stage-3'] ? '#34d399' : 'var(--text-secondary)',
+                  background: completedStages['stage-3'] ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.8)',
+                  border: `1px solid ${completedStages['stage-3'] ? '#10b981' : 'rgba(140,195,165,0.5)'}`,
+                  color: completedStages['stage-3'] ? '#15803d' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   borderRadius: '6px',
+                  fontWeight: 600,
                 }}
               >
                 {completedStages['stage-3'] ? `✓ Done (${completedStages['stage-3']})` : `[ ] ${t('fert_mark_done')}`}
@@ -1330,10 +1333,10 @@ END:VCALENDAR`;
             </p>
 
             {/* Dosages Pill Container */}
-            <div style={{ background: 'rgba(240,253,244,0.7)', padding: '0.65rem 0.8rem', borderRadius: '8px', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '5px', margin: '0.4rem 0' }}>
+            <div style={{ background: 'rgba(240,253,244,0.7)', padding: '0.65rem 0.8rem', borderRadius: '8px', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '5px', margin: '0.4rem 0', border: '1px solid rgba(140,195,165,0.25)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>🟡 <strong>Urea (46% N):</strong></span>
-                <strong style={{ color: '#34d399' }}>
+                <strong style={{ color: '#15803d' }}>
                   {stage3UreaKg.toFixed(1)} kg <span style={{ fontSize: '0.74rem', fontWeight: 400, color: 'var(--text-muted)' }}>({(stage3UreaKg / 50).toFixed(1)} bags)</span>
                 </strong>
               </div>
@@ -1391,7 +1394,7 @@ END:VCALENDAR`;
             onClick={handleShareWhatsApp}
             style={{
               background: '#25D366',
-              color: '#152922',
+              color: '#fff',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',

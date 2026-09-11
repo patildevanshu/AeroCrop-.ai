@@ -268,6 +268,49 @@ Testing on real-world specimen images showed cross-crop confusion in unconstrain
 
 ---
 
+### Milestone 6 — Final Project Crops Standardization, Deduplication & Reference Index (2026-09-11)
+
+**Status**: ✅ Complete (Scope Frozen)
+
+**Motivation**:
+Consolidation and deduplication of the complete training dataset, freezing the core scope to 11 final agricultural crops relevant to Maharashtra, and synchronizing both backend and frontend components.
+
+**Final Scope Specifications**:
+- **Final Project Crops (11 Crops)**:
+  1. 🌾 **Wheat (गहू / गेहूं)** — Added 11 diagnostic classes (2,101 images)
+  2. 🌾 **Rice / Paddy (भात / धान)** — Upgraded from 120 to 6,112 images (5 classes)
+  3. 🌱 **Cotton (कापूस / कपास)** — 2 classes (Bacterial blight & healthy)
+  4. 🎋 **Sugarcane (ऊस / गन्ना)** — 5 classes (Red rot, Rust, Mosaic, Yellow leaf, healthy)
+  5. 🫘 **Soybean (सोयाबीन)** — 1 class (healthy)
+  6. 🌽 **Maize / Corn (मका / मक्का)** — 4 classes (Cercospora, Rust, Blight, healthy)
+  7. 🥔 **Potato (बटाटा / आलू)** — 3 classes (Early blight, Late blight, healthy)
+  8. 🍅 **Tomato (टोमॅटो / टमाटर)** — 10 classes (Blight, mold, viruses, bacterial spot, healthy)
+  9. 🍌 **Banana (केळी / केला)** — 4 classes (Panama disease, Sigatoka, Cordana, healthy)
+  10. 🌿 **Turmeric / Haldi (हळद / हल्दी)** — 4 classes (Leaf blotch, dry leaf, rhizome rot, healthy)
+  11. 🍊 **Orange / Citrus (संत्रे / संतरा)** — 1 class (Citrus greening / Huanglongbing)
+
+**Dataset Volume Metrics**:
+- **Total Unique Images**: **62,836 images** (100% unique MD5 hashes)
+- **Training Set (80%)**: **50,294 images**
+- **Validation Set (20%)**: **12,542 images**
+- **Train/Valid Data Leakage**: **0** (Zero hash overlap)
+- **Duplicates Eliminated**: **14,470+** redundant files pruned (~1.5 GB storage reclaimed)
+- **Total Canonical Classes**: **50 classes**
+- **Tabular Yield Dataset**: **36,439 records** (`yield_df.csv` covering FAO + microclimate telemetry)
+
+**Official Reference Dataset Links**:
+1. [20k Multi-Class Crop Disease Images (Jawad Ali)](https://www.kaggle.com/datasets/jawadali1045/20k-multi-class-crop-disease-images) — Wheat & Upgraded Rice
+2. [New Plant Diseases Dataset (Augmented)](https://www.kaggle.com/datasets/vipoooool/new-plant-diseases-dataset) — Tomato, Potato, Corn, Orange, Soybean
+3. [Banana Leaf Disease Dataset v4 (Rayhan Arlistya)](https://www.kaggle.com/datasets/rayhanarlistya/banana-leaf-disease-dataset-v4) — Banana pathology
+4. [Turmeric Datasets for CNN (Hitesh Patil)](https://www.kaggle.com/datasets/hiteshpatil95/turmeric-datasets-for-cnn-model-training-and-test) — Turmeric pathology
+5. [Cotton Leaf Diseases Dataset (Janmejay Bhoi)](https://www.kaggle.com/datasets/janmejaybhoi/cotton-disease-dataset) — Cotton pathology
+6. [Sugarcane Leaf Disease Dataset (Nirmal Sankalana)](https://www.kaggle.com/datasets/nirmalsankalana/sugarcane-leaf-disease-dataset) — Sugarcane pathology
+7. [Rice Leaf Diseases Dataset (Vbookshelf)](https://www.kaggle.com/datasets/vbookshelf/rice-leaf-diseases) — Baseline rice pathology
+8. [Crop Yield Prediction Dataset (FAO / Rikin Patel)](https://www.kaggle.com/datasets/patelris/crop-yield-prediction-dataset) — Yield regression telemetry
+9. [Crop Production in India (Abhinand)](https://www.kaggle.com/datasets/abhinand05/crop-production-in-india) — District-level Indian crop production
+
+---
+
 ## Technical Summary Table
 
 | Parameter | AeroCrop.ai Core v2.0 | Farmer-Centric Extensions |

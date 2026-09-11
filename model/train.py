@@ -20,6 +20,7 @@ Usage:
 from __future__ import annotations
 import argparse
 import csv
+import json
 import os
 import sys
 import time
@@ -48,20 +49,26 @@ def parse_args():
     parser.add_argument(
         "--image_dir",
         type=str,
-        default=r"data\New Plant Diseases Dataset(Augmented)\New Plant Diseases Dataset(Augmented)\train",
-        help="Path to PlantVillage training image directory",
+        default=r"data\main dataset\train",
+        help="Path to training image directory",
     )
     parser.add_argument(
         "--val_dir",
         type=str,
-        default=r"data\New Plant Diseases Dataset(Augmented)\New Plant Diseases Dataset(Augmented)\valid",
-        help="Path to PlantVillage validation image directory",
+        default=r"data\main dataset\valid",
+        help="Path to validation image directory",
     )
     parser.add_argument(
         "--yield_csv",
         type=str,
         default=r"data\yield_df.csv",
         help="Path to yield_df.csv",
+    )
+    parser.add_argument(
+        "--num_classes",
+        type=int,
+        default=None,
+        help="Number of disease classes (default: auto-detect from dataset)",
     )
     parser.add_argument("--epochs",       type=int,   default=15,
                         help="Number of training epochs")
@@ -100,6 +107,7 @@ def resolve_dir(provided_path: str, fallback_subfolder: str) -> str:
         return str(rel_base)
 
     candidates = [
+        Path(config.DATA_DIR) / "main dataset" / fallback_subfolder,
         Path(config.DATA_DIR) / "New Plant Diseases Dataset(Augmented)" / "New Plant Diseases Dataset(Augmented)" / fallback_subfolder,
         Path(config.DATA_DIR) / "New Plant Diseases Dataset(Augmented)" / fallback_subfolder,
         Path(config.DATA_DIR) / fallback_subfolder,
@@ -365,6 +373,7 @@ def main():
             split="val",
             transform=VAL_TRANSFORM,
             max_per_class=args.max_per_class,
+            classes=train_dataset.classes,
         )
     else:
         print("[Dataset] Mode: Vision-Only (PlantDiseaseDataset)")
@@ -373,7 +382,8 @@ def main():
             img_train_abs, transform=TRAIN_TRANSFORM, max_per_class=args.max_per_class
         )
         val_dataset = PlantDiseaseDataset(
-            img_val_abs, transform=VAL_TRANSFORM, max_per_class=args.max_per_class
+            img_val_abs, transform=VAL_TRANSFORM, max_per_class=args.max_per_class,
+            classes=train_dataset.classes,
         )
 
     # Multi-worker async prefetching to saturate GPU
@@ -401,12 +411,25 @@ def main():
         **loader_kwargs,
     )
 
+    num_classes = (
+        args.num_classes
+        or getattr(train_dataset, "num_classes", None)
+        or config.NUM_DISEASE_CLASSES
+    )
+
     print(f"\n  Dataset Size  : {len(train_dataset):,} train samples, {len(val_dataset):,} val samples")
+    print(f"  Target Classes: {num_classes} classes")
     print(f"  Batch Batches : {len(train_loader):,} steps per epoch (workers={num_workers})")
+
+    if hasattr(train_dataset, "classes") and train_dataset.classes:
+        classes_json_path = os.path.join(config.MODEL_DIR, "classes.json")
+        with open(classes_json_path, "w", encoding="utf-8") as f:
+            json.dump(train_dataset.classes, f, indent=2)
+        print(f"  Class Mapping : Saved {len(train_dataset.classes)} classes to {classes_json_path}")
 
     # ── Model Initialization ───────────────────────────────────────────────
     model = MultiModalAeroCropNet(
-        num_classes=config.NUM_DISEASE_CLASSES,
+        num_classes=num_classes,
         tabular_input_dim=config.TABULAR_INPUT_DIM,
         pretrained=pretrained,
     ).to(device)
