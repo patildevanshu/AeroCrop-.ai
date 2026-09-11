@@ -78,31 +78,41 @@ app.post('/send-email', async (req, res) => {
             return res.status(400).json({ success: false, error: `Invalid email address format: ${email}` });
         }
 
-        if (!process.env.FROM || !process.env.PASS) {
+        if (!SENDER_EMAIL || !SENDER_PASS) {
             return res.status(500).json({
                 success: false,
-                error: 'SMTP credentials (FROM and PASS) are not configured in .env.',
+                error: 'SMTP credentials (FROM/EMAIL_USER and PASS/EMAIL_PASS) are not configured in environment.',
             });
         }
 
         // 1. Generate High-Fidelity Trilingual PDF
-        let pdfBuffer;
+        let pdfBuffer = null;
         if (pdfBase64) {
-            pdfBuffer = Buffer.from(pdfBase64.replace(/^data:application\/pdf;base64,/, ''), 'base64');
-        } else {
-            console.log(`📄 Generating Trilingual PDF Advisory for ${name} (${crop}, ${district})...`);
-            pdfBuffer = await generateTrilingualPDF({
-                farmerName: name,
-                farmerPhone,
-                farmerVillage,
-                district,
-                crop,
-                disease,
-                fertilizer,
-                yield_t_ha,
-                weather,
-            });
-            console.log(`✅ PDF generated successfully (${pdfBuffer.length} bytes)`);
+            try {
+                pdfBuffer = Buffer.from(pdfBase64.replace(/^data:application\/pdf;base64,/, ''), 'base64');
+            } catch (err) {
+                console.warn('⚠️ Could not decode provided pdfBase64, proceeding to generate or fallback:', err.message);
+            }
+        }
+        
+        if (!pdfBuffer) {
+            try {
+                console.log(`📄 Generating Trilingual PDF Advisory for ${name} (${crop}, ${district})...`);
+                pdfBuffer = await generateTrilingualPDF({
+                    farmerName: name,
+                    farmerPhone,
+                    farmerVillage,
+                    district,
+                    crop,
+                    disease,
+                    fertilizer,
+                    yield_t_ha,
+                    weather,
+                });
+                console.log(`✅ PDF generated successfully (${pdfBuffer.length} bytes)`);
+            } catch (pdfErr) {
+                console.error(`⚠️ PDF generation failed, dispatching comprehensive HTML email instead:`, pdfErr.message);
+            }
         }
 
         const conditionName = disease?.name || 'Diagnostic Completed';
@@ -119,10 +129,10 @@ app.post('/send-email', async (req, res) => {
 
         // 2. Compose High-Quality Email Body
         const mailOptions = {
-            from: `"AeroCrop.ai Advisory" <${process.env.FROM}>`,
+            from: `"AeroCrop.ai Advisory" <${SENDER_EMAIL}>`,
             to: email,
             subject: `🌾 पीक सल्ला व रोग निदान अहवाल | Crop Advisory Report — ${crop} (${conditionName})`,
-            text: `Namaste ${name},\n\nYour crop diagnostic report for ${crop} (${district}) is attached.\n\nCondition: ${conditionName}\nConfidence: ${confidence}\nSeverity: ${severity}\n\nThe PDF contains complete details in 3 comprehensive sections:\n1. Marathi (मराठी अहवाल)\n2. English (English Report)\n3. Hindi (हिंदी रिपोर्ट)\n\nRegards,\nAeroCrop.ai Team`,
+            text: `Namaste ${name},\n\nYour crop diagnostic report for ${crop} (${district}) is attached.\n\nCondition: ${conditionName}\nConfidence: ${confidence}\nSeverity: ${severity}\n\nThe report contains complete details in 3 comprehensive sections:\n1. Marathi (मराठी अहवाल)\n2. English (English Report)\n3. Hindi (हिंदी रिपोर्ट)\n\nRegards,\nAeroCrop.ai Team`,
             html: `
 <div style="font-family:'Segoe UI',Arial,sans-serif;color:#0f172a;max-width:620px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05)">
   <div style="background:linear-gradient(135deg, #15803d, #16a34a);color:#ffffff;padding:22px 28px">
@@ -157,7 +167,7 @@ app.post('/send-email', async (req, res) => {
 
     <div style="background:#f0fdf4;border-left:5px solid #16a34a;padding:14px 16px;border-radius:6px;margin:18px 0">
       <p style="margin:0;font-size:13px;color:#166534;font-weight:600">
-        📎 संपूर्ण सविस्तर अहवाल PDF स्वरूपात सोबत जोडला आहे:
+        ${pdfBuffer ? '📎 संपूर्ण सविस्तर अहवाल PDF स्वरूपात सोबत जोडला आहे:' : '📋 अहवाल सविस्तर तपशील:'}
       </p>
       <ul style="margin:6px 0 0 18px;padding:0;font-size:12px;color:#14532d">
         <li><strong>विभाग १ : मराठी अहवाल</strong> — रासायनिक व सेंद्रिय फवारणी, खतांचे डोस, हवामान व विमा पडताळणी</li>
@@ -171,11 +181,11 @@ app.post('/send-email', async (req, res) => {
     </p>
   </div>
 </div>`,
-            attachments: [{
+            attachments: pdfBuffer ? [{
                 filename: `AeroCrop_Advisory_${crop}_${Date.now()}.pdf`,
                 content: pdfBuffer,
                 contentType: 'application/pdf',
-            }],
+            }] : [],
         };
 
         const info = await transporter.sendMail(mailOptions);

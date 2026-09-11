@@ -49,7 +49,8 @@ class EmailService:
         logger.info("[EmailService] Dispatching advisory PDF email to %s via %s", farmer_email, url)
 
         try:
-            async with httpx.AsyncClient(timeout=12.0) as client:
+            client_timeout = httpx.Timeout(35.0, connect=5.0)
+            async with httpx.AsyncClient(timeout=client_timeout) as client:
                 response = await client.post(url, json=payload)
                 if response.status_code == 200:
                     resp_json = response.json()
@@ -66,15 +67,19 @@ class EmailService:
                         "error": f"Email service HTTP {response.status_code}",
                         "details": response.text,
                     }
-        except httpx.ConnectError:
+        except (httpx.ConnectError, httpx.ConnectTimeout) as conn_err:
             logger.warning(
-                "[EmailService] Could not connect to email service at %s. Ensure 'npm start' is running in email_service/.",
+                "[EmailService] Could not reach email service at %s (%s). Check internal container hostname in Coolify.",
                 url,
+                conn_err,
             )
             return {
                 "success": False,
-                "error": f"Email service unreachable at {url}. Ensure email_service microservice is running.",
+                "error": f"Email service unreachable at {url}: {conn_err}",
             }
+        except httpx.ReadTimeout:
+            logger.warning("[EmailService] Timeout (>35s) waiting for email service at %s.", url)
+            return {"success": False, "error": f"Timeout waiting for email service at {url}"}
         except Exception as exc:
             logger.error("[EmailService] Exception while dispatching email to %s: %s", farmer_email, exc)
             return {"success": False, "error": str(exc)}

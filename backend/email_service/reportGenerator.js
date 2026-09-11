@@ -4,17 +4,22 @@ const path = require('path');
 
 function getBrowserExecutable() {
     const candidates = [
+        process.env.PUPPETEER_EXECUTABLE_PATH,
+        process.env.CHROME_PATH,
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium',
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome',
         'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
         'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
         'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
         'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-        process.env.CHROME_PATH,
     ].filter(Boolean);
 
     for (const p of candidates) {
         if (fs.existsSync(p)) return p;
     }
-    throw new Error('No compatible Chrome or Edge browser found for PDF rendering.');
+    throw new Error('No compatible Chrome or Chromium browser found for PDF rendering.');
 }
 
 // Crop mappings
@@ -303,7 +308,8 @@ function buildHTML(data) {
 <html lang="mr">
 <head>
 <meta charset="UTF-8">
-<title>AeroCrop.ai Trilingual Advisory Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   @page {
     size: A4 portrait;
@@ -315,7 +321,7 @@ function buildHTML(data) {
     padding: 0;
   }
   body {
-    font-family: 'Nirmala UI', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    font-family: 'Noto Sans Devanagari', 'Nirmala UI', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     color: #0f172a;
     background: #ffffff;
     font-size: 9pt;
@@ -1324,6 +1330,7 @@ async function generateTrilingualPDF(data) {
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
             '--disable-gpu',
             '--font-render-hinting=none',
         ]
