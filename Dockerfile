@@ -31,8 +31,7 @@ COPY backend/ ./backend/
 COPY model/ ./model/
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 COPY main.py config.py ./
-COPY data/ ./data/
-COPY uploads/ ./uploads/
+RUN mkdir -p /app/data /app/uploads
 
 # Environment defaults (optimized for multi-core ARM64/x86 VPS)
 ENV HOST=0.0.0.0 \

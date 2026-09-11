@@ -1,4 +1,4 @@
-﻿FROM python:3.11-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -19,8 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 COPY model/ ./model/
 COPY main.py config.py ./
-COPY data/ ./data/
-COPY uploads/ ./uploads/
+RUN mkdir -p /app/data /app/uploads
 
 # Environment defaults (optimized for ARM64 2 OCPU / 4 vCPUs)
 ENV HOST=0.0.0.0 \

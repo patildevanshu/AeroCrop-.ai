@@ -46,7 +46,8 @@ logs/
 
 
 # Data & Uploads
-data/
+data/*
+!data/.gitkeep
 datasets/
 uploads/*
 !uploads/.gitkeep
