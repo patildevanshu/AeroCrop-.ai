@@ -4,6 +4,22 @@
 
 const AUTH_TOKEN_KEY = 'aerocrop_jwt_token';
 
+// If VITE_API_URL is configured (e.g. https://api.yourdomain.com), prefix endpoints.
+const API_BASE_URL = String((import.meta as any).env?.VITE_API_URL || '').replace(/\/$/, '');
+
+export function resolveAssetUrl(url?: string | null): string {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const clean = url.startsWith('/') ? url : `/${url}`;
+  return `${API_BASE_URL}${clean}`;
+}
+
+export function getApiUrl(endpoint: string): string {
+  return resolveAssetUrl(endpoint);
+}
+
 export function getAuthToken(): string | null {
   return localStorage.getItem(AUTH_TOKEN_KEY);
 }
@@ -38,7 +54,8 @@ export async function apiFetch<T = any>(
     (headers as Record<string, string>)['Content-Type'] = 'application/json';
   }
 
-  const response = await fetch(endpoint, {
+  const targetUrl = resolveAssetUrl(endpoint);
+  const response = await fetch(targetUrl, {
     ...options,
     headers,
   });
