@@ -9,12 +9,12 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 
-const SENDER_EMAIL = process.env.FROM;
-const SENDER_PASS  = process.env.PASS;
+const SENDER_EMAIL = (process.env.FROM || process.env.EMAIL_USER || '').trim();
+const SENDER_PASS  = (process.env.PASS || process.env.EMAIL_PASS || '').trim();
 const PORT         = process.env.PORT || 5000;
 
 if (!SENDER_EMAIL || !SENDER_PASS) {
-    console.warn('⚠️  FROM or PASS not set in .env — email sending will fail.');
+    console.warn('⚠️  Email credentials (FROM/EMAIL_USER or PASS/EMAIL_PASS) not configured. Email report sending is disabled.');
 }
 
 // ── Nodemailer Transporter (Singleton) ──────────────────────────────────────
@@ -23,14 +23,16 @@ const transporter = nodemailer.createTransport({
     auth: { user: SENDER_EMAIL, pass: SENDER_PASS },
 });
 
-transporter.verify((err) => {
-    if (err) {
-        console.error('❌ SMTP Connection Error:', err.message);
-        console.warn('💡 Tip: Ensure 2-Step Verification is ON and use a 16-character App Password.');
-    } else {
-        console.log(`✅ SMTP Server connected successfully as: ${SENDER_EMAIL}`);
-    }
-});
+if (SENDER_EMAIL && SENDER_PASS) {
+    transporter.verify((err) => {
+        if (err) {
+            console.error('❌ SMTP Connection Error:', err.message);
+            console.warn('💡 Tip: Ensure 2-Step Verification is ON and use a 16-character Google App Password.');
+        } else {
+            console.log(`✅ SMTP Server connected successfully as: ${SENDER_EMAIL}`);
+        }
+    });
+}
 
 // ── Health Check ────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
