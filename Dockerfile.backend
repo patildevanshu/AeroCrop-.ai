@@ -23,15 +23,15 @@ RUN mkdir -p /app/data /app/uploads
 
 # Environment defaults (optimized for ARM64 2 OCPU / 4 vCPUs)
 ENV HOST=0.0.0.0 \
-    PORT=8000 \
+    PORT=3000 \
     PYTHONUNBUFFERED=1 \
     OMP_NUM_THREADS=4 \
     OPENBLAS_NUM_THREADS=4 \
     MKL_NUM_THREADS=4
 
-EXPOSE 8000
+EXPOSE 3000 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8000/api/health || exit 1
+  CMD curl -f http://localhost:${PORT:-3000}/api/health || exit 1
 
-CMD [uvicorn, backend.main:app, --host, 0.0.0.0, --port, 8000]
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-3000}"]
