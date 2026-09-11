@@ -64,13 +64,21 @@ async def init_mongodb() -> None:
     client = get_client()
     db = client[config.MONGODB_DB_NAME]
 
-    # Verify server is responsive
-    try:
-        await client.admin.command("ping")
-        logger.info("[MongoDB] Ping successful! Connected to MongoDB server.")
-    except Exception as exc:
-        logger.error("[MongoDB] Connection failure: %s", exc)
-        raise exc
+    # Verify server is responsive with retry loop
+    connected = False
+    for attempt in range(1, 6):
+        try:
+            await client.admin.command("ping")
+            logger.info("[MongoDB] Ping successful! Connected to MongoDB server.")
+            connected = True
+            break
+        except Exception as exc:
+            logger.warning("[MongoDB] Connection attempt %d/5 failed (%s). Retrying in 2s...", attempt, exc)
+            await asyncio.sleep(2)
+
+    if not connected:
+        logger.error("[MongoDB] Could not establish MongoDB connection after 5 attempts.")
+        raise ConnectionError(f"Could not connect to MongoDB at {config.MONGODB_URL}")
 
     # Ensure indexes on collections
     try:

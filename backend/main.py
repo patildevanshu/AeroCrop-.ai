@@ -88,21 +88,26 @@ app = FastAPI(
 
 # ── CORS ───────────────────────────────────────────────────────────────────
 _raw_cors = os.getenv("CORS_ORIGINS", "")
-CORS_ORIGINS = [origin.strip() for origin in _raw_cors.split(",") if origin.strip()]
-if not CORS_ORIGINS:
-    CORS_ORIGINS = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-    ]
+raw_list = [origin.strip() for origin in _raw_cors.split(",") if origin.strip()]
+
+allow_all_regex = "*" in _raw_cors or not raw_list or "devanshupatil.tech" in _raw_cors
+
+CORS_ORIGINS = list(dict.fromkeys([
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://aerocrop.devanshupatil.tech",
+    "https://aerocrop-ai.devanshupatil.tech",
+    "https://api-aerocrop.devanshupatil.tech",
+] + [o for o in raw_list if o != "*"]))
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origin_regex=r"^https?://.*$" if allow_all_regex else r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
