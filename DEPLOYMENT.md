@@ -109,10 +109,6 @@ sudo systemctl enable --now mongod
 cd backend/email_service && npm install && node server.js &
 cd ../..
 
-# 7. Run Validator Service
-cd validator_service && pip install -r requirements.txt && python3 server.py &
-cd ..
-
 # 8. Start AeroCrop Backend (serves Frontend + API together)
 uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```

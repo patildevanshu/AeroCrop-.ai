@@ -17,7 +17,7 @@ services:
       - MONGODB_DB_NAME=aerocrop
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-aerocrop-maharashtra-farm-secret-key-2026}
       - EMAIL_SERVICE_URL=http://email-service:5000/send-email
-      - VALIDATOR_SERVICE_URL=http://validator-service:5005/api/v1/validate
+      - VALIDATOR_SERVICE_URL=${VALIDATOR_SERVICE_URL:-}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8000,http://localhost:3000}
     volumes:
       - aerocrop_data:/app/data
@@ -25,7 +25,6 @@ services:
     depends_on:
       - mongodb
       - email-service
-      - validator-service
 
   mongodb:
     image: mongo:7.0
@@ -54,20 +53,8 @@ services:
       - EMAIL_USER=${EMAIL_USER:-}
       - EMAIL_PASS=${EMAIL_PASS:-}
 
-  validator-service:
-    build:
-      context: ./validator_service
-      dockerfile: Dockerfile
-    container_name: aerocrop-validator
-    restart: unless-stopped
-    ports:
-      - "5005:5005"
-    environment:
-      - PORT=5005
-      - VALIDATOR_API_KEY=${VALIDATOR_API_KEY:-}
-      - VALIDATOR_MODEL=${VALIDATOR_MODEL:-gemini-3.1-flash-lite-preview}
-
 volumes:
   aerocrop_data:
   aerocrop_uploads:
   aerocrop_mongodb_data:
+

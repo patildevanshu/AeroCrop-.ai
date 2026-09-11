@@ -16,8 +16,9 @@ env/
 .venv/
 .env/
 
-# Model weights (large binary files — store separately)
+# Model weights
 model/*.pth
+!model/aerocrop_weights.pth
 model/*.pt
 model/*.ckpt
 

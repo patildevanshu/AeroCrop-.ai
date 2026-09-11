@@ -9,8 +9,12 @@ echo.
 echo 1. Starting Email Microservice (:5000)...
 start "AeroCrop Email (:5000)" cmd /k "cd backend\email_service && node server.js"
 
-echo 2. Starting Validator Microservice (:5005)...
-start "AeroCrop Validator (:5005)" cmd /k "python validator_service\server.py"
+echo 2. Checking Validator Microservice (:5005)...
+if exist "..\aerocrop-validator\main.py" (
+    start "AeroCrop Validator (:5005)" cmd /k "cd ..\aerocrop-validator && python main.py"
+) else (
+    echo    (Validator service running in standalone repository or remote container)
+)
 
 echo 3. Starting Backend API (:8000)...
 start "AeroCrop Backend (:8000)" cmd /k "python main.py"
