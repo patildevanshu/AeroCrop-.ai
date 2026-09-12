@@ -2,14 +2,35 @@ const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 const path = require('path');
 
+const { execSync } = require('child_process');
+
+function findBinaryInPath(bin) {
+    try {
+        const out = execSync(`which ${bin} 2>/dev/null`, { encoding: 'utf8' }).trim();
+        if (out && fs.existsSync(out)) return out;
+    } catch (_) {}
+    return null;
+}
+
 function getBrowserExecutable() {
+    const fromPath = [
+        findBinaryInPath('chromium'),
+        findBinaryInPath('chromium-browser'),
+        findBinaryInPath('google-chrome'),
+        findBinaryInPath('google-chrome-stable'),
+    ];
+
     const candidates = [
         process.env.PUPPETEER_EXECUTABLE_PATH,
         process.env.CHROME_PATH,
+        ...fromPath,
         '/usr/bin/chromium-browser',
         '/usr/bin/chromium',
         '/usr/bin/google-chrome-stable',
         '/usr/bin/google-chrome',
+        '/root/.nix-profile/bin/chromium',
+        '/nix/var/nix/profiles/default/bin/chromium',
+        '/snap/bin/chromium',
         'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
         'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
         'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',

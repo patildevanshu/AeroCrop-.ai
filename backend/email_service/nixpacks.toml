@@ -1,0 +1,5 @@
+﻿[phases.setup]
+nixPkgs = ["chromium", "fontconfig", "noto-fonts", "noto-fonts-cjk-sans"]
+
+[variables]
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
