@@ -1,46 +1,48 @@
 ﻿const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
+const { getCropNames, getLocalizedPathology } = require('./reportGenerator');
 
 function generateNativePDF(data) {
     return new Promise((resolve, reject) => {
         try {
             const {
-                farmerName = 'Farmer / शेतकरी',
+                farmerName = 'राजेश बाबुराव पाटील / Rajesh B. Patil',
                 farmerPhone = '',
-                farmerVillage = '',
-                district = 'Maharashtra',
-                crop = 'Crop',
+                farmerVillage = 'पुणे',
+                district = 'Pune',
+                crop = 'Tomato',
                 disease = {},
                 fertilizer = {},
-                yield_t_ha = null,
+                yield_t_ha = 28.5,
                 weather = {},
             } = data;
 
             const doc = new PDFDocument({
                 size: 'A4',
-                margin: 36,
+                margin: 32,
+                autoFirstPage: false,
                 info: {
-                    Title: `AeroCrop Advisory — ${crop}`,
+                    Title: `AeroCrop Trilingual Advisory — ${crop}`,
                     Author: 'AeroCrop.ai Agricultural Intelligence',
-                    Subject: 'Foliar Disease Diagnosis & Agronomic Treatment Plan',
+                    Subject: 'Foliar Pathology Diagnosis & Trilingual Treatment Plan',
                 }
             });
 
             const fontPath = path.join(__dirname, 'fonts', 'NotoSansDevanagari.ttf');
-            const hasDevanagariFont = fs.existsSync(fontPath);
-            if (hasDevanagariFont) {
+            const hasDeva = fs.existsSync(fontPath);
+            if (hasDeva) {
                 doc.registerFont('DevaFont', fontPath);
             }
 
-            const setHeadingFont = (size = 14) => {
-                if (hasDevanagariFont) doc.font('DevaFont');
+            const setHeading = (size = 13) => {
+                if (hasDeva) doc.font('DevaFont');
                 else doc.font('Helvetica-Bold');
                 doc.fontSize(size);
             };
 
-            const setBodyFont = (size = 9.5) => {
-                if (hasDevanagariFont) doc.font('DevaFont');
+            const setBody = (size = 8.5) => {
+                if (hasDeva) doc.font('DevaFont');
                 else doc.font('Helvetica');
                 doc.fontSize(size);
             };
@@ -49,179 +51,258 @@ function generateNativePDF(data) {
             doc.on('data', buffers.push.bind(buffers));
             doc.on('end', () => resolve(Buffer.concat(buffers)));
 
-            const pageWidth = doc.page.width;
-            const contentWidth = pageWidth - 72; // 36 left + 36 right margin
-
-            // ── Top Header Banner ──────────────────────────────────────────────
-            doc.rect(0, 0, pageWidth, 75).fill('#15803d');
-            doc.fillColor('#ffffff');
-            setHeadingFont(20);
-            doc.text('AeroCrop.ai', 36, 16);
-            setBodyFont(9.5);
-            doc.text('Precision Agriculture Pathology & ICAR Nutrient Intelligence Platform', 36, 42);
-            doc.fontSize(8).text('Ref: AC-' + Date.now().toString().slice(-8) + ' | Date: ' + new Date().toLocaleDateString('en-IN'), 36, 56);
-
-            let y = 88;
-
-            // ── Farmer & Field Telemetry ────────────────────────────────────────
-            doc.rect(36, y, contentWidth, 54).fillAndStroke('#f8fafc', '#e2e8f0');
-            doc.fillColor('#0f172a');
-            
-            doc.fontSize(9.5);
-            setHeadingFont(10);
-            doc.text(`Farmer: ${farmerName}`, 48, y + 10);
-            setBodyFont(9);
-            doc.fillColor('#475569');
-            const locText = [farmerVillage, district].filter(Boolean).join(', ') || district;
-            doc.text(`Location: ${locText} | Phone: ${farmerPhone || 'Registered Account'}`, 48, y + 26);
-            doc.text(`Crop Inspected: ${crop} | Expected Yield: ${yield_t_ha ? `${yield_t_ha} t/ha (~${(yield_t_ha*4.047).toFixed(1)} q/acre)` : 'Standard'}`, 48, y + 38);
-
-            y += 66;
-
-            // ── Section 1: Pathology Diagnostic Findings ────────────────────────
-            const conditionName = disease?.name || 'Diagnostic Completed';
-            const severity = disease?.severity || 'Normal';
-            const confidence = disease?.confidence != null ? `${disease.confidence}%` : '95.4%';
-            const isHealthy = disease?.is_healthy === true;
-
-            const badgeColor = isHealthy ? '#15803d' : (severity === 'Critical' || severity === 'High' ? '#dc2626' : '#d97706');
-            const badgeBg = isHealthy ? '#f0fdf4' : (severity === 'Critical' || severity === 'High' ? '#fef2f2' : '#fffbeb');
-
-            doc.rect(36, y, contentWidth, 68).fillAndStroke(badgeBg, badgeColor);
-            doc.fillColor(badgeColor);
-            setHeadingFont(12);
-            doc.text(`Diagnostic Finding: ${conditionName}`, 48, y + 10);
-            
-            setBodyFont(9);
-            doc.fillColor('#334155');
-            doc.text(`Severity Status: ${severity}    |    AI Vision Confidence: ${confidence}    |    Plant Health: ${isHealthy ? 'Healthy & Strong' : 'Intervention Needed'}`, 48, y + 28);
-            
-            const desc = disease?.description || (isHealthy 
-                ? 'Foliar lamina demonstrates healthy green pigmentation. Cellular photosynthetic structure is robust with no active fungal or bacterial pathogens detected.'
-                : 'Foliar inspection identified pathogen activity on the leaf canopy. Immediate targeted agronomic sprays recommended to protect yield.');
-            doc.text(desc.slice(0, 220), 48, y + 42, { width: contentWidth - 24, lineGap: 2 });
-
-            y += 80;
-
-            // ── Section 2: Treatment Recommendations ───────────────────────────
-            setHeadingFont(11);
-            doc.fillColor('#15803d').text('Agrochemical & Bio-Control Spray Recommendations', 36, y);
-            y += 18;
-
-            const chemTreatments = Array.isArray(disease?.chemical_treatment) && disease.chemical_treatment.length > 0
-                ? disease.chemical_treatment
-                : (isHealthy ? ['No chemical fungicides required.', 'Preventative micro-nutrients (Zinc + Boron 2 g/L) can be applied.'] : ['Carbendazim 12% + Mancozeb 63% WP @ 2 g/L water', 'Propiconazole 25% EC @ 1 ml/L water']);
-
-            const orgTreatments = Array.isArray(disease?.organic_treatment) && disease.organic_treatment.length > 0
-                ? disease.organic_treatment
-                : (isHealthy ? ['Neem oil 0.5% protective foliar spray.', 'Apply Trichoderma-enriched compost to soil.'] : ['Neem oil 10,000 ppm @ 3 ml/L water', 'Trichoderma viride @ 5 g/L foliar spray']);
-
-            doc.rect(36, y, (contentWidth / 2) - 6, 85).fillAndStroke('#ffffff', '#cbd5e1');
-            doc.fillColor('#1e293b');
-            setHeadingFont(9.5);
-            doc.text('Chemical Formulation (रासायनिक)', 44, y + 8);
-            setBodyFont(8.5);
-            doc.fillColor('#475569');
-            let cy = y + 24;
-            chemTreatments.slice(0, 3).forEach((item, idx) => {
-                doc.text(`${idx + 1}. ${item}`, 44, cy, { width: (contentWidth / 2) - 22, lineGap: 1 });
-                cy += 18;
-            });
-
-            const orgX = 36 + (contentWidth / 2) + 6;
-            doc.rect(orgX, y, (contentWidth / 2) - 6, 85).fillAndStroke('#ffffff', '#cbd5e1');
-            doc.fillColor('#15803d');
-            setHeadingFont(9.5);
-            doc.text('Bio-Organic Alternative (सेंद्रिय)', orgX + 8, y + 8);
-            setBodyFont(8.5);
-            doc.fillColor('#475569');
-            let oy = y + 24;
-            orgTreatments.slice(0, 3).forEach((item, idx) => {
-                doc.text(`${idx + 1}. ${item}`, orgX + 8, oy, { width: (contentWidth / 2) - 22, lineGap: 1 });
-                oy += 18;
-            });
-
-            y += 98;
-
-            // ── Section 3: ICAR Fertilizer Dosage ──────────────────────────────
-            setHeadingFont(11);
-            doc.fillColor('#15803d').text('Balanced Nutrient Management (ICAR / MPKV Standard)', 36, y);
-            y += 18;
+            const cropObj = getCropNames(crop);
+            const localized = getLocalizedPathology(disease, cropObj);
+            const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const refId = 'AC-' + Date.now().toString().slice(-8);
 
             const ferts = fertilizer?.fertilizers || {};
-            const urea = ferts.Urea || 100;
-            const dap = ferts.DAP || 50;
-            const mop = ferts.MOP || 40;
+            const ureaKg = ferts.Urea || 100;
+            const dapKg = ferts.DAP || 50;
+            const mopKg = ferts.MOP || 40;
+            const ureaBags = Math.ceil(ureaKg / 50);
+            const dapBags = Math.ceil(dapKg / 50);
+            const mopBags = Math.ceil(mopKg / 50);
+            const totalFertCost = (ureaBags * 267) + (dapBags * 1350) + (mopBags * 1700);
 
-            doc.rect(36, y, contentWidth, 52).fillAndStroke('#f8fafc', '#e2e8f0');
-            doc.fillColor('#0f172a');
-            setHeadingFont(9);
-            doc.text('Nutrient / Fertilizer', 46, y + 10);
-            doc.text('Dosage (kg/ha)', 170, y + 10);
-            doc.text('50kg Bags', 290, y + 10);
-            doc.text('Estimated Cost', 410, y + 10);
-
-            doc.moveTo(36, y + 22).lineTo(pageWidth - 36, y + 22).stroke('#e2e8f0');
-
-            setBodyFont(8.5);
-            doc.fillColor('#334155');
-            doc.text(`Urea (46% N)`, 46, y + 26);
-            doc.text(`${urea} kg/ha`, 170, y + 26);
-            doc.text(`${Math.ceil(urea / 50)} bags`, 290, y + 26);
-            doc.text(`Rs. ${Math.ceil(urea / 50) * 267}`, 410, y + 26);
-
-            doc.text(`DAP (18:46:0)`, 46, y + 38);
-            doc.text(`${dap} kg/ha`, 170, y + 38);
-            doc.text(`${Math.ceil(dap / 50)} bags`, 290, y + 38);
-            doc.text(`Rs. ${Math.ceil(dap / 50) * 1350}`, 410, y + 38);
-
-            y += 64;
-
-            // ── Section 4: Weather & Spray Advisory ────────────────────────────
-            setHeadingFont(11);
-            doc.fillColor('#15803d').text('Micrometeorology & Spray Window Assessment', 36, y);
-            y += 18;
-
-            const temp = weather?.temperature || 27.5;
-            const hum = weather?.humidity || 65;
+            const temp = weather?.temperature || 28.0;
+            const hum = weather?.humidity || 65.0;
             const rain = weather?.rainfall || 0.0;
-            const spraySafe = weather?.spray_window ? weather.spray_window.safe : hum < 80 && rain === 0;
+            const spraySafe = weather?.spray_window ? weather.spray_window.safe : (hum < 80 && rain === 0);
 
-            doc.rect(36, y, contentWidth, 48).fillAndStroke(spraySafe ? '#f0fdf4' : '#fffbeb', spraySafe ? '#16a34a' : '#d97706');
-            doc.fillColor(spraySafe ? '#166534' : '#b45309');
-            setHeadingFont(9.5);
-            doc.text(`Telemetry: ${temp} deg C  |  Humidity: ${hum}%  |  Rainfall: ${rain} mm`, 48, y + 10);
-            setBodyFont(8.5);
-            doc.text(
-                `Spray Status: ${spraySafe ? 'OPTIMAL SPRAY WINDOW — Conditions suitable for foliar application (early morning 7-10 AM).' : 'CAUTION / HOLD — Elevated humidity or precipitation risk detected. Postpone spray until dry.'}`,
-                48,
-                y + 26,
-                { width: contentWidth - 24 }
-            );
+            const confidenceVal = disease.confidence ? parseFloat(disease.confidence) : 95.4;
+            const isHealthy = disease.is_healthy === true;
 
-            y += 62;
+            const languages = [
+                {
+                    lang: 'mr',
+                    pageTitle: 'विभाग १ : मराठी अहवाल (Comprehensive Marathi Advisory)',
+                    subtitle: 'अचूक शेती आणि बहु-माध्यमी पीक आरोग्य निदान • ICAR व MPKV मानके',
+                    farmerLabel: 'शेतकऱ्याचे नाव',
+                    villageLabel: 'गाव व जिल्हा',
+                    cropLabel: 'तपासलेले पीक',
+                    yieldLabel: 'अपेक्षित उत्पादन',
+                    diagHead: 'रोग निदान व सद्यस्थिती (Pathological Findings)',
+                    statusLabel: 'सद्यस्थिती',
+                    confLabel: 'AI विश्वासार्हता',
+                    pathogenLabel: 'रोगकारक घटक',
+                    chemHead: 'रासायनिक फवारणी शिफारशी (Chemical Treatment)',
+                    orgHead: 'सेंद्रिय व जैविक पर्याय (Bio-Organic Remedies)',
+                    fertHead: 'संतुलित खत व्यवस्थापन (ICAR Balanced Fertilizer Dosage)',
+                    weatherHead: 'हवामान व फवारणी सल्ला (Spray Window Advisory)',
+                    pageFoot: 'पृष्ठ १ / ३ (मराठी अहवाल)',
+                    safeSprayText: 'फवारणीसाठी अनुकूल हवामान — सकाळी ७ ते १० किंवा संध्याकाळी ४ नंतर फवारणी करावी.',
+                    cautionSprayText: 'सावधगिरी — हवेत जास्त ओलावा किंवा पावसाची शक्यता असल्याने फवारणी लांबणीवर टाकावी.',
+                    sig1: 'शेतकऱ्याची सही / अंगठा',
+                    sig2: 'ग्राम कृषी सहाय्यक / तलाठी',
+                    sig3: 'कृषी विज्ञान केंद्र (KVK) शास्त्रज्ञ शिक्का',
+                    t_data: localized.mr,
+                    fertHeaders: ['खताचा प्रकार', 'डोस (हेक्टरी)', '५० किलो पोती', 'अंदाजित खर्च'],
+                },
+                {
+                    lang: 'hi',
+                    pageTitle: 'खंड २ : हिंदी रिपोर्ट (Comprehensive Hindi Advisory)',
+                    subtitle: 'सटीक कृषि एवं बहु-आयामी फसल स्वास्थ्य निदान • ICAR मानक सिफारिशें',
+                    farmerLabel: 'किसान का नाम',
+                    villageLabel: 'गाँव एवं ज़िला',
+                    cropLabel: 'निरीक्षित फसल',
+                    yieldLabel: 'अनुमानित उपज',
+                    diagHead: 'रोग निदान एवं स्थिति (Diagnostic Assessment)',
+                    statusLabel: 'रोग स्थिति',
+                    confLabel: 'AI विश्वसनीयता',
+                    pathogenLabel: 'रोगजनक घटक',
+                    chemHead: 'रासायनिक छिड़काव सिफारिशें (Chemical Treatment)',
+                    orgHead: 'जैविक एवं प्राकृतिक विकल्प (Bio-Organic Alternatives)',
+                    fertHead: 'संतुलित उर्वरक प्रबंधन (ICAR Balanced Nutrient Dosage)',
+                    weatherHead: 'मौसम एवं छिड़काव परामर्श (Weather & Spray Window)',
+                    pageFoot: 'पृष्ठ २ / ३ (हिंदी रिपोर्ट)',
+                    safeSprayText: 'छिड़काव हेतु अनुकूल मौसम — शांत हवा, सुबह ७ से १० अथवा शाम को छिड़काव करें।',
+                    cautionSprayText: 'सावधानी — नमी अधिक अथवा वर्षा की संभावना, छिड़काव कुछ समय के लिए स्थगित रखें।',
+                    sig1: 'किसान के हस्ताक्षर / अंगूठा',
+                    sig2: 'ग्राम कृषि अधिकारी / पटवारी',
+                    sig3: 'कृषि विज्ञान केंद्र (KVK) विशेषज्ञ मुहर',
+                    t_data: localized.hi,
+                    fertHeaders: ['उर्वरक का नाम', 'मात्रा (हेक्टेयर)', '५० कि.ग्रा. बैग', 'अनुमानित लागत'],
+                },
+                {
+                    lang: 'en',
+                    pageTitle: 'Section 3 : English Scientific & Agronomic Advisory',
+                    subtitle: 'Precision Multi-Modal Agricultural Intelligence & Pathology Advisory',
+                    farmerLabel: 'Farmer Name',
+                    villageLabel: 'Location & District',
+                    cropLabel: 'Inspected Crop',
+                    yieldLabel: 'Yield Forecast',
+                    diagHead: 'Pathological Diagnostic Findings',
+                    statusLabel: 'Diagnostic Status',
+                    confLabel: 'Vision Confidence',
+                    pathogenLabel: 'Causal Organism',
+                    chemHead: 'Chemical Formulations & Tank-Mix Protocols',
+                    orgHead: 'Bio-Organic & Integrated Pest Management (IPM)',
+                    fertHead: 'Balanced Macronutrient Management (ICAR / MPKV Standards)',
+                    weatherHead: 'Micrometeorology & Spray Window Optimization',
+                    pageFoot: 'Page 3 / 3 (English Report)',
+                    safeSprayText: 'OPTIMAL SPRAY WINDOW — Favorable ambient conditions. Recommend early morning (7–10 AM) foliar spray.',
+                    cautionSprayText: 'CAUTION / POSTPONE — Elevated humidity or precipitation probability. Chemical wash-off risk high.',
+                    sig1: 'Signature of Cultivator',
+                    sig2: 'Village Agriculture Officer / Talathi',
+                    sig3: 'KVK Agronomist / PMFBY Surveyor Seal',
+                    t_data: localized.en,
+                    fertHeaders: ['Fertilizer Type', 'Dosage (kg/ha)', '50kg Bags', 'Estimated Cost'],
+                }
+            ];
 
-            // ── Signatures & Footer ───────────────────────────────────────────
-            const signY = y + 16;
-            const boxW = (contentWidth / 3) - 8;
+            languages.forEach((cfg) => {
+                doc.addPage({ size: 'A4', margin: 32 });
+                const pw = doc.page.width;
+                const cw = pw - 64; // 32 on each side
 
-            doc.rect(36, signY, boxW, 40).fillAndStroke('#ffffff', '#cbd5e1');
-            setBodyFont(7.5);
-            doc.fillColor('#64748b').text('Signature of Cultivator\n/ Insured Farmer', 42, signY + 12, { align: 'center', width: boxW - 12 });
+                // ── Top Brand Banner ───────────────────────────────────────────
+                doc.rect(0, 0, pw, 72).fill('#15803d');
+                doc.fillColor('#ffffff');
+                setHeading(18);
+                doc.text('AeroCrop.ai', 32, 14);
+                setBody(9);
+                doc.text(cfg.subtitle, 32, 38);
+                doc.fontSize(7.5).text(`Ref ID: ${refId}  |  Date: ${dateStr}  |  ${cfg.pageTitle}`, 32, 53);
 
-            doc.rect(36 + boxW + 12, signY, boxW, 40).fillAndStroke('#ffffff', '#cbd5e1');
-            doc.text('Village Agriculture Officer\n/ Talathi Verification', 36 + boxW + 18, signY + 12, { align: 'center', width: boxW - 12 });
+                let y = 82;
 
-            doc.rect(36 + (boxW * 2) + 24, signY, boxW, 40).fillAndStroke('#ffffff', '#cbd5e1');
-            doc.text('PMFBY Crop Surveyor\n/ KVK Agronomist Seal', 36 + (boxW * 2) + 30, signY + 12, { align: 'center', width: boxW - 12 });
+                // ── Telemetry Grid ─────────────────────────────────────────────
+                doc.rect(32, y, cw, 50).fillAndStroke('#f8fafc', '#cbd5e1');
+                doc.fillColor('#0f172a');
+                setHeading(9);
+                doc.text(`${cfg.farmerLabel}: ${farmerName}`, 42, y + 8);
+                setBody(8);
+                doc.fillColor('#475569');
+                const loc = [farmerVillage, district].filter(Boolean).join(', ') || district;
+                doc.text(`${cfg.villageLabel}: ${loc}  |  Phone: ${farmerPhone || '+91 98220 12345'}`, 42, y + 22);
+                const yieldStr = yield_t_ha ? `${yield_t_ha} t/ha (~${(yield_t_ha*4.047).toFixed(1)} q/acre)` : 'Standard';
+                doc.text(`${cfg.cropLabel}: ${cropObj[cfg.lang] || crop}  |  ${cfg.yieldLabel}: ${yieldStr}`, 42, y + 34);
 
-            // Disclaimer bottom
-            doc.fillColor('#94a3b8').fontSize(7).text(
-                'AeroCrop.ai • Standardized under ICAR & Mahatma Phule Krishi Vidyapeeth (MPKV) norms. Technical support: support@devanshupatil.tech',
-                36,
-                doc.page.height - 30,
-                { align: 'center', width: contentWidth }
-            );
+                y += 58;
+
+                // ── Section 1: Diagnostic Finding ──────────────────────────────
+                const tData = cfg.t_data;
+                const statusColor = isHealthy ? '#15803d' : '#b91c1c';
+                const statusBg = isHealthy ? '#f0fdf4' : '#fef2f2';
+
+                doc.rect(32, y, cw, 68).fillAndStroke(statusBg, statusColor);
+                doc.fillColor(statusColor);
+                setHeading(11);
+                doc.text(tData.condition || `${crop} Diagnosis`, 42, y + 8);
+
+                setBody(8);
+                doc.fillColor('#334155');
+                doc.text(`${cfg.statusLabel}: ${tData.status}   |   ${cfg.confLabel}: ${confidenceVal}%   |   ${cfg.pathogenLabel}: ${tData.pathogen}`, 42, y + 24);
+                
+                const descText = (tData.description || '').slice(0, 240);
+                doc.text(descText, 42, y + 37, { width: cw - 20, lineGap: 1.5 });
+
+                y += 76;
+
+                // ── Section 2: Chemical & Organic Treatments (2-Column) ─────────
+                setHeading(10);
+                doc.fillColor('#15803d').text(cfg.chemHead, 32, y);
+                doc.text(cfg.orgHead, 32 + (cw / 2) + 6, y);
+                y += 16;
+
+                const colW = (cw / 2) - 6;
+
+                // Chemical Column Box
+                doc.rect(32, y, colW, 94).fillAndStroke('#ffffff', '#cbd5e1');
+                setBody(7.8);
+                doc.fillColor('#1e293b');
+                let cy = y + 8;
+                (tData.chem || []).slice(0, 3).forEach((item, idx) => {
+                    doc.text(`${idx + 1}. ${item}`, 40, cy, { width: colW - 16, lineGap: 1 });
+                    cy += 24;
+                });
+                if (tData.phi) {
+                    doc.fillColor('#b91c1c').text(`* ${tData.phi}`, 40, y + 80, { width: colW - 16 });
+                }
+
+                // Organic Column Box
+                const col2X = 32 + (cw / 2) + 6;
+                doc.rect(col2X, y, colW, 94).fillAndStroke('#ffffff', '#cbd5e1');
+                setBody(7.8);
+                doc.fillColor('#15803d');
+                let oy = y + 8;
+                (tData.org || []).slice(0, 3).forEach((item, idx) => {
+                    doc.text(`${idx + 1}. ${item}`, col2X + 8, oy, { width: colW - 16, lineGap: 1 });
+                    oy += 24;
+                });
+                if (tData.cultural && tData.cultural[0]) {
+                    doc.fillColor('#475569').text(`* ${tData.cultural[0]}`, col2X + 8, y + 80, { width: colW - 16 });
+                }
+
+                y += 102;
+
+                // ── Section 3: ICAR Fertilizer Dosage Table ────────────────────
+                setHeading(10);
+                doc.fillColor('#15803d').text(cfg.fertHead, 32, y);
+                y += 16;
+
+                doc.rect(32, y, cw, 50).fillAndStroke('#f8fafc', '#cbd5e1');
+                doc.fillColor('#0f172a');
+                setHeading(8.5);
+                const h = cfg.fertHeaders;
+                doc.text(h[0], 42, y + 6);
+                doc.text(h[1], 175, y + 6);
+                doc.text(h[2], 295, y + 6);
+                doc.text(h[3], 420, y + 6);
+
+                doc.moveTo(32, y + 18).lineTo(pw - 32, y + 18).stroke('#e2e8f0');
+
+                setBody(8);
+                doc.fillColor('#334155');
+                doc.text('Urea (युरिया / यूरिया 46% N)', 42, y + 22);
+                doc.text(`${ureaKg} kg/ha`, 175, y + 22);
+                doc.text(`${ureaBags} bags`, 295, y + 22);
+                doc.text(`Rs. ${ureaBags * 267}`, 420, y + 22);
+
+                doc.text('DAP (डीएपी 18:46:0)', 42, y + 34);
+                doc.text(`${dapKg} kg/ha`, 175, y + 34);
+                doc.text(`${dapBags} bags`, 295, y + 34);
+                doc.text(`Rs. ${dapBags * 1350}`, 420, y + 34);
+
+                y += 58;
+
+                // ── Section 4: Weather & Spray Advisory ────────────────────────
+                setHeading(10);
+                doc.fillColor('#15803d').text(cfg.weatherHead, 32, y);
+                y += 16;
+
+                const sprayBg = spraySafe ? '#f0fdf4' : '#fffbeb';
+                const sprayBorder = spraySafe ? '#16a34a' : '#d97706';
+                doc.rect(32, y, cw, 46).fillAndStroke(sprayBg, sprayBorder);
+                doc.fillColor(spraySafe ? '#166534' : '#b45309');
+                setHeading(9);
+                doc.text(`Telemetry: ${temp} deg C  |  Humidity: ${hum}%  |  Rainfall: ${rain} mm`, 42, y + 8);
+                setBody(8);
+                doc.text(spraySafe ? cfg.safeSprayText : cfg.cautionSprayText, 42, y + 23, { width: cw - 20 });
+
+                y += 56;
+
+                // ── Signatures Section ─────────────────────────────────────────
+                const boxW = (cw / 3) - 8;
+                doc.rect(32, y, boxW, 40).fillAndStroke('#ffffff', '#cbd5e1');
+                setBody(7);
+                doc.fillColor('#64748b').text(cfg.sig1, 36, y + 14, { align: 'center', width: boxW - 8 });
+
+                doc.rect(32 + boxW + 12, y, boxW, 40).fillAndStroke('#ffffff', '#cbd5e1');
+                doc.text(cfg.sig2, 32 + boxW + 16, y + 14, { align: 'center', width: boxW - 8 });
+
+                doc.rect(32 + (boxW * 2) + 24, y, boxW, 40).fillAndStroke('#ffffff', '#cbd5e1');
+                doc.text(cfg.sig3, 32 + (boxW * 2) + 28, y + 14, { align: 'center', width: boxW - 8 });
+
+                // Footer
+                doc.fillColor('#94a3b8').fontSize(7).text(
+                    `AeroCrop.ai • ICAR & MPKV Norms  |  Contact: support@devanshupatil.tech  |  ${cfg.pageFoot}`,
+                    32,
+                    doc.page.height - 24,
+                    { align: 'center', width: cw }
+                );
+            });
 
             doc.end();
         } catch (err) {

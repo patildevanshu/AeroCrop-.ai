@@ -1375,4 +1375,7 @@ async function generateTrilingualPDF(data) {
 module.exports = {
     generateTrilingualPDF,
     buildHTML,
+    getCropNames,
+    getLocalizedPathology,
+    CROPS_MAP,
 };
