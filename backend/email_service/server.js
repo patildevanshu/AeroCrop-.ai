@@ -4,6 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const { generateTrilingualPDF } = require('./reportGenerator');
+const { generateNativePDF } = require('./nativePdfGenerator');
 
 const app = express();
 app.use(cors());
@@ -96,22 +97,30 @@ app.post('/send-email', async (req, res) => {
         }
         
         if (!pdfBuffer) {
+            const reportData = {
+                farmerName: name,
+                farmerPhone,
+                farmerVillage,
+                district,
+                crop,
+                disease,
+                fertilizer,
+                yield_t_ha,
+                weather,
+            };
+
             try {
                 console.log(`📄 Generating Trilingual PDF Advisory for ${name} (${crop}, ${district})...`);
-                pdfBuffer = await generateTrilingualPDF({
-                    farmerName: name,
-                    farmerPhone,
-                    farmerVillage,
-                    district,
-                    crop,
-                    disease,
-                    fertilizer,
-                    yield_t_ha,
-                    weather,
-                });
-                console.log(`✅ PDF generated successfully (${pdfBuffer.length} bytes)`);
+                pdfBuffer = await generateTrilingualPDF(reportData);
+                console.log(`✅ Puppeteer PDF generated successfully (${pdfBuffer.length} bytes)`);
             } catch (pdfErr) {
-                console.error(`⚠️ PDF generation failed, dispatching comprehensive HTML email instead:`, pdfErr.message);
+                console.warn(`⚠️ Puppeteer engine unavailable (${pdfErr.message}), generating native PDF advisory report...`);
+                try {
+                    pdfBuffer = await generateNativePDF(reportData);
+                    console.log(`✅ Native PDF generated successfully (${pdfBuffer.length} bytes)`);
+                } catch (nativeErr) {
+                    console.error(`❌ Native PDF generation failed, dispatching comprehensive HTML email:`, nativeErr.message);
+                }
             }
         }
 
