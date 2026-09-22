@@ -1,12 +1,18 @@
 FROM node:20-bookworm-slim
 
-# Install system dependencies, Chromium, and fonts for Marathi/Hindi/English rendering
+# Install system dependencies, Chromium, fonts (including Marathi/Hindi Devanagari & Emojis), and dumb-init
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
-    fonts-freefont-ttf \
     fonts-noto-core \
-    fonts-noto-cjk \
+    fonts-noto-devanagari \
+    fonts-noto-color-emoji \
+    fonts-freefont-ttf \
+    fonts-liberation \
+    fontconfig \
+    dumb-init \
+    debianutils \
     ca-certificates \
+    && fc-cache -fv \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
@@ -22,5 +28,5 @@ COPY . .
 
 EXPOSE 5000
 
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["node", "server.js"]
-

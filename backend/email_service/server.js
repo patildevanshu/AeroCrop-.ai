@@ -107,16 +107,20 @@ app.post('/send-email', async (req, res) => {
                 weather,
             };
 
+            let engineUsed = 'puppeteer';
             try {
                 console.log(`📄 Generating Trilingual PDF Advisory for ${name} (${crop}, ${district})...`);
                 pdfBuffer = await generateTrilingualPDF(reportData);
                 console.log(`✅ Puppeteer PDF generated successfully (${pdfBuffer.length} bytes)`);
             } catch (pdfErr) {
+                engineUsed = 'pdfkit_fallback';
                 console.warn(`⚠️ Puppeteer engine unavailable (${pdfErr.message}), generating native PDF advisory report...`);
+                console.warn(`   Details:`, pdfErr.stack || pdfErr);
                 try {
                     pdfBuffer = await generateNativePDF(reportData);
                     console.log(`✅ Native PDF generated successfully (${pdfBuffer.length} bytes)`);
                 } catch (nativeErr) {
+                    engineUsed = 'none';
                     console.error(`❌ Native PDF generation failed, dispatching comprehensive HTML email:`, nativeErr.message);
                 }
             }
@@ -202,6 +206,7 @@ app.post('/send-email', async (req, res) => {
             success: true,
             message: `Trilingual advisory report PDF successfully sent to ${email}`,
             messageId: info.messageId,
+            engine: engineUsed,
         });
     } catch (err) {
         console.error('❌ Email dispatch error:', err);

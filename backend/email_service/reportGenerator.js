@@ -3,6 +3,17 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+// ── Inlined Font Support (Zero-Network Offline Guarantee) ───────────────────
+const FONT_PATH = path.join(__dirname, 'fonts', 'NotoSansDevanagari.ttf');
+let NOTO_DEVANAGARI_BASE64 = '';
+try {
+    if (fs.existsSync(FONT_PATH)) {
+        NOTO_DEVANAGARI_BASE64 = fs.readFileSync(FONT_PATH).toString('base64');
+    }
+} catch (err) {
+    console.warn('⚠️ Could not load NotoSansDevanagari.ttf for base64 inlining:', err.message);
+}
+
 function findBinaryInPath(bin) {
     if (process.platform === 'win32') {
         try {
@@ -10,6 +21,14 @@ function findBinaryInPath(bin) {
             if (out && fs.existsSync(out)) return out;
         } catch (_) {}
         return null;
+    }
+    // Search process.env.PATH directories directly (no dependency on 'which' binary in slim containers)
+    const pathDirs = (process.env.PATH || '').split(':').filter(Boolean);
+    for (const dir of pathDirs) {
+        const full = path.join(dir, bin);
+        try {
+            if (fs.existsSync(full)) return full;
+        } catch (_) {}
     }
     try {
         const out = execSync(`which ${bin} 2>/dev/null`, { encoding: 'utf8' }).trim();
@@ -29,14 +48,15 @@ function getBrowserExecutable() {
     const candidates = [
         process.env.PUPPETEER_EXECUTABLE_PATH,
         process.env.CHROME_PATH,
-        ...fromPath,
-        '/usr/bin/chromium-browser',
         '/usr/bin/chromium',
+        '/usr/bin/chromium-browser',
+        '/usr/lib/chromium/chromium',
         '/usr/bin/google-chrome-stable',
         '/usr/bin/google-chrome',
         '/root/.nix-profile/bin/chromium',
         '/nix/var/nix/profiles/default/bin/chromium',
         '/snap/bin/chromium',
+        ...fromPath,
         'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
         'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
         'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
@@ -44,7 +64,9 @@ function getBrowserExecutable() {
     ].filter(Boolean);
 
     for (const p of candidates) {
-        if (fs.existsSync(p)) return p;
+        try {
+            if (fs.existsSync(p)) return p;
+        } catch (_) {}
     }
     throw new Error('No compatible Chrome or Chromium browser found for PDF rendering.');
 }
@@ -317,6 +339,15 @@ function buildHTML(data) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
+  ${NOTO_DEVANAGARI_BASE64 ? `
+  @font-face {
+    font-family: 'Noto Sans Devanagari';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url('data:font/truetype;charset=utf-8;base64,${NOTO_DEVANAGARI_BASE64}') format('truetype');
+  }
+  ` : ''}
   @page {
     size: A4 portrait;
     margin: 6mm 8mm 8mm 8mm;
@@ -1187,18 +1218,32 @@ async function generateTrilingualPDF(data) {
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
             '--disable-gpu',
+            '--no-zygote',
+            '--single-process',
             '--font-render-hinting=none',
+            '--disable-extensions',
+            '--hide-scrollbars',
+            '--disable-web-security',
+            '--disable-software-rasterizer',
+            '--disable-background-networking',
+            '--disable-default-apps',
+            '--disable-sync',
+            '--no-first-run',
         ]
     });
 
     try {
         const page = await browser.newPage();
         const html = buildHTML(data);
-        await page.setContent(html, { waitUntil: 'load' });
+        await page.setContent(html, { waitUntil: ['domcontentloaded', 'networkidle0'] });
+        try {
+            await page.evaluateHandle('document.fonts.ready');
+        } catch (_) {}
         const pdfBuffer = await page.pdf({
             format: 'A4',
             printBackground: true,
             margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' },
+            preferCSSPageSize: true,
         });
         return pdfBuffer;
     } finally {

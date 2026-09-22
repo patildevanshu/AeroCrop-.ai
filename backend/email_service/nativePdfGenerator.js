@@ -162,9 +162,17 @@ function generateNativePDF(data) {
                 const loc = [farmerVillage, district].filter(Boolean).join(', ') || district;
                 doc.text(`${cfg.villageLabel}: ${loc}  |  Phone: ${farmerPhone || '+91 98220 12345'}`, 42, y + 22);
                 const yieldStr = yield_t_ha ? `${yield_t_ha} t/ha (~${(yield_t_ha*4.047).toFixed(1)} q/acre)` : 'Standard';
-                doc.text(`${cfg.cropLabel}: ${cropObj[cfg.lang] || crop}  |  ${cfg.yieldLabel}: ${yieldStr}`, 42, y + 34);
-
                 y += 58;
+
+                // ── AI Confidence Bar ──────────────────────────────────────────
+                doc.rect(32, y, cw, 20).fillAndStroke('#f0fdf4', '#86efac');
+                doc.fillColor('#065f46');
+                setHeading(7.5);
+                doc.text(`AI Confidence: ${confidenceVal}% | Multi-Modal Deep Neural Verification`, 42, y + 4);
+                doc.rect(42, y + 13, cw - 20, 3.5).fill('#dcfce7');
+                const barW = Math.max(5, Math.min(cw - 20, (cw - 20) * (confidenceVal / 100)));
+                doc.rect(42, y + 13, barW, 3.5).fill('#059669');
+                y += 26;
 
                 // ── Section 1: Diagnostic Finding ──────────────────────────────
                 const tData = cfg.t_data;
