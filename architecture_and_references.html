@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    .arch-box { transition: transform 0.15s, box-shadow 0.15s; }
+    .arch-box:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+    .flow-arrow { stroke-dasharray: 6 3; animation: dash 1.5s linear infinite; }
+    @keyframes dash { to { stroke-dashoffset: -18; } }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased p-4">
+
+  <!-- TITLE -->
+  <div class="text-center mb-6">
+    <div class="inline-block px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-semibold uppercase tracking-wider mb-2">Verified Against Project Synopsis</div>
+    <h1 class="text-2xl font-bold text-[var(--foreground)]">AeroCrop.ai — System Architecture & References</h1>
+    <p class="text-[var(--muted-foreground)] text-sm mt-1">Multimodal Deep Learning Architecture for Cash Crop Disease Diagnostics & Yield Forecasting</p>
+    <p class="text-xs text-[var(--muted-foreground)] mt-0.5">Authors: Devanshu Patil, Yash Bhutada, Smit Patil • Guide: Mrs. Padmavati Sarode (GHRCEM, Pune)</p>
+  </div>
+
+  <!-- ARCHITECTURE DIAGRAM -->
+  <div class="max-w-5xl mx-auto space-y-3">
+
+    <!-- LAYER 1: CLIENT -->
+    <div class="arch-box bg-[var(--card)] border border-[var(--border)] rounded-xl p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center text-blue-500 font-bold text-xs">1</div>
+        <h2 class="font-semibold text-[var(--foreground)]">Client / Presentation Tier</h2>
+        <span class="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500">React 18 + TypeScript + Vite</span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div class="bg-[var(--background)] rounded-lg p-2.5 text-center border border-[var(--border)]">
+          <div class="text-lg mb-1">📸</div>
+          <div class="text-xs font-medium">Photo Upload</div>
+          <div class="text-[10px] text-[var(--muted-foreground)]">Canvas compression + 36 Dist.</div>
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 text-center border border-[var(--border)]">
+          <div class="text-lg mb-1">🌾</div>
+          <div class="text-xs font-medium">Plots Cadastre</div>
+          <div class="text-[10px] text-[var(--muted-foreground)]">Acreage, Sowing Date, History</div>
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 text-center border border-[var(--border)]">
+          <div class="text-lg mb-1">🔊</div>
+          <div class="text-xs font-medium">Voice Narration</div>
+          <div class="text-[10px] text-[var(--muted-foreground)]">Web Speech API (MR/HI/EN)</div>
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 text-center border border-[var(--border)]">
+          <div class="text-lg mb-1">📋</div>
+          <div class="text-xs font-medium">PMFBY PDF</div>
+          <div class="text-[10px] text-[var(--muted-foreground)]">Surveyor Sign + WhatsApp</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARROW -->
+    <div class="flex justify-center">
+      <svg width="40" height="24" viewBox="0 0 40 24"><path d="M20 2 L20 18 M12 12 L20 20 L28 12" stroke="var(--muted-foreground)" stroke-width="2" fill="none" class="flow-arrow"/></svg>
+    </div>
+
+    <!-- LAYER 2: API -->
+    <div class="arch-box bg-[var(--card)] border border-[var(--border)] rounded-xl p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <div class="w-8 h-8 rounded-lg bg-teal-500/15 flex items-center justify-center text-teal-500 font-bold text-xs">2</div>
+        <h2 class="font-semibold text-[var(--foreground)]">Asynchronous API Gateway Tier</h2>
+        <span class="ml-auto text-xs px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-500">FastAPI ASGI / Uvicorn</span>
+      </div>
+      <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
+        <div class="bg-[var(--background)] rounded-lg p-2 text-center border border-[var(--border)]">
+          <div class="text-[10px] font-mono font-medium text-emerald-500">POST</div>
+          <div class="text-[10px]">/api/predict</div>
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2 text-center border border-[var(--border)]">
+          <div class="text-[10px] font-mono font-medium text-blue-500">GET</div>
+          <div class="text-[10px]">/api/weather</div>
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2 text-center border border-[var(--border)]">
+          <div class="text-[10px] font-mono font-medium text-blue-500">GET</div>
+          <div class="text-[10px]">/api/mandi</div>
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2 text-center border border-[var(--border)]">
+          <div class="text-[10px] font-mono font-medium text-amber-500">POST</div>
+          <div class="text-[10px]">/api/auth</div>
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2 text-center border border-[var(--border)]">
+          <div class="text-[10px] font-mono font-medium text-blue-500">GET</div>
+          <div class="text-[10px]">/api/plots</div>
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2 text-center border border-[var(--border)]">
+          <div class="text-[10px] font-mono font-medium text-blue-500">GET</div>
+          <div class="text-[10px]">/api/history</div>
+        </div>
+      </div>
+      <div class="mt-2 flex items-center gap-2 flex-wrap">
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/20">JWT + bcrypt Auth</span>
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500 border border-purple-500/20">Pydantic V2 Schemas</span>
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">166 Passing Pytest Suite</span>
+      </div>
+    </div>
+
+    <!-- ARROW -->
+    <div class="flex justify-center">
+      <svg width="40" height="24" viewBox="0 0 40 24"><path d="M20 2 L20 18 M12 12 L20 20 L28 12" stroke="var(--muted-foreground)" stroke-width="2" fill="none" class="flow-arrow"/></svg>
+    </div>
+
+    <!-- LAYER 3: CORE ML + SERVICES -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+      <!-- AI/ML MODEL -->
+      <div class="arch-box bg-[var(--card)] border-2 border-orange-500/30 rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center text-orange-500 font-bold text-xs">3</div>
+          <h2 class="font-semibold text-[var(--foreground)] text-sm">MultiModalAeroCropNet Engine</h2>
+        </div>
+        <div class="space-y-2">
+          <div class="bg-orange-500/5 rounded-lg p-3 border border-orange-500/20">
+            <div class="text-xs font-semibold text-orange-500 mb-2">11,285,191 Parameters • 45.1 MB Weights</div>
+
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div class="bg-[var(--background)] rounded p-2 border border-[var(--border)]">
+                <div class="text-[10px] font-semibold text-blue-500">Visual Backbone</div>
+                <div class="text-[10px] text-[var(--muted-foreground)]">ResNet-18 (ImageNet)</div>
+                <div class="text-[10px] font-mono text-[var(--foreground)]">512-dim Vector</div>
+              </div>
+              <div class="bg-[var(--background)] rounded p-2 border border-[var(--border)]">
+                <div class="text-[10px] font-semibold text-teal-500">Tabular Encoder</div>
+                <div class="text-[10px] text-[var(--muted-foreground)]">3-Layer MLP + BN</div>
+                <div class="text-[10px] font-mono text-[var(--foreground)]">64-dim Vector</div>
+              </div>
+            </div>
+
+            <div class="bg-[var(--background)] rounded p-2 border border-[var(--border)] text-center mb-2">
+              <div class="text-[10px] font-semibold text-orange-500">Intermediate Feature Fusion</div>
+              <div class="text-[10px] text-[var(--muted-foreground)]">Concat [v; t] (576-d) → Linear → BN → ReLU → Drop(0.3) → <strong class="text-orange-500">128-dim Embedding</strong></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div class="bg-red-500/5 rounded p-2 border border-red-500/20 text-center">
+                <div class="text-[10px] font-semibold text-red-500">Classification Head</div>
+                <div class="text-[10px] text-[var(--muted-foreground)]">Linear(128, 134)</div>
+                <div class="text-[10px] font-bold text-emerald-500">95.27% Val Acc</div>
+              </div>
+              <div class="bg-purple-500/5 rounded p-2 border border-purple-500/20 text-center">
+                <div class="text-[10px] font-semibold text-purple-500">Yield Regression Head</div>
+                <div class="text-[10px] text-[var(--muted-foreground)]">128→32→1 + Softplus</div>
+                <div class="text-[10px] font-bold text-purple-500">8.30 t/ha RMSE</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-1 flex-wrap">
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)]">PyTorch 2.5 AMP FP16</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)]">Singleton GPU</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)]">T=0.70 Calibration</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)]">&lt;15ms Inference</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOMAIN SERVICES -->
+      <div class="arch-box bg-[var(--card)] border border-[var(--border)] rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-lg bg-violet-500/15 flex items-center justify-center text-violet-500 font-bold text-xs">4</div>
+          <h2 class="font-semibold text-[var(--foreground)] text-sm">Agronomic Domain Services</h2>
+        </div>
+        <div class="space-y-2">
+          <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)]">
+            <div class="text-[10px] font-semibold text-emerald-500">🔬 DiseaseService (134 Classes)</div>
+            <div class="text-[10px] text-[var(--muted-foreground)]">Chemical active ingredients • Dilution ratios • Organic remedies • Severity triage • Treatment cost/acre (₹)</div>
+          </div>
+          <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)]">
+            <div class="text-[10px] font-semibold text-blue-500">🌦️ WeatherService & SpraySafetyEngine</div>
+            <div class="text-[10px] text-[var(--muted-foreground)]">Open-Meteo API • 36 districts • Rain >1mm wash-off • Wind >15km/h drift • Badges: Safe/Caution/Danger</div>
+          </div>
+          <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)]">
+            <div class="text-[10px] font-semibold text-amber-500">🏛️ MandiService & Revenue Forecaster</div>
+            <div class="text-[10px] text-[var(--muted-foreground)]">Maharashtra APMC modal prices • GoI MSP support • Projected harvest gross revenue (₹) in Quintal/Acre</div>
+          </div>
+          <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)]">
+            <div class="text-[10px] font-semibold text-rose-500">🗄️ Persistence & Storage Layer</div>
+            <div class="text-[10px] text-[var(--muted-foreground)]">MongoDB Motor (users, plots, analyses) • File system (uploads, production weights, classes.json)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXACT 15 REFERENCES FROM SYNOPSIS -->
+  <div class="max-w-5xl mx-auto mt-8">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-1">
+        <h2 class="text-lg font-bold text-[var(--foreground)]">📚 The 15 Verified References from Project Synopsis</h2>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-semibold">Strict 15/15 Match</span>
+      </div>
+      <p class="text-xs text-[var(--muted-foreground)] mb-4">Extracted directly from Section 2 & References of <code>Synopsis__1_ (3) (1).pdf</code>.</p>
+
+      <!-- PART A -->
+      <h3 class="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2 border-b border-[var(--border)] pb-1">Part A: Multimodal Methods for Crop Disease Diagnosis (Refs. [1]–[8])</h3>
+      <div class="space-y-1.5 mb-5">
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[1]</span> <strong>S. P. Mohanty, D. P. Hughes, and M. Salathé</strong>, "Using deep learning for image-based plant disease detection," <em>Frontiers in Plant Science</em>, vol. 7, p. 1419, 2016.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[2]</span> <strong>A. Dolatabadian, P. E. Bayer, L. Schultz-Leisner, and J. Batley</strong>, "Image-based crop disease detection using machine learning," <em>Plant Pathology</em>, 2025.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[3]</span> <strong>W. Zhang, H. Liu, W. Wu, L. Zhan, and J. Wei</strong>, "A deep learning-based crop disease diagnosis method using multimodal mixup augmentation," <em>Applied Sciences</em>, vol. 14, no. 10, p. 4322, 2024.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[4]</span> <strong>A. Almadhor, H. T. Rauf, M. I. U. Lali, R. Damasevicius, A. Alahmer, and A. Mahmood</strong>, "A hybrid deep learning model for tomato leaf disease detection and classification," <em>Sensors</em>, vol. 22, no. 10, p. 3721, 2023.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[5]</span> <strong>H. Zhu, B. Zhang, X. Zhao, Z. Li, and Y. Peng</strong>, "Interpretable deep multimodal-based tomato disease diagnosis and severity estimation," <em>Frontiers in Plant Science</em>, vol. 16, p. 1534810, 2025.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[6]</span> <strong>B. Khan, M. S. Farooq, S. Abbas, M. A. Khan, and S. S. U. Rizvi</strong>, "Bayesian optimized multimodal deep hybrid learning approach for tomato leaf disease classification," <em>Scientific Reports</em>, vol. 14, no. 1, p. 21525, 2024.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[7]</span> <strong>K. P. Ferentinos</strong>, "Deep learning models for plant disease detection and diagnosis," <em>Computers and Electronics in Agriculture</em>, vol. 145, pp. 311–318, 2018.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[8]</span> <strong>S. Mukherjee, D. K. Bhatt, P. Misra, and A. Mishra</strong>, "Hybrid multimodal learning framework for crop disease detection, adaptive treatment, and price forecasting," <em>Frontiers in Computer Science</em>, vol. 8, p. 1560547, 2026.
+        </div>
+      </div>
+
+      <!-- PART B -->
+      <h3 class="text-xs font-bold text-teal-500 uppercase tracking-wider mb-2 border-b border-[var(--border)] pb-1">Part B: Multimodal Methods for Crop Classification and Yield Prediction (Refs. [9]–[15])</h3>
+      <div class="space-y-1.5">
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[9]</span> <strong>K. Sivasubramanian et al.</strong>, "Attention-based multi-modal deep learning model of spatio-temporal crop yield prediction with satellite, soil and climate data," 2026.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[10]</span> <strong>G. Tseng, H. Kerner, and D. Rolnick</strong>, "Annual and permanent crop mapping from multispectral and multitemporal satellite data using deep learning," <em>Frontiers in Plant Science</em>, vol. 14, p. 1011780, 2023.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[11]</span> <strong>K. K. Gadiraju and R. R. Vatsavai</strong>, "Multimodal deep learning based crop classification using multi-spectral and multitemporal satellite imagery," in <em>Proc. 26th ACM SIGKDD</em>, pp. 3234–3242, 2020.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[12]</span> <strong>P. Nevavuori, N. Narra, and T. Lipping</strong>, "Crop yield prediction with deep convolutional neural networks," <em>Computers and Electronics in Agriculture</em>, vol. 163, p. 104859, 2019.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[13]</span> <strong>A. Feng, J. Zhou, E. D. Vories, and K. A. Sudduth</strong>, "Prediction of cotton yield based on soil texture, weather conditions and UAV imagery using deep learning," <em>Precision Agriculture</em>, vol. 25, no. 1, pp. 303–326, 2024.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[14]</span> <strong>Z. Li, J. Yan, Z. Chen, J. Wang, R. Zhou, and Y. Hu</strong>, "Multimodal deep learning models in precision agriculture: Cotton yield prediction based on unmanned aerial vehicle imagery and meteorological data," <em>Agriculture</em>, vol. 15, no. 5, p. 1217, 2025.
+        </div>
+        <div class="bg-[var(--background)] rounded-lg p-2.5 border border-[var(--border)] text-xs">
+          <span class="font-mono text-orange-500 font-bold">[15]</span> <strong>J. Cao, Z. Zhang, Y. Luo, L. Zhang, J. Zhang, Z. Li, and F. Tao</strong>, "Wheat yield predictions at a county and field scale with deep learning, machine learning, and google earth engine," <em>European Journal of Agronomy</em>, vol. 123, p. 126204, 2021.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

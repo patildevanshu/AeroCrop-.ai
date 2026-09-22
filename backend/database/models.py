@@ -30,6 +30,7 @@ class User(BaseModel):
     preferred_language: str = "en"
     token_version: int = 1
     is_active: bool = True
+    is_verified: bool = True
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)
 

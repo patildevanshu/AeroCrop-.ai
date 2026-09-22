@@ -18,9 +18,6 @@ env/
 
 # Model weights
 model/*.pth
-!model/aerocrop_weights.pth
-!model/aerocrop_weights_best_loss.pth
-!model/aerocrop_weights_best_yield.pth
 !model/aerocrop_weights_epoch80.pth
 model/*.pt
 model/*.ckpt

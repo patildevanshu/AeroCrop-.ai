@@ -20,25 +20,50 @@ async def test_email_service_invalid_email():
 
 
 @pytest.mark.anyio
-async def test_email_service_unreachable_graceful_handling():
+async def test_email_service_fallback_when_microservice_unreachable():
     with patch("config.EMAIL_SERVICE_URL", "http://127.0.0.1:59999/send-email"):
-        res = await EmailService.dispatch_report_email(
-            farmer_email="farmer@example.com",
-            report_data={"crop": "Tomato", "district": "Pune"},
-        )
-        assert res["success"] is False
-        assert "unreachable" in res["error"].lower()
+        with patch.object(
+            EmailService,
+            "_send_direct_smtp_sync",
+            return_value={
+                "success": True,
+                "method": "python_smtp_direct",
+                "message": "Fallback report delivered",
+            },
+        ) as mock_smtp:
+            res = await EmailService.dispatch_report_email(
+                farmer_email="farmer@example.com",
+                report_data={"crop": "Tomato", "district": "Pune"},
+                farmer_name="Ramesh",
+            )
+            assert res["success"] is True
+            assert res["method"] == "python_smtp_direct"
+            assert mock_smtp.called
+
+
+@pytest.mark.anyio
+async def test_email_service_both_services_fail_gracefully():
+    with patch("config.EMAIL_SERVICE_URL", "http://127.0.0.1:59999/send-email"):
+        with patch.object(
+            EmailService,
+            "_send_direct_smtp_sync",
+            side_effect=RuntimeError("SMTP Authentication Error"),
+        ):
+            res = await EmailService.dispatch_report_email(
+                farmer_email="farmer@example.com",
+                report_data={"crop": "Tomato", "district": "Pune"},
+            )
+            assert res["success"] is False
+            assert "fallback failed" in res["error"].lower()
 
 
 @pytest.mark.anyio
 async def test_email_service_mock_success():
-    mock_resp = Response(
-        status_code=200,
-        json={"success": True, "messageId": "msg-12345"},
-        request=MagicMock(),
-    )
-
-    with patch.object(EmailService, "dispatch_report_email", return_value={"success": True, "details": {"messageId": "msg-12345"}}):
+    with patch.object(
+        EmailService,
+        "dispatch_report_email",
+        return_value={"success": True, "details": {"messageId": "msg-12345"}},
+    ):
         res = await EmailService.dispatch_report_email(
             farmer_email="farmer.test@example.com",
             report_data={

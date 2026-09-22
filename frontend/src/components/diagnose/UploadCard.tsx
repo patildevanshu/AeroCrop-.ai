@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { useToast } from '../../context/ToastContext';
+import { CameraCaptureModal } from './CameraCaptureModal';
 
 interface UploadCardProps {
   selectedFile: File | null;
@@ -14,6 +15,7 @@ export const UploadCard: React.FC<UploadCardProps> = ({ selectedFile, onFileSele
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const processFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -55,7 +57,13 @@ export const UploadCard: React.FC<UploadCardProps> = ({ selectedFile, onFileSele
   };
 
   const handleCameraClick = () => {
-    cameraInputRef.current?.click();
+    // If WebRTC getUserMedia is available in current browser context, launch live viewfinder
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+      setIsCameraOpen(true);
+    } else {
+      // Fallback directly to native device camera/gallery file picker
+      cameraInputRef.current?.click();
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,6 +154,18 @@ export const UploadCard: React.FC<UploadCardProps> = ({ selectedFile, onFileSele
           <span>{selectedFile ? (language === 'mr' ? 'फोटो बदला' : language === 'hi' ? 'फोटो बदलें' : 'Change') : t('browse_file')}</span>
         </button>
       </div>
+
+      {/* Live Interactive Camera Viewfinder Modal */}
+      <CameraCaptureModal
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onCapture={(file) => {
+          processFile(file);
+        }}
+        onFallbackToFile={() => {
+          cameraInputRef.current?.click();
+        }}
+      />
     </div>
   );
 };

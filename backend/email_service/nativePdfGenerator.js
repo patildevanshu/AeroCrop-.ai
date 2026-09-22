@@ -141,13 +141,14 @@ function generateNativePDF(data) {
                 const cw = pw - 64; // 32 on each side
 
                 // ── Top Brand Banner ───────────────────────────────────────────
-                doc.rect(0, 0, pw, 72).fill('#15803d');
+                doc.rect(0, 0, pw, 72).fill('#064e3b');
                 doc.fillColor('#ffffff');
                 setHeading(18);
                 doc.text('AeroCrop.ai', 32, 14);
                 setBody(9);
+                doc.fillColor('#a7f3d0');
                 doc.text(cfg.subtitle, 32, 38);
-                doc.fontSize(7.5).text(`Ref ID: ${refId}  |  Date: ${dateStr}  |  ${cfg.pageTitle}`, 32, 53);
+                doc.fontSize(7.5).fillColor('#ffffff').text(`Ref ID: ${refId}  |  Date: ${dateStr}  |  ${cfg.pageTitle}`, 32, 53);
 
                 let y = 82;
 

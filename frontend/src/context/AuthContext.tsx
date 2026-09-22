@@ -7,10 +7,14 @@ import {
 } from '../api/client';
 import {
   loginFarmer,
+  loginFarmerWithOtp,
   registerFarmer,
+  registerFarmerWithOtp,
   getCurrentUser,
   LoginPayload,
+  LoginWithOtpPayload,
   RegisterPayload,
+  RegisterWithOtpPayload,
 } from '../api/auth';
 import { fetchFarmerPlots } from '../api/plots';
 import { useToast } from './ToastContext';
@@ -23,7 +27,9 @@ interface AuthContextType {
   userPlots: FarmPlot[];
   refreshPlots: () => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
+  loginWithOtp: (payload: LoginWithOtpPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
+  registerWithOtp: (payload: RegisterWithOtpPayload) => Promise<void>;
   logout: () => void;
   updateCurrentUser: (user: User) => void;
   isAuthModalOpen: boolean;
@@ -107,8 +113,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await refreshPlots();
   };
 
+  const loginWithOtp = async (payload: LoginWithOtpPayload) => {
+    const data = await loginFarmerWithOtp(payload);
+    setAuthToken(data.access_token);
+    setCurrentUser(data.user);
+    const savedLang = localStorage.getItem('aerocrop_lang');
+    if (!savedLang && data.user.preferred_language) {
+      setLanguage(data.user.preferred_language);
+    }
+    setIsAuthModalOpen(false);
+    showToast(`Welcome back, ${data.user.full_name}!`, 'success');
+    await refreshPlots();
+  };
+
   const register = async (payload: RegisterPayload) => {
     const data = await registerFarmer(payload);
+    setAuthToken(data.access_token);
+    setCurrentUser(data.user);
+    if (data.user.preferred_language) {
+      setLanguage(data.user.preferred_language);
+    }
+    setIsAuthModalOpen(false);
+    showToast(`Account created! Welcome, ${data.user.full_name}!`, 'success');
+    await refreshPlots();
+  };
+
+  const registerWithOtp = async (payload: RegisterWithOtpPayload) => {
+    const data = await registerFarmerWithOtp(payload);
     setAuthToken(data.access_token);
     setCurrentUser(data.user);
     if (data.user.preferred_language) {
@@ -156,7 +187,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         userPlots,
         refreshPlots,
         login,
+        loginWithOtp,
         register,
+        registerWithOtp,
         logout,
         updateCurrentUser,
         isAuthModalOpen,

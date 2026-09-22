@@ -19,18 +19,47 @@ from database.mongodb import get_db
 from database.models import User
 from services.auth_service import AuthService, get_current_user
 from services.user_service import UserService
+from services.otp_service import OtpService
+import backend.config as config
 
 logger = logging.getLogger("aerocrop.controllers.auth")
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
 # ── Schemas ──────────────────────────────────────────────────────────────────
+class SendOtpRequest(BaseModel):
+    email: str = Field(..., min_length=5, max_length=150, description="Farmer's email address")
+    purpose: str = Field("register", description="Purpose: register | login | reset_password")
+
+
+class VerifyOtpRequest(BaseModel):
+    email: str = Field(..., min_length=5, max_length=150, description="Farmer's email address")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit verification code")
+    purpose: str = Field("register", description="Purpose: register | login | reset_password")
+
+
+class RegisterWithOtpRequest(BaseModel):
+    full_name: str = Field(..., min_length=2, max_length=120, description="Farmer's full name")
+    email: str = Field(..., min_length=5, max_length=150, description="Compulsory email address")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit verification code")
+    password: str = Field(..., min_length=6, description="Password (min 6 characters)")
+    district: str = Field(..., min_length=2, max_length=60, description="Farmer's compulsory Maharashtra district")
+    phone_number: Optional[str] = Field(None, description="10-digit mobile number (optional)")
+    taluka_village: Optional[str] = Field(None, description="Taluka or Village name")
+    preferred_language: str = Field("en", description="Language code: en | mr | hi")
+
+
+class LoginWithOtpRequest(BaseModel):
+    email: str = Field(..., min_length=5, max_length=150, description="Farmer's email address")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit verification code")
+
+
 class RegisterRequest(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=120, description="Farmer's full name")
+    email: str = Field(..., min_length=5, max_length=150, description="Compulsory email address")
     phone_number: Optional[str] = Field(None, description="10-digit mobile number")
-    email: Optional[str] = Field(None, description="Email address (optional)")
     password: str = Field(..., min_length=6, description="Password (min 6 characters)")
-    district: str = Field("pune", description="Default Maharashtra district")
+    district: str = Field(..., min_length=2, max_length=60, description="Farmer's compulsory Maharashtra district")
     taluka_village: Optional[str] = Field(None, description="Taluka or Village name")
     preferred_language: str = Field("en", description="Language code: en | mr | hi")
 
@@ -53,6 +82,166 @@ class ChangePasswordRequest(BaseModel):
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
+@router.post("/send-otp", summary="Send email verification OTP")
+async def send_otp(
+    req: SendOtpRequest,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Generate and email a 6-digit OTP to the farmer's email.
+    Enforces a 60-second cooldown rate limit.
+    """
+    clean_email = req.email.strip().lower()
+    if not clean_email or "@" not in clean_email or "." not in clean_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please provide a valid email address.",
+        )
+
+    if req.purpose == "register":
+        existing = await db.users.find_one({"email": clean_email})
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"An account with email {clean_email} is already registered. Please sign in.",
+            )
+    elif req.purpose == "login":
+        existing = await db.users.find_one({"email": clean_email})
+        if not existing:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No account found with email {clean_email}. Please create an account first.",
+            )
+
+    success, msg = await OtpService.create_and_send_otp(db, clean_email, req.purpose)
+    if not success:
+        status_code = status.HTTP_429_TOO_MANY_REQUESTS if "wait" in msg.lower() else status.HTTP_400_BAD_REQUEST
+        raise HTTPException(status_code=status_code, detail=msg)
+
+    return {
+        "status": "success",
+        "message": msg,
+        "cooldown_seconds": config.OTP_COOLDOWN_SECONDS,
+    }
+
+
+@router.post("/verify-otp", summary="Verify email OTP code")
+async def verify_otp(
+    req: VerifyOtpRequest,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Validate the 6-digit OTP code against the stored hash.
+    Does not consume the OTP until registration or login completes.
+    """
+    clean_email = req.email.strip().lower()
+    valid, err = await OtpService.verify_otp(db, clean_email, req.otp, req.purpose, mark_used=False)
+    if not valid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err)
+
+    return {
+        "status": "success",
+        "message": "Verification code verified successfully.",
+        "verified": True,
+    }
+
+
+@router.post("/register-with-otp", summary="Register farmer with verified email OTP")
+async def register_with_otp(
+    req: RegisterWithOtpRequest,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Atomically verify the OTP and create a new farmer account.
+    Returns access token and user metadata.
+    """
+    clean_email = req.email.strip().lower()
+    valid, err = await OtpService.verify_otp(db, clean_email, req.otp, "register", mark_used=True)
+    if not valid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err)
+
+    user, reg_err = await UserService.register_user(
+        db=db,
+        full_name=req.full_name,
+        password=req.password,
+        district=req.district,
+        phone_number=req.phone_number,
+        email=clean_email,
+        taluka_village=req.taluka_village,
+        preferred_language=req.preferred_language,
+        is_verified=True,
+    )
+
+    if reg_err:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=reg_err)
+
+    identifier = user.email or user.phone_number or str(user.id)
+    token = AuthService.create_access_token(user.id, identifier, getattr(user, "token_version", 1))
+
+    return {
+        "status": "success",
+        "message": f"Welcome to AeroCrop.ai, {user.full_name}!",
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "full_name": user.full_name,
+            "phone_number": user.phone_number,
+            "email": user.email,
+            "district": user.district,
+            "taluka_village": user.taluka_village,
+            "preferred_language": user.preferred_language,
+        },
+    }
+
+
+@router.post("/login-with-otp", summary="Passwordless login with email OTP")
+async def login_with_otp(
+    req: LoginWithOtpRequest,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Authenticate farmer via verified 6-digit email OTP.
+    Returns JWT access token.
+    """
+    clean_email = req.email.strip().lower()
+    user_doc = await db.users.find_one({"email": clean_email})
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account registered with this email address.",
+        )
+
+    user = User(**user_doc)
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This farmer account is deactivated. Please contact support.",
+        )
+
+    valid, err = await OtpService.verify_otp(db, clean_email, req.otp, "login", mark_used=True)
+    if not valid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err)
+
+    identifier = user.email or user.phone_number or str(user.id)
+    token = AuthService.create_access_token(user.id, identifier, getattr(user, "token_version", 1))
+
+    return {
+        "status": "success",
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "full_name": user.full_name,
+            "phone_number": user.phone_number,
+            "email": user.email,
+            "district": user.district,
+            "taluka_village": user.taluka_village,
+            "preferred_language": user.preferred_language,
+        },
+    }
+
+
 @router.post("/register", summary="Register a new farmer account")
 async def register(
     req: RegisterRequest,

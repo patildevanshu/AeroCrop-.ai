@@ -107,6 +107,10 @@ async def init_mongodb() -> None:
         await db.analyses.create_index([("plot_id", 1)], background=True)
         await db.analyses.create_index([("crop_type", 1)], background=True)
 
+        # Email OTP collection indexes with automatic TTL expiration
+        await db.email_otps.create_index([("email", 1), ("purpose", 1)], background=True)
+        await db.email_otps.create_index([("expires_at", 1)], expireAfterSeconds=0, background=True)
+
         # Initialize sequence counters if missing
         for seq_name in ("user_id", "plot_id", "analysis_id"):
             existing = await db.counters.find_one({"_id": seq_name})

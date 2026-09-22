@@ -1,10 +1,16 @@
 const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 const path = require('path');
-
 const { execSync } = require('child_process');
 
 function findBinaryInPath(bin) {
+    if (process.platform === 'win32') {
+        try {
+            const out = execSync(`where ${bin} 2>nul`, { encoding: 'utf8' }).trim().split(/\r?\n/)[0];
+            if (out && fs.existsSync(out)) return out;
+        } catch (_) {}
+        return null;
+    }
     try {
         const out = execSync(`which ${bin} 2>/dev/null`, { encoding: 'utf8' }).trim();
         if (out && fs.existsSync(out)) return out;
@@ -84,8 +90,8 @@ function getLocalizedPathology(disease, cropObj) {
                 phi: 'लागू नाही (N/A)',
                 description: 'पिकाच्या पानात कोणत्याही बुरशीजन्य, विषाणूजन्य अथवा जिवाणूजन्य रोगाची लक्षणे आढळलेली नाहीत. पानांचा रंग नैसर्गिक गडद हिरवा असून पेशींची रचना सशक्त आहे. प्रकाशसंश्लेषण क्रिया सुरळीत सुरू आहे. सध्या कोणतेही रासायनिक औषध फवारण्याची गरज नाही.',
                 chem: [
-                    'सध्या कोणत्याही रासायनिक बुरशीनाशकाची अजिबात गरज नाही.',
-                    'प्रतिबंधात्मक पोषण: सूक्ष्म अन्नद्रव्ये (Zinc + Boron) २ ग्रॅम/लिटर फवारू शकता.'
+                    'सध्या कोणत्याही रासायनिक बुरशीनाशकाची किंवा कीटकनाशकाची गरज नाही.',
+                    'प्रतिबंधात्मक पोषण: चिलेटेड सूक्ष्म अन्नद्रव्ये (Zinc + Boron) २ ग्रॅम/लिटर फवारू शकता.'
                 ],
                 org: [
                     'दशपर्णी अर्क किंवा गोमूत्र अर्क ५% फवारणीने पिकाची नैसर्गिक प्रतिकारशक्ती वाढते.',
@@ -104,7 +110,7 @@ function getLocalizedPathology(disease, cropObj) {
                 phi: 'लागू नहीं (N/A)',
                 description: 'पौधे की पत्तियों पर किसी भी प्रकार के फफूंद, जीवाणु या विषाणु संक्रमण के लक्षण नहीं पाए गए हैं। पत्तियों का प्राकृतिक हरा रंग एवं कोशिकीय संरचना स्वस्थ है। प्रकाश संश्लेषण क्रिया सामान्य है। किसी भी रासायनिक छिड़काव की आवश्यकता नहीं है।',
                 chem: [
-                    'वर्तमान में किसी भी रासायनिक फफूंदनाशक के छिड़काव की आवश्यकता नहीं है।',
+                    'वर्तमान में किसी भी रासायनिक फफूंदनाशक अथवा कीटनाशक के छिड़काव की आवश्यकता नहीं है।',
                     'सुरक्षात्मक पोषण हेतु सूक्ष्म पोषक तत्व (जिंक + बोरॉन 2 ग्राम/लीटर) का प्रयोग कर सकते हैं।'
                 ],
                 org: [
@@ -283,7 +289,7 @@ function buildHTML(data) {
 
     // AI Confidence tier & rating
     const confRating = confidenceVal >= 90
-        ? { mr: 'अत्यंत उच्च विश्वसनीयता (Very High Confidence >90%)', hi: 'अत्यधिक उच्च विश्वसनीयता (>90%)', en: 'Very High Statistical Confidence (>90%)', color: '#15803d', bg: '#f0fdf4' }
+        ? { mr: 'अत्यंत उच्च विश्वसनीयता (Very High >90%)', hi: 'अत्यधिक उच्च विश्वसनीयता (>90%)', en: 'Very High Statistical Confidence (>90%)', color: '#047857', bg: '#ecfdf5' }
         : confidenceVal >= 75
         ? { mr: 'मध्यम ते उच्च विश्वसनीयता (Moderate Confidence)', hi: 'मध्यम से उच्च विश्वसनीयता', en: 'Moderate to High Confidence', color: '#b45309', bg: '#fef3c7' }
         : { mr: 'कमी अचूकता — प्रयोगशाळा चाचणी सुचविली आहे', hi: 'कम विश्वसनीयता — प्रयोगशाला जांच अनुशंसित', en: 'Low Confidence — Field Verification Needed', color: '#b91c1c', bg: '#fee2e2' };
@@ -309,11 +315,11 @@ function buildHTML(data) {
 <head>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm 10mm 10mm;
+    margin: 6mm 8mm 8mm 8mm;
   }
   * {
     box-sizing: border-box;
@@ -321,58 +327,94 @@ function buildHTML(data) {
     padding: 0;
   }
   body {
-    font-family: 'Noto Sans Devanagari', 'Nirmala UI', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    font-family: 'Inter', 'Noto Sans Devanagari', 'Nirmala UI', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #0f172a;
     background: #ffffff;
-    font-size: 9pt;
-    line-height: 1.38;
+    font-size: 8.8pt;
+    line-height: 1.36;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .page-container {
     page-break-after: always;
-    min-height: 275mm;
+    min-height: 277mm;
     position: relative;
-    padding-bottom: 22px;
+    padding-bottom: 24px;
   }
   .page-container:last-child {
     page-break-after: avoid;
   }
 
-  /* Header */
+  /* Executive Brand Header */
   .brand-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 8px;
-    border-bottom: 2.5px solid #16a34a;
-    margin-bottom: 8px;
+    padding-bottom: 7px;
+    border-bottom: 2px solid #059669;
+    margin-bottom: 7px;
   }
   .brand-logo-area {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+  }
+  .brand-logo-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19pt;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
   }
   .brand-title {
-    font-size: 18pt;
+    font-size: 17pt;
     font-weight: 800;
-    color: #15803d;
-    letter-spacing: -0.5px;
+    color: #064e3b;
+    letter-spacing: -0.4px;
+    line-height: 1.1;
+  }
+  .brand-title span {
+    color: #10b981;
   }
   .brand-subtitle {
-    font-size: 8pt;
+    font-size: 7.4pt;
     color: #475569;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: 0.15px;
+    margin-top: 1px;
+  }
+  .header-badges {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+  }
+  .accreditation-pill {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 6.8pt;
+    font-weight: 700;
+    color: #065f46;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
   }
   .meta-tag-pill {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 5px;
-    padding: 4px 10px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 3px 8px;
     text-align: right;
-    font-size: 7.5pt;
-    color: #166534;
+    font-size: 7.2pt;
+    color: #334155;
+    font-family: monospace;
   }
 
   /* Language banner */
@@ -381,110 +423,128 @@ function buildHTML(data) {
     justify-content: space-between;
     align-items: center;
     border-radius: 6px;
-    padding: 6px 12px;
-    margin-bottom: 8px;
+    padding: 5px 12px;
+    margin-bottom: 7px;
     color: #ffffff;
     font-weight: 700;
-    font-size: 10pt;
+    font-size: 9.5pt;
+    letter-spacing: 0.2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
-  .bar-mr { background: linear-gradient(135deg, #6b21a8, #9333ea); }
-  .bar-hi { background: linear-gradient(135deg, #c2410c, #ea580c); }
-  .bar-en { background: linear-gradient(135deg, #1e3a8a, #2563eb); }
+  .bar-mr { background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%); }
+  .bar-hi { background: linear-gradient(135deg, #9a3412 0%, #c2410c 50%, #ea580c 100%); }
+  .bar-en { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%); }
+  .lang-tag {
+    font-size: 7.2pt;
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
 
   /* Info Grid */
   .info-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 6px;
-    margin-bottom: 8px;
+    margin-bottom: 7px;
   }
   .info-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 5px;
+    border-top: 2.5px solid #059669;
+    border-radius: 6px;
     padding: 6px 8px;
   }
   .info-card .lbl {
-    font-size: 7pt;
+    font-size: 6.8pt;
     font-weight: 700;
     text-transform: uppercase;
     color: #64748b;
     margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
   .info-card .val {
-    font-size: 8.8pt;
+    font-size: 8.6pt;
     font-weight: 700;
     color: #0f172a;
     word-break: break-word;
+    line-height: 1.25;
   }
 
   /* 🧠 AI Confidence & Verification Card */
   .ai-intel-card {
-    background: #f0fdf4;
-    border: 1.5px solid #86efac;
+    background: linear-gradient(180deg, #f0fdf4 0%, #f7fee7 100%);
+    border: 1.2px solid #86efac;
     border-radius: 6px;
-    padding: 8px 12px;
-    margin-bottom: 8px;
+    padding: 6px 11px;
+    margin-bottom: 7px;
   }
   .ai-intel-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
   .ai-intel-title {
-    font-size: 9pt;
+    font-size: 8.6pt;
     font-weight: 800;
-    color: #166534;
+    color: #14532d;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
   .ai-intel-score-badge {
-    background: #15803d;
+    background: #047857;
     color: #ffffff;
-    padding: 2px 10px;
+    padding: 2px 9px;
     border-radius: 999px;
-    font-size: 8.5pt;
+    font-size: 8pt;
     font-weight: 800;
     letter-spacing: 0.3px;
   }
   .conf-bar-track {
     width: 100%;
-    height: 7px;
+    height: 6px;
     background: #dcfce7;
-    border-radius: 4px;
+    border-radius: 999px;
     overflow: hidden;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     border: 1px solid #bbf7d0;
   }
   .conf-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #22c55e, #15803d);
-    border-radius: 4px;
+    background: linear-gradient(90deg, #10b981 0%, #047857 100%);
+    border-radius: 999px;
   }
   .ai-intel-details-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-    font-size: 7.2pt;
+    gap: 6px;
+    font-size: 7pt;
     color: #166534;
     border-top: 1px dashed #bbf7d0;
-    padding-top: 4px;
+    padding-top: 3px;
   }
 
   /* Diagnosis Hero Box */
   .diag-hero {
-    background: #f8fafc;
+    background: #ffffff;
     border: 1px solid #cbd5e1;
-    border-left: 5px solid #16a34a;
+    border-left: 5px solid #059669;
     border-radius: 6px;
-    padding: 8px 12px;
-    margin-bottom: 8px;
+    padding: 7px 11px;
+    margin-bottom: 7px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
   }
   .diag-hero.has-disease {
     border-left-color: #dc2626;
-    background: #fffafa;
+    background: #fffbfa;
   }
   .diag-top {
     display: flex;
@@ -493,19 +553,21 @@ function buildHTML(data) {
     margin-bottom: 4px;
   }
   .condition-name {
-    font-size: 11pt;
+    font-size: 10.5pt;
     font-weight: 800;
-    color: #1e293b;
+    color: #0f172a;
+    line-height: 1.2;
   }
   .badge {
     display: inline-block;
     padding: 2px 8px;
     border-radius: 999px;
-    font-size: 7.5pt;
+    font-size: 7.2pt;
     font-weight: 800;
     text-transform: uppercase;
+    letter-spacing: 0.3px;
   }
-  .badge-healthy { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .badge-healthy { background: #dcfce7; color: #047857; border: 1px solid #86efac; }
   .badge-moderate { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
   .badge-critical { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
 
@@ -517,42 +579,52 @@ function buildHTML(data) {
     border-top: 1px dashed #e2e8f0;
     border-bottom: 1px dashed #e2e8f0;
     margin-bottom: 4px;
-    font-size: 7.8pt;
+    font-size: 7.5pt;
+    color: #334155;
   }
   .diag-desc {
-    font-size: 8pt;
+    font-size: 7.8pt;
     color: #334155;
-    line-height: 1.35;
+    line-height: 1.34;
   }
 
   /* Two Column Protocols */
   .treatment-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 7px;
+    margin-bottom: 7px;
   }
   .t-box {
-    border-radius: 5px;
+    border-radius: 6px;
     padding: 7px 10px;
     border: 1px solid #e2e8f0;
   }
-  .t-box.chem { background: #fffbeb; border-color: #fde68a; }
-  .t-box.org { background: #f0fdf4; border-color: #bbf7d0; }
+  .t-box.chem {
+    background: #fffbeb;
+    border-color: #fde68a;
+  }
+  .t-box.org {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
   .t-title {
-    font-size: 8.2pt;
-    font-weight: 700;
+    font-size: 8pt;
+    font-weight: 800;
     margin-bottom: 4px;
     display: flex;
     align-items: center;
     gap: 5px;
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
+    padding-bottom: 3px;
   }
   .t-box.chem .t-title { color: #b45309; }
-  .t-box.org .t-title { color: #15803d; }
+  .t-box.org .t-title { color: #047857; }
   .t-box ul {
     padding-left: 14px;
-    font-size: 7.6pt;
+    font-size: 7.4pt;
     color: #1e293b;
+    line-height: 1.38;
   }
   .t-box li {
     margin-bottom: 3px;
@@ -561,68 +633,30 @@ function buildHTML(data) {
   /* Mandi Grid */
   .agri-meta-grid {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 7px;
   }
   .agri-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 5px;
+    border-radius: 6px;
     padding: 6px 10px;
-    font-size: 7.5pt;
+    font-size: 7.4pt;
   }
   .agri-card-title {
-    font-weight: 700;
-    color: #334155;
-    margin-bottom: 4px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 3px;
     display: flex;
     align-items: center;
     gap: 5px;
-  }
-
-  /* Table styling */
-  .section-heading {
-    font-size: 8.8pt;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  table.custom-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 8px;
-    font-size: 7.6pt;
-  }
-  table.custom-table th {
-    background: #f1f5f9;
-    color: #334155;
-    font-weight: 700;
-    text-align: left;
-    padding: 4px 6px;
-    border: 1px solid #cbd5e1;
-  }
-  table.custom-table td {
-    padding: 4px 6px;
-    border: 1px solid #cbd5e1;
-    color: #1e293b;
-  }
-  table.custom-table tr:nth-child(even) {
-    background: #f8fafc;
-  }
-  .highlight-row {
-    background: #f0fdf4 !important;
-    font-weight: 700;
-    color: #166534;
   }
 
   /* Weather & Spray Banner */
   .weather-spray-grid {
     display: grid;
     grid-template-columns: 2fr 3fr;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 7px;
+    margin-bottom: 7px;
   }
   .weather-pills {
     display: grid;
@@ -630,17 +664,17 @@ function buildHTML(data) {
     gap: 4px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 5px;
+    border-radius: 6px;
     padding: 5px;
     text-align: center;
   }
-  .wp-item .wp-l { font-size: 6.8pt; color: #64748b; font-weight: 600; }
-  .wp-item .wp-v { font-size: 8.5pt; color: #0f172a; font-weight: 700; margin-top: 1px; }
+  .wp-item .wp-l { font-size: 6.6pt; color: #64748b; font-weight: 700; text-transform: uppercase; }
+  .wp-item .wp-v { font-size: 8.2pt; color: #0f172a; font-weight: 800; margin-top: 1px; }
 
   .spray-box {
-    border-radius: 5px;
+    border-radius: 6px;
     padding: 6px 10px;
-    font-size: 7.5pt;
+    font-size: 7.3pt;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -660,9 +694,10 @@ function buildHTML(data) {
   .sign-box {
     border-top: 1px dashed #94a3b8;
     text-align: center;
-    font-size: 7.2pt;
+    font-size: 7pt;
     color: #475569;
     padding-top: 3px;
+    font-weight: 600;
   }
 
   /* Footer */
@@ -673,7 +708,7 @@ function buildHTML(data) {
     right: 0;
     display: flex;
     justify-content: space-between;
-    font-size: 6.8pt;
+    font-size: 6.6pt;
     color: #94a3b8;
     border-top: 1px solid #e2e8f0;
     padding-top: 3px;
@@ -688,40 +723,43 @@ function buildHTML(data) {
 <div class="page-container">
   <div class="brand-header">
     <div class="brand-logo-area">
-      <span style="font-size: 22pt;">🌿</span>
+      <div class="brand-logo-icon">🌱</div>
       <div>
-        <div class="brand-title">AeroCrop.ai</div>
+        <div class="brand-title">AeroCrop<span>.ai</span></div>
         <div class="brand-subtitle">अचूक शेती आणि बहु-माध्यमी पीक आरोग्य निदान व्यासपीठ • महाराष्ट्र शासन कृषी मार्गदर्शक</div>
       </div>
     </div>
-    <div class="meta-tag-pill">
-      <div><strong>संदर्भ:</strong> ${refId}</div>
-      <div><strong>तारीख:</strong> ${dateFormatted} | ${timeFormatted}</div>
+    <div class="header-badges">
+      <div class="accreditation-pill">ICAR & MPKV Standard Aligned</div>
+      <div class="meta-tag-pill">
+        <div><strong>संदर्भ:</strong> ${refId}</div>
+        <div><strong>तारीख:</strong> ${dateFormatted} | ${timeFormatted}</div>
+      </div>
     </div>
   </div>
 
   <div class="lang-title-bar bar-mr">
     <span>विभाग १ : सविस्तर पीक आरोग्य व खत व्यवस्थापन अहवाल (मराठी)</span>
-    <span style="font-size: 8pt; background: rgba(255,255,255,0.2); padding: 2px 7px; border-radius: 4px;">मराठी आवृत्ती</span>
+    <span class="lang-tag">महाराष्ट्र शासन कृषी मार्गदर्शक</span>
   </div>
 
   <!-- शेतकरी तपशील -->
   <div class="info-grid">
     <div class="info-card">
-      <div class="lbl">शेतकऱ्याचे नाव</div>
+      <div class="lbl">👤 शेतकऱ्याचे नाव</div>
       <div class="val">${farmerName}</div>
     </div>
     <div class="info-card">
-      <div class="lbl">जिल्हा व गाव</div>
+      <div class="lbl">📍 जिल्हा व गाव</div>
       <div class="val">${district} (${farmerVillage})</div>
     </div>
     <div class="info-card">
-      <div class="lbl">तपासलेले पीक</div>
+      <div class="lbl">🌱 तपासलेले पीक</div>
       <div class="val">${cropObj.mr} (${cropObj.en})</div>
     </div>
     <div class="info-card">
-      <div class="lbl">अपेक्षित उत्पादन</div>
-      <div class="val" style="color:#15803d">${yieldHa} टन/हे (${yieldAcre} क्विंटल/एकर)</div>
+      <div class="lbl">⚖️ अपेक्षित उत्पादन</div>
+      <div class="val" style="color:#047857">${yieldHa} टन/हे (${yieldAcre} क्विंटल/एकर)</div>
     </div>
   </div>
 
@@ -748,7 +786,7 @@ function buildHTML(data) {
   <div class="diag-hero ${isHealthy ? '' : 'has-disease'}">
     <div class="diag-top">
       <div>
-        <span style="font-size: 7.5pt; color: #64748b; font-weight: 700; text-transform: uppercase;">निदान झालेली स्थिती व पॅथॉलॉजी</span>
+        <span style="font-size: 7.2pt; color: #64748b; font-weight: 700; text-transform: uppercase;">निदान झालेली स्थिती व पॅथॉलॉजी</span>
         <div class="condition-name">${pathology.mr.condition}</div>
       </div>
       <span class="badge ${sevBadgeClass}">
@@ -837,40 +875,43 @@ function buildHTML(data) {
 <div class="page-container">
   <div class="brand-header">
     <div class="brand-logo-area">
-      <span style="font-size: 22pt;">🌿</span>
+      <div class="brand-logo-icon">🌱</div>
       <div>
-        <div class="brand-title">AeroCrop.ai</div>
+        <div class="brand-title">AeroCrop<span>.ai</span></div>
         <div class="brand-subtitle">सटीक कृषि एवं बहु-मॉडल फसल रोग निदान मंच • भारतीय कृषि अनुसंधान परिषद (ICAR) मानक</div>
       </div>
     </div>
-    <div class="meta-tag-pill">
-      <div><strong>संदर्भ सं:</strong> ${refId}</div>
-      <div><strong>दिनांक:</strong> ${dateFormatted} | ${timeFormatted}</div>
+    <div class="header-badges">
+      <div class="accreditation-pill">ICAR & MPKV Standard Aligned</div>
+      <div class="meta-tag-pill">
+        <div><strong>संदर्भ सं:</strong> ${refId}</div>
+        <div><strong>दिनांक:</strong> ${dateFormatted} | ${timeFormatted}</div>
+      </div>
     </div>
   </div>
 
   <div class="lang-title-bar bar-hi">
     <span>खंड २ : विस्तृत फसल स्वास्थ्य एवं उर्वरक प्रबंधन रिपोर्ट (हिंदी)</span>
-    <span style="font-size: 8pt; background: rgba(255,255,255,0.2); padding: 2px 7px; border-radius: 4px;">हिंदी संस्करण</span>
+    <span class="lang-tag">राष्ट्रीय कृषि परामर्श मानक</span>
   </div>
 
   <!-- किसान विवरण -->
   <div class="info-grid">
     <div class="info-card">
-      <div class="lbl">किसान का नाम</div>
+      <div class="lbl">👤 किसान का नाम</div>
       <div class="val">${farmerName}</div>
     </div>
     <div class="info-card">
-      <div class="lbl">जिला एवं तहसील</div>
+      <div class="lbl">📍 जिला एवं तहसील</div>
       <div class="val">${district} (${farmerVillage})</div>
     </div>
     <div class="info-card">
-      <div class="lbl">निरीक्षित फसल</div>
+      <div class="lbl">🌱 निरीक्षित फसल</div>
       <div class="val">${cropObj.hi} (${cropObj.en})</div>
     </div>
     <div class="info-card">
-      <div class="lbl">अनुमानित पैदावार</div>
-      <div class="val" style="color:#15803d">${yieldHa} टन/हे (${yieldAcre} क्विंटल/एकड़)</div>
+      <div class="lbl">⚖️ अनुमानित पैदावार</div>
+      <div class="val" style="color:#047857">${yieldHa} टन/हे (${yieldAcre} क्विंटल/एकड़)</div>
     </div>
   </div>
 
@@ -897,7 +938,7 @@ function buildHTML(data) {
   <div class="diag-hero ${isHealthy ? '' : 'has-disease'}">
     <div class="diag-top">
       <div>
-        <span style="font-size: 7.5pt; color: #64748b; font-weight: 700; text-transform: uppercase;">पहचाना गया रोग एवं विकृति विज्ञान</span>
+        <span style="font-size: 7.2pt; color: #64748b; font-weight: 700; text-transform: uppercase;">पहचाना गया रोग एवं विकृति विज्ञान</span>
         <div class="condition-name">${pathology.hi.condition}</div>
       </div>
       <span class="badge ${sevBadgeClass}">
@@ -986,40 +1027,43 @@ function buildHTML(data) {
 <div class="page-container">
   <div class="brand-header">
     <div class="brand-logo-area">
-      <span style="font-size: 22pt;">🌿</span>
+      <div class="brand-logo-icon">🌱</div>
       <div>
-        <div class="brand-title">AeroCrop.ai</div>
+        <div class="brand-title">AeroCrop<span>.ai</span></div>
         <div class="brand-subtitle">Multi-Modal Precision Crop Health & Agronomic Prescription System • Maharashtra</div>
       </div>
     </div>
-    <div class="meta-tag-pill">
-      <div><strong>Ref No:</strong> ${refId}</div>
-      <div><strong>Timestamp:</strong> ${dateFormatted} | ${timeFormatted}</div>
+    <div class="header-badges">
+      <div class="accreditation-pill">ICAR & MPKV Standard Aligned</div>
+      <div class="meta-tag-pill">
+        <div><strong>REF NO:</strong> ${refId}</div>
+        <div><strong>TIMESTAMP:</strong> ${dateFormatted} | ${timeFormatted}</div>
+      </div>
     </div>
   </div>
 
   <div class="lang-title-bar bar-en">
     <span>Section 3 : Detailed Crop Health & Agronomic Advisory Report (English)</span>
-    <span style="font-size: 8pt; background: rgba(255,255,255,0.2); padding: 2px 7px; border-radius: 4px;">English Edition</span>
+    <span class="lang-tag">Official Agronomic Dossier</span>
   </div>
 
   <!-- Farmer & Field Specs -->
   <div class="info-grid">
     <div class="info-card">
-      <div class="lbl">Farmer Name</div>
+      <div class="lbl">👤 Farmer Name</div>
       <div class="val">${farmerName}</div>
     </div>
     <div class="info-card">
-      <div class="lbl">District & Village</div>
+      <div class="lbl">📍 District & Village</div>
       <div class="val">${district} (${farmerVillage})</div>
     </div>
     <div class="info-card">
-      <div class="lbl">Monitored Crop</div>
+      <div class="lbl">🌱 Monitored Crop</div>
       <div class="val">${cropObj.en}</div>
     </div>
     <div class="info-card">
-      <div class="lbl">Yield Forecast</div>
-      <div class="val" style="color:#15803d">${yieldHa} t/ha (${yieldAcre} q/acre)</div>
+      <div class="lbl">⚖️ Yield Forecast</div>
+      <div class="val" style="color:#047857">${yieldHa} t/ha (${yieldAcre} q/acre)</div>
     </div>
   </div>
 
@@ -1046,7 +1090,7 @@ function buildHTML(data) {
   <div class="diag-hero ${isHealthy ? '' : 'has-disease'}">
     <div class="diag-top">
       <div>
-        <span style="font-size: 7.5pt; color: #64748b; font-weight: 700; text-transform: uppercase;">Pathological Assessment & Etiology</span>
+        <span style="font-size: 7.2pt; color: #64748b; font-weight: 700; text-transform: uppercase;">Pathological Assessment & Etiology</span>
         <div class="condition-name">${pathology.en.condition}</div>
       </div>
       <span class="badge ${sevBadgeClass}">

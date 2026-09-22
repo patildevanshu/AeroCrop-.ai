@@ -64,9 +64,11 @@ class TestAuthAPIEndpoints:
         assert registered_farmer["user"]["district"] == "nashik"
 
     def test_duplicate_phone_rejected(self, registered_farmer):
+        uid = uuid.uuid4().hex[:8]
         payload = {
             "full_name": "Another Farmer",
             "phone_number": registered_farmer["test_phone"],  # Duplicate
+            "email": f"unique_{uid}@aerocrop.ai",
             "password": "Password123",
             "district": "pune",
             "preferred_language": "en",
@@ -87,10 +89,22 @@ class TestAuthAPIEndpoints:
         assert res.status_code == 400
         assert "already registered" in res.json()["detail"]
 
+    def test_missing_email_rejected(self):
+        payload = {
+            "full_name": "No Email Farmer",
+            "phone_number": f"988{uuid.uuid4().hex[:7]}",
+            "password": "Password123",
+            "district": "pune",
+            "preferred_language": "en",
+        }
+        res = client.post("/api/auth/register", json=payload)
+        assert res.status_code == 422
+
     def test_short_password_rejected(self):
         payload = {
             "full_name": "Short Pass Farmer",
             "phone_number": f"999{uuid.uuid4().hex[:7]}",
+            "email": f"short_{uuid.uuid4().hex[:6]}@example.com",
             "password": "123",  # Too short
             "district": "pune",
             "preferred_language": "en",
@@ -172,12 +186,14 @@ class TestAuthAPIEndpoints:
     def test_login_with_phone_normalization(self):
         uid = uuid.uuid4().hex[:7]
         raw_phone = f"982{uid}"
-        # Register with standard number
+        email = f"kisan_{uid}@aerocrop.ai"
+        # Register with standard number & email
         reg_res = client.post(
             "/api/auth/register",
             json={
                 "full_name": "Kisan Rao",
                 "phone_number": raw_phone,
+                "email": email,
                 "password": "FarmerPassword123",
                 "district": "solapur",
             },
@@ -198,12 +214,14 @@ class TestAuthAPIEndpoints:
     def test_change_password_flow(self):
         uid = uuid.uuid4().hex[:7]
         phone = f"987{uid}"
+        email = f"ramesh_{uid}@aerocrop.ai"
         # Register user
         reg_res = client.post(
             "/api/auth/register",
             json={
                 "full_name": "Ramesh Pawar",
                 "phone_number": phone,
+                "email": email,
                 "password": "OldPassword123",
                 "district": "pune",
             },
@@ -247,5 +265,69 @@ class TestAuthAPIEndpoints:
             json={"identifier": phone, "password": "NewSecretPassword123"},
         )
         assert login_new.status_code == 200
+
+
+class TestEmailOtpEndpoints:
+    def test_send_otp_success(self):
+        uid = uuid.uuid4().hex[:8]
+        test_email = f"otp_test_{uid}@example.com"
+        res = client.post("/api/auth/send-otp", json={"email": test_email, "purpose": "register"})
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "success"
+        assert "sent" in data["message"].lower()
+
+    def test_send_otp_cooldown(self):
+        uid = uuid.uuid4().hex[:8]
+        test_email = f"cooldown_{uid}@example.com"
+        # First request succeeds
+        res1 = client.post("/api/auth/send-otp", json={"email": test_email, "purpose": "register"})
+        assert res1.status_code == 200
+
+        # Immediate second request hits cooldown
+        res2 = client.post("/api/auth/send-otp", json={"email": test_email, "purpose": "register"})
+        assert res2.status_code == 429
+        assert "wait" in res2.json()["detail"].lower()
+
+    def test_register_with_otp_flow(self):
+        from database.mongodb import get_database
+        import asyncio
+        from services.otp_service import OtpService
+
+        uid = uuid.uuid4().hex[:8]
+        test_email = f"otp_farmer_{uid}@example.com"
+
+        # Send OTP
+        res_send = client.post("/api/auth/send-otp", json={"email": test_email, "purpose": "register"})
+        assert res_send.status_code == 200
+
+        # Retrieve generated code from database for testing
+        async def fetch_code():
+            db = get_database()
+            rec = await db.email_otps.find_one({"email": test_email, "is_used": False}, sort=[("created_at", -1)])
+            return rec
+
+        try:
+            loop = asyncio.get_event_loop()
+            rec = loop.run_until_complete(fetch_code())
+        except RuntimeError:
+            rec = asyncio.run(fetch_code())
+
+        assert rec is not None
+
+        # Verify invalid code is rejected
+        res_bad = client.post(
+            "/api/auth/register-with-otp",
+            json={
+                "full_name": "OTP Test Farmer",
+                "email": test_email,
+                "otp": "000000",
+                "password": "ValidPassword123",
+                "district": "nashik",
+            },
+        )
+        assert res_bad.status_code == 400
+        assert "invalid" in res_bad.json()["detail"].lower()
+
 
 

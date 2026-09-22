@@ -10,19 +10,10 @@ import torch
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(BACKEND_DIR)
 MODEL_DIR   = os.path.join(BASE_DIR, "model")
-WEIGHTS_PATH_SET1 = os.path.join(MODEL_DIR, "aerocrop_weights.pth")
-WEIGHTS_PATH_SET2 = os.path.join(MODEL_DIR, "aerocrop_weights_full_v2.pth")
-WEIGHTS_PATH_SET3 = os.path.join(MODEL_DIR, "aerocrop_weights_full_v3.pth")
-DEFAULT_WEIGHTS_FILE = os.getenv(
-    "AEROCROP_WEIGHTS_FILE",
-    "aerocrop_weights_full_v3.pth"
-    if os.path.exists(os.path.join(MODEL_DIR, "aerocrop_weights_full_v3.pth"))
-    else (
-        "aerocrop_weights_full_v2.pth"
-        if os.path.exists(os.path.join(MODEL_DIR, "aerocrop_weights_full_v2.pth"))
-        else "aerocrop_weights.pth"
-    ),
-)
+WEIGHTS_PATH_SET1 = os.path.join(MODEL_DIR, "aerocrop_weights_epoch80.pth")
+WEIGHTS_PATH_SET2 = os.path.join(MODEL_DIR, "aerocrop_weights_epoch80.pth")
+WEIGHTS_PATH_SET3 = os.path.join(MODEL_DIR, "aerocrop_weights_epoch80.pth")
+DEFAULT_WEIGHTS_FILE = os.getenv("AEROCROP_WEIGHTS_FILE", "aerocrop_weights_epoch80.pth")
 WEIGHTS_PATH = os.path.join(MODEL_DIR, DEFAULT_WEIGHTS_FILE)
 VIEWS_DIR   = os.path.join(BASE_DIR, "frontend", "legacy")
 STATIC_DIR  = os.path.join(VIEWS_DIR, "static")
@@ -129,4 +120,11 @@ VALIDATOR_TIMEOUT_SECONDS = float(os.getenv("VALIDATOR_TIMEOUT_SECONDS", "35.0")
 # ─── Official Support ────────────────────────────────────────────────────────
 SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@devanshupatil.tech")
 
-
+# ─── SMTP Email Delivery (Gmail / Standard SMTP) ─────────────────────────────
+SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", os.getenv("FROM", "megabypass3@gmail.com"))
+SMTP_PASS = os.getenv("SMTP_PASS", os.getenv("PASS", "jjckvganjyeowklt"))
+SMTP_FROM = os.getenv("SMTP_FROM", f"AeroCrop.ai Support <{SMTP_USER}>")
+OTP_EXPIRY_MINUTES = int(os.getenv("OTP_EXPIRY_MINUTES", "10"))
+OTP_COOLDOWN_SECONDS = int(os.getenv("OTP_COOLDOWN_SECONDS", "60"))

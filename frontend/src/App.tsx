@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { ToastProvider } from './context/ToastContext';
 import { I18nProvider } from './context/I18nContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppShell } from './components/layout/AppShell';
 import { PageTab } from './components/layout/Sidebar';
 import { AuthModal } from './components/auth/AuthModal';
+import { AuthGate } from './components/auth/AuthGate';
 
 import { DiagnosePage } from './components/diagnose/DiagnosePage';
 import { CropsPage } from './components/plots/CropsPage';
@@ -14,9 +15,38 @@ import { AboutPage } from './components/about/AboutPage';
 import { FarmPlot } from './types';
 
 const MainApp: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<PageTab>('diagnose');
   const [activePlotId, setActivePlotId] = useState<string>('');
   const [activeCrop, setActiveCrop] = useState<string>('');
+
+  if (isLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        width: '100%',
+        maxWidth: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#0b1411',
+        color: '#f8fafc',
+        gap: '16px',
+        boxSizing: 'border-box',
+      }}>
+        <div style={{ fontSize: '2.5rem' }}>🌱</div>
+        <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#34d399' }}>AeroCrop.ai</div>
+        <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Verifying secure farmer session...</div>
+        <div className="btn-spinner" style={{ width: '28px', height: '28px', borderWidth: '3px', borderColor: '#34d399', borderTopColor: 'transparent' }} />
+      </div>
+    );
+  }
+
+  // Compulsory Authentication Gate
+  if (!isAuthenticated) {
+    return <AuthGate />;
+  }
 
   const handleQuickDiagnose = (plot: FarmPlot) => {
     setActivePlotId(plot.id.toString());

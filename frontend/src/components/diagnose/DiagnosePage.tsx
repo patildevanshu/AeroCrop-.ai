@@ -24,10 +24,12 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [crop, setCrop] = useState<string>(initialCrop ? initialCrop.toLowerCase() : 'auto');
-  const [district, setDistrict] = useState<string>('pune');
+  const [district, setDistrict] = useState<string>(
+    currentUser?.district ? currentUser.district.toLowerCase() : 'pune'
+  );
   const [districts, setDistricts] = useState<string[]>([]);
   const [selectedPlotId, setSelectedPlotId] = useState<string>(initialPlotId);
-  const [farmerEmail, setFarmerEmail] = useState<string>('');
+  const [farmerEmail, setFarmerEmail] = useState<string>(currentUser?.email || '');
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<PredictionResult | null>(null);
@@ -37,6 +39,9 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
   useEffect(() => {
     if (currentUser?.email) {
       setFarmerEmail(currentUser.email);
+    }
+    if (currentUser?.district) {
+      setDistrict(currentUser.district.toLowerCase());
     }
   }, [currentUser]);
 
@@ -50,20 +55,26 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
     }
   }, [initialCrop]);
 
-  // Load districts on mount
+  // Load districts on mount & prioritize user's signup district
   useEffect(() => {
     fetchDistricts()
       .then((data) => {
         setDistricts(data.districts);
-        if (data.districts.length > 0 && !data.districts.includes(district)) {
+        if (currentUser?.district && data.districts.includes(currentUser.district.toLowerCase())) {
+          setDistrict(currentUser.district.toLowerCase());
+        } else if (data.districts.length > 0 && !data.districts.includes(district)) {
           setDistrict(data.districts[0]);
         }
       })
       .catch((err) => {
         console.warn('Failed to load districts:', err);
-        setDistricts(['pune', 'nagpur', 'nashik', 'amravati', 'kolhapur', 'aurangabad', 'solapur', 'jalgaon']);
+        const fallback = ['pune', 'nagpur', 'nashik', 'amravati', 'kolhapur', 'aurangabad', 'solapur', 'jalgaon'];
+        setDistricts(fallback);
+        if (currentUser?.district && fallback.includes(currentUser.district.toLowerCase())) {
+          setDistrict(currentUser.district.toLowerCase());
+        }
       });
-  }, []);
+  }, [currentUser]);
 
   // Fetch weather when district changes
   useEffect(() => {

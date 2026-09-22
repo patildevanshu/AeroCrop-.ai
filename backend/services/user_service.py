@@ -47,6 +47,7 @@ class UserService:
         email: Optional[str] = None,
         taluka_village: Optional[str] = None,
         preferred_language: str = "en",
+        is_verified: bool = True,
     ) -> Tuple[Optional[User], Optional[str]]:
         """
         Register a new farmer account in MongoDB.
@@ -55,8 +56,11 @@ class UserService:
         phone_clean = UserService.normalize_phone(phone_number) if phone_number and phone_number.strip() else None
         email_clean = email.strip().lower() if email and email.strip() else None
 
-        if not phone_clean and not email_clean:
-            return None, "Either mobile phone number or email address is required."
+        if not email_clean or "@" not in email_clean or "." not in email_clean:
+            return None, "A valid email address is required for registration."
+
+        if not district or not district.strip():
+            return None, "District selection is required."
 
         if len(password) < 6:
             return None, "Password must be at least 6 characters long."
@@ -91,6 +95,7 @@ class UserService:
             "preferred_language": preferred_language.strip().lower() if preferred_language in ("en", "mr", "hi") else "en",
             "token_version": 1,
             "is_active": True,
+            "is_verified": is_verified,
             "created_at": now,
             "updated_at": now,
         }
