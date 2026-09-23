@@ -16,14 +16,17 @@ try:
         os.path.join(_backend_dir, ".env"),
     ]:
         if os.path.exists(_env_file):
-            load_dotenv(_env_file, override=False)
+            _vals = dotenv_values(_env_file)
+            for _k, _v in _vals.items():
+                if _v and not os.environ.get(_k):
+                    os.environ[_k] = str(_v)
 
     # 2. Extract SMTP credentials from email_service/.env without overriding backend PORT (PORT 5000 is for node microservice)
     _email_env = os.path.join(_backend_dir, "email_service", ".env")
     if os.path.exists(_email_env):
         _email_vals = dotenv_values(_email_env)
         for _k in ("FROM", "PASS", "EMAIL_USER", "EMAIL_PASS", "SMTP_USER", "SMTP_PASS"):
-            if _k in _email_vals and _email_vals[_k] and _k not in os.environ:
+            if _k in _email_vals and _email_vals[_k] and not os.environ.get(_k):
                 os.environ[_k] = str(_email_vals[_k])
 except ImportError:
     pass
@@ -155,7 +158,7 @@ _raw_pass = os.getenv("SMTP_PASS") or os.getenv("PASS") or os.getenv("EMAIL_PASS
 SMTP_PASS = _raw_pass.replace(" ", "").strip() if _raw_pass else ""
 
 SMTP_FROM = os.getenv("SMTP_FROM", f"AeroCrop.ai Support <{SMTP_USER}>" if SMTP_USER else "AeroCrop.ai Support")
-SMTP_TIMEOUT_SECONDS = float(os.getenv("SMTP_TIMEOUT_SECONDS", "8.0"))
+SMTP_TIMEOUT_SECONDS = float(os.getenv("SMTP_TIMEOUT_SECONDS", "12.0"))
 OTP_EXPIRY_MINUTES = int(os.getenv("OTP_EXPIRY_MINUTES", "10"))
 OTP_COOLDOWN_SECONDS = int(os.getenv("OTP_COOLDOWN_SECONDS", "30"))
 DEV_ALLOW_OTP_BYPASS = os.getenv("DEV_ALLOW_OTP_BYPASS", "true" if os.getenv("ENVIRONMENT", "").lower() not in ("prod", "production") else "false").lower() == "true"

@@ -18,6 +18,7 @@ import logging
 import os
 import secrets
 import smtplib
+import socket
 import ssl
 import sys
 import time
@@ -184,21 +185,32 @@ class OtpService:
 
         msg = cls._build_email_message(to_email, otp_code, purpose)
 
-        if smtp_port == 465:
-            # Implicit SSL
-            ssl_context = ssl.create_default_context()
-            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=timeout, context=ssl_context) as server:
-                server.login(smtp_user, smtp_pass)
-                server.send_message(msg)
-        else:
-            # Plain or STARTTLS (e.g. 587)
-            ssl_context = ssl.create_default_context()
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=timeout) as server:
-                server.ehlo()
-                server.starttls(context=ssl_context)
-                server.ehlo()
-                server.login(smtp_user, smtp_pass)
-                server.send_message(msg)
+        _orig_gai = socket.getaddrinfo
+
+        def _ipv4_gai(host, port, family=0, type=0, proto=0, flags=0):
+            if family == 0 or family == socket.AF_UNSPEC:
+                family = socket.AF_INET
+            return _orig_gai(host, port, family, type, proto, flags)
+
+        try:
+            socket.getaddrinfo = _ipv4_gai
+            if smtp_port == 465:
+                # Implicit SSL
+                ssl_context = ssl.create_default_context()
+                with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=timeout, context=ssl_context) as server:
+                    server.login(smtp_user, smtp_pass)
+                    server.send_message(msg)
+            else:
+                # Plain or STARTTLS (e.g. 587)
+                ssl_context = ssl.create_default_context()
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=timeout) as server:
+                    server.ehlo()
+                    server.starttls(context=ssl_context)
+                    server.ehlo()
+                    server.login(smtp_user, smtp_pass)
+                    server.send_message(msg)
+        finally:
+            socket.getaddrinfo = _orig_gai
 
         return {
             "success": True,
@@ -258,6 +270,7 @@ class OtpService:
         provider_str = f"{config.SMTP_HOST}:{primary_port}"
 
         t0 = EmailAuditLogger.log_attempt(to_email, purpose, provider_str, f"python_smtp_{primary_port}")
+        tier_errors = []
         last_error = ""
         last_exc: Optional[Exception] = None
 
@@ -275,7 +288,9 @@ class OtpService:
             )
             return True, f"Verification code sent to {to_email}.", audit
         except Exception as exc1:
-            last_error = f"Primary SMTP ({primary_port}) failed: {exc1}"
+            err1 = f"Primary SMTP ({primary_port}) failed: {exc1}"
+            tier_errors.append(err1)
+            last_error = err1
             last_exc = exc1
             EmailAuditLogger.log_retry(
                 to_email, purpose, f"python_smtp_{primary_port}", f"python_smtp_{alt_port}", str(exc1)
@@ -295,7 +310,9 @@ class OtpService:
             )
             return True, f"Verification code sent to {to_email}.", audit
         except Exception as exc2:
-            last_error = f"Alternate SMTP ({alt_port}) failed: {exc2}"
+            err2 = f"Alternate SMTP ({alt_port}) failed: {exc2}"
+            tier_errors.append(err2)
+            last_error = err2
             last_exc = exc2
             EmailAuditLogger.log_retry(
                 to_email, purpose, f"python_smtp_{alt_port}", "node_microservice", str(exc2)
@@ -309,17 +326,24 @@ class OtpService:
             )
             return True, f"Verification code sent to {to_email}.", audit
         except Exception as exc3:
-            last_error = f"Node microservice fallback failed: {exc3}"
+            err3 = f"Node microservice fallback failed: {exc3}"
+            tier_errors.append(err3)
+            last_error = err3
             last_exc = exc3
 
         # ── All Channels Exhausted ─────────────────────────────────────────────
+        if not config.IS_SMTP_CONFIGURED:
+            summary = "SMTP credentials (SMTP_USER / SMTP_PASS) are not configured. Please define them in your server .env file."
+        else:
+            summary = " | ".join(tier_errors)
+
         audit = EmailAuditLogger.log_failure(
             to_email,
             purpose,
             "all_channels_exhausted",
             provider_str,
             t0,
-            last_error,
+            summary,
             exc_info=last_exc,
             code_for_dev_fallback=otp_code,
         )
@@ -328,8 +352,8 @@ class OtpService:
         is_prod = os.getenv("ENVIRONMENT", "").lower().startswith("prod")
         is_test_or_dev = (
             ("pytest" in sys.modules)
-            or (config.DEV_ALLOW_OTP_BYPASS and not is_prod)
-            or (not is_prod and os.getenv("ENVIRONMENT", "").lower() in ("dev", "development", "test", "testing", ""))
+            or (config.DEV_ALLOW_OTP_BYPASS and not is_prod and not config.IS_SMTP_CONFIGURED)
+            or (not is_prod and not config.IS_SMTP_CONFIGURED and os.getenv("ENVIRONMENT", "").lower() in ("dev", "development", "test", "testing", ""))
         )
 
         if is_test_or_dev:
@@ -345,8 +369,7 @@ class OtpService:
             )
             return True, f"Verification code sent to {to_email}. (Dev Code: {otp_code})", audit
 
-        err_detail = f" ({last_error})" if last_error else ""
-        return False, f"Unable to deliver verification email. Please verify your email address or check server runtime logs{err_detail}.", audit
+        return False, f"Unable to deliver verification email. {summary}", audit
 
     @classmethod
     async def create_and_send_otp(

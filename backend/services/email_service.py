@@ -17,6 +17,7 @@ from email.message import EmailMessage
 from typing import Any, Dict, Optional
 
 import email.utils
+import socket
 import ssl
 import httpx
 try:
@@ -402,19 +403,30 @@ class EmailService:
         if not smtp_user or not smtp_pass:
             raise RuntimeError("SMTP credentials (SMTP_USER / SMTP_PASS) are not configured.")
 
-        if smtp_port == 465:
-            ssl_context = ssl.create_default_context()
-            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=timeout, context=ssl_context) as server:
-                server.login(smtp_user, smtp_pass)
-                server.send_message(msg)
-        else:
-            ssl_context = ssl.create_default_context()
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=timeout) as server:
-                server.ehlo()
-                server.starttls(context=ssl_context)
-                server.ehlo()
-                server.login(smtp_user, smtp_pass)
-                server.send_message(msg)
+        _orig_gai = socket.getaddrinfo
+
+        def _ipv4_gai(host, port, family=0, type=0, proto=0, flags=0):
+            if family == 0 or family == socket.AF_UNSPEC:
+                family = socket.AF_INET
+            return _orig_gai(host, port, family, type, proto, flags)
+
+        try:
+            socket.getaddrinfo = _ipv4_gai
+            if smtp_port == 465:
+                ssl_context = ssl.create_default_context()
+                with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=timeout, context=ssl_context) as server:
+                    server.login(smtp_user, smtp_pass)
+                    server.send_message(msg)
+            else:
+                ssl_context = ssl.create_default_context()
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=timeout) as server:
+                    server.ehlo()
+                    server.starttls(context=ssl_context)
+                    server.ehlo()
+                    server.login(smtp_user, smtp_pass)
+                    server.send_message(msg)
+        finally:
+            socket.getaddrinfo = _orig_gai
 
         logger.info("[EmailService] Direct SMTP advisory email successfully delivered to %s", farmer_email)
         EmailAuditLogger.log_success(farmer_email, "advisory_report", f"python_smtp_{smtp_port}", f"{smtp_host}:{smtp_port}", time.time(), {"crop": crop})
