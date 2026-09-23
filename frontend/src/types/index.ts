@@ -116,6 +116,9 @@ export interface PredictionResult {
   image_url: string | null;
   disease: DiseaseInfo;
   yield_t_ha: number;
+  yield_loss_pct?: number | null;
+  baseline_yield_t_ha?: number | null;
+  yield_reason?: string | null;
   weather: WeatherData;
   mandi?: MandiRateInfo;
   email_status?: 'queued' | 'sent' | null;

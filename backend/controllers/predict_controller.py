@@ -167,6 +167,25 @@ async def predict(
                 result["confidence"] = float(verified.get("confidence", 0.96))
                 result["mock"] = False
                 result["low_confidence"] = False
+
+            # Incorporate agronomic yield estimate from validator microservice if present
+            val_yield = verified.get("yield")
+            if val_yield and isinstance(val_yield, dict):
+                val_pred = val_yield.get("predicted_yield_t_ha")
+                if val_pred is not None and float(val_pred) > 0:
+                    val_pred = float(val_pred)
+                    if result.get("mock"):
+                        result["yield_t_ha"] = round(val_pred, 2)
+                    else:
+                        local_yield = float(result.get("yield_t_ha", val_pred))
+                        result["yield_t_ha"] = round(0.6 * val_pred + 0.4 * local_yield, 2)
+                    result["yield_loss_pct"] = val_yield.get("yield_loss_pct")
+                    result["baseline_yield_t_ha"] = val_yield.get("baseline_yield_t_ha")
+                    result["yield_reason"] = val_yield.get("yield_reason")
+                    logger.info(
+                        "[PredictController] Yield updated via validator: %.2f t/ha (loss: %s%%)",
+                        result["yield_t_ha"], result.get("yield_loss_pct")
+                    )
     except Exception as exc:
         logger.debug("[PredictController] Ensemble cross-verification bypassed: %s", exc)
 
@@ -274,6 +293,9 @@ async def predict(
                     "ood_reason": result.get("ood_reason", ""),
                     "ensemble_verified": True if "verified" in locals() and verified else False,
                     "model_weights": config.DEFAULT_WEIGHTS_FILE,
+                    "yield_loss_pct": result.get("yield_loss_pct"),
+                    "baseline_yield_t_ha": result.get("baseline_yield_t_ha"),
+                    "yield_reason": result.get("yield_reason"),
                 },
             )
             saved_record_id = saved_record.id
@@ -291,6 +313,9 @@ async def predict(
             "crop": final_crop_name,
             "district": district.title(),
             "yield_t_ha": result["yield_t_ha"],
+            "yield_loss_pct": result.get("yield_loss_pct"),
+            "baseline_yield_t_ha": result.get("baseline_yield_t_ha"),
+            "yield_reason": result.get("yield_reason"),
             "disease": disease_payload,
             "weather": weather,
         }
@@ -310,18 +335,21 @@ async def predict(
         "out_of_distribution": result.get("out_of_distribution", False),
         "ood_reason":          result.get("ood_reason", ""),
         "crop":                final_crop_name,
-        "crop_key":        effective_crop_key,
-        "auto_detected":   True,
-        "district":        district.title(),
-        "plot_id":         valid_plot_id if optional_user else None,
-        "saved_record_id": saved_record_id,
-        "image_url":       saved_image_url,
-        "weather":         weather,
-        "disease":         disease_payload,
-        "yield_t_ha":      result["yield_t_ha"],
-        "mandi":           mandi_payload,
-        "email_status":    email_status,
-        "email_recipient": target_email,
+        "crop_key":            effective_crop_key,
+        "auto_detected":       True,
+        "district":            district.title(),
+        "plot_id":             valid_plot_id if optional_user else None,
+        "saved_record_id":     saved_record_id,
+        "image_url":           saved_image_url,
+        "weather":             weather,
+        "disease":             disease_payload,
+        "yield_t_ha":          result["yield_t_ha"],
+        "yield_loss_pct":      result.get("yield_loss_pct"),
+        "baseline_yield_t_ha": result.get("baseline_yield_t_ha"),
+        "yield_reason":        result.get("yield_reason"),
+        "mandi":               mandi_payload,
+        "email_status":        email_status,
+        "email_recipient":     target_email,
     })
 
 

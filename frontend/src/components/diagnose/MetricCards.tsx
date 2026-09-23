@@ -58,12 +58,16 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ result }) => {
       </div>
 
       {/* Yield Card */}
-      <div className="metric-card glass">
+      <div className="metric-card glass" title={result.yield_reason || undefined}>
         <div className="metric-icon" aria-hidden="true">🌾</div>
         <div className="metric-body">
           <p className="metric-label">{t('predicted_yield')}</p>
           <p className="metric-value">{(yield_t_ha * 4.047).toFixed(1)} Quintal / Acre</p>
-          <p className="metric-sub">{t('for_crop')} {crop}</p>
+          <p className="metric-sub">
+            {result.yield_loss_pct != null && result.yield_loss_pct > 0
+              ? `⚠️ ~${result.yield_loss_pct}% loss impact`
+              : `${t('for_crop')} ${crop}`}
+          </p>
         </div>
       </div>
 
