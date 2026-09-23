@@ -146,11 +146,15 @@ async def predict(
             local_confidence=result["confidence"],
         )
         if verified and (verified.get("out_of_distribution") or verified.get("is_supported") is False):
-            logger.info("[PredictController] Specimen flagged as out-of-distribution: %s", verified.get("reason"))
+            reason_text = verified.get("reason") or (
+                "This plant or disease specimen may not be present in our dataset (this is not guaranteed). "
+                "The diagnosis below is based on our internal model's closest estimate."
+            )
+            logger.info("[PredictController] Specimen flagged as out-of-distribution: %s", reason_text)
             result["low_confidence"] = True
-            result["confidence"] = 0.0
+            # Keep internal model's prediction and confidence score intact (do not zero out)
             result["out_of_distribution"] = True
-            result["ood_reason"] = "Uploaded image could not be recognized. Please upload a clear, focused photograph of a crop leaf."
+            result["ood_reason"] = reason_text
         elif verified and verified.get("verified") and "class_idx" in verified:
             v_idx = int(verified["class_idx"])
             v_info = DiseaseService.get_by_index(v_idx)
@@ -204,6 +208,7 @@ async def predict(
         "organic_cost":  disease_info.organic_cost_display  if disease_info else "₹0 / Acre",
         "confidence":   round(result["confidence"] * 100, 2),
         "probabilities": result["probabilities"],
+        "warning":      result.get("ood_reason") if result.get("out_of_distribution") else None,
     }
 
     # ── 5. Mandi price intelligence & revenue forecast for the AUTO-DETECTED crop

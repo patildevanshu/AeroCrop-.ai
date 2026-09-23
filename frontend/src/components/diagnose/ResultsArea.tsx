@@ -59,17 +59,17 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
           <div>
             <strong style={{ display: 'block', fontSize: '0.95rem', color: '#fbbf24', marginBottom: '3px' }}>
               {language === 'mr'
-                ? 'मॉडेल सूचना — छायाचित्र डेटासेटमध्ये आढळले नाही'
+                ? 'मॉडेल सूचना — वनस्पती कदाचित डेटासेटमध्ये उपस्थित नसू शकते'
                 : (language === 'hi'
-                  ? 'मॉडल सूचना — फोटो हमारे डेटासेट में मौजूद नहीं है'
-                  : 'Model Advisory — Image Not Recognized in Dataset')}
+                  ? 'मॉडल सलाह — यह पौधा संभवतः डेटासेट में मौजूद नहीं हो सकता है'
+                  : 'Model Advisory — Specimen May Not Be in Dataset')}
             </strong>
             <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: '1.45' }}>
               {language === 'mr'
-                ? 'अपलोड केलेले छायाचित्र मॉडेलद्वारे ओळखता आले नाही किंवा आमच्या डेटासेटमध्ये उपस्थित नाही. कृपया अधिक अचूकतेसाठी पानाचा स्पष्ट व स्वच्छ फोटो अपलोड करा. खाली आमचे मॉडेल विश्लेषण दाखवले आहे.'
+                ? 'अपलोड केलेली वनस्पती किंवा रोग आमच्या डेटासेटमध्ये उपस्थित नसू शकतो (याची कोणतीही खात्री नाही). खालील निकाल आमच्या अंतर्गत मॉडेलच्या अंदाजावर आधारित आहे. अचूकतेसाठी कृपया पानावरील स्पष्ट फोटो अपलोड करा.'
                 : (language === 'hi'
-                  ? 'अपलोड की गई फोटो मॉडल द्वारा पहचानी नहीं जा सकी या हमारे डेटासेट में मौजूद नहीं है। सटीक परिणाम के लिए कृपया स्पष्ट पत्ती की फोटो अपलोड करें। नीचे हमारे मॉडल का विश्लेषण दिखाया गया है।'
-                  : 'The uploaded image is not recognized by the model or may not be present in our dataset. For best accuracy, please upload a clear, focused leaf photo. Below is our model\'s preliminary analysis.')}
+                  ? 'यह पौधा या रोग हमारे डेटासेट में मौजूद नहीं हो सकता है (इसकी कोई गारंटी नहीं है)। नीचे दिया गया परिणाम हमारे आंतरिक मॉडल के सर्वोत्तम अनुमान पर आधारित है। कृपया स्पष्ट पत्ती की फोटो अपलोड करें।'
+                  : 'This plant or disease specimen may not be present in our dataset (this is not guaranteed). The output below is based on our internal model\'s closest estimate. For best accuracy, please upload a clear, focused leaf photo.')}
             </span>
           </div>
         </div>

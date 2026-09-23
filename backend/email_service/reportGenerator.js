@@ -336,8 +336,6 @@ function buildHTML(data) {
 <html lang="mr">
 <head>
 <meta charset="UTF-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   ${NOTO_DEVANAGARI_BASE64 ? `
   @font-face {
@@ -1235,7 +1233,7 @@ async function generateTrilingualPDF(data) {
     try {
         const page = await browser.newPage();
         const html = buildHTML(data);
-        await page.setContent(html, { waitUntil: ['domcontentloaded', 'networkidle0'] });
+        await page.setContent(html, { waitUntil: 'domcontentloaded' });
         try {
             await page.evaluateHandle('document.fonts.ready');
         } catch (_) {}
