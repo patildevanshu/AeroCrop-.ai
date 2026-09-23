@@ -161,7 +161,7 @@ async def seed():
                 "description": d_info.description if d_info else "",
                 "chemical_treatment": d_info.chemical_treatment if d_info else [],
                 "organic_treatment": d_info.organic_treatment if d_info else [],
-                "probabilities": [0.01] * 50,
+                "probabilities": [round(1.0 / 134, 4)] * 134,
             },
             "yield": {
                 "predicted_yield_t_ha": round(yield_val, 2),

@@ -105,11 +105,11 @@ In `model/dataset.py`, we engineered `MultiModalDataset`:
 The network consists of 4 distinct functional sub-modules:
 
 ```
-[Input 1: Leaf Image (3, 224, 224)]           [Input 2: Soil & Weather (6,)]
+[Input 1: Leaf Image (3, 224, 224)]           [Input 2: Weather Telemetry (3,)]
                 │                                            │
                 ▼                                            ▼
    ResNet-18 Visual Backbone                    3-Layer MLP Tabular Encoder
-   (Conv layers + Adaptive Avg Pool)           [Linear(6,64) -> BN -> ReLU -> Dropout] x 3
+   (Conv layers + Adaptive Avg Pool)           [Linear(3,64) -> BN -> ReLU -> Dropout] x 3
                 │                                            │
                 ▼ (512-dim)                                  ▼ (64-dim)
                 └─────────────────────┬──────────────────────┘
@@ -117,7 +117,7 @@ The network consists of 4 distinct functional sub-modules:
                            Concatenation (576-dim)
                                       │
                                       ▼
-                              Fusion Layer
+                               Fusion Layer
                    [Linear(576, 128) -> BatchNorm1d -> ReLU -> Dropout(0.3)]
                                       │
                                       ▼
@@ -126,15 +126,15 @@ The network consists of 4 distinct functional sub-modules:
                     ┌─────────────────┴─────────────────┐
                     ▼                                   ▼
         Task Head 1 (Disease)               Task Head 2 (Yield)
-        Linear(128, 38)                     Linear(128, 32) -> ReLU
-        -> Softmax (Logits)                 -> Linear(32, 1) -> ReLU
+        Linear(128, 134)                    Linear(128, 32) -> ReLU
+        -> Softmax (Logits)                 -> Linear(32, 1) -> Softplus
 ```
 
 - **Visual Encoder**: ResNet-18 with final classification FC removed, outputting a $512$-dim vector.
-- **Tabular Encoder**: 3-layer MLP `[6 -> 64 -> 64 -> 64 -> 64]` with Batch Normalization and Dropout ($p=0.2$).
+- **Tabular Encoder**: 3-layer MLP `[3 -> 64 -> 64 -> 64 -> 64]` with Batch Normalization and Dropout ($p=0.2$).
 - **Fusion Layer**: Concatenates $512 + 64 = 576$ dimensions, projected down to a $128$-dimensional shared embedding with Batch Normalization and Dropout ($p=0.3$).
-- **Disease Classification Head**: `Linear(128, 38)` producing unnormalized class logits.
-- **Yield Regression Head**: `Linear(128, 32) -> ReLU -> Linear(32, 1) -> ReLU` (ensuring non-negative yields in $t/\text{ha}$).
+- **Disease Classification Head**: `Linear(128, 134)` producing unnormalized class logits across 134 diagnostic classes.
+- **Yield Regression Head**: `Linear(128, 32) -> ReLU -> Linear(32, 1) -> Softplus()` (ensuring strictly positive, smooth non-negative yields in $t/\text{ha}$ while eliminating dying ReLU gradient collapse).
 
 ---
 
@@ -149,7 +149,7 @@ The network consists of 4 distinct functional sub-modules:
 
 ### Q3.3: Why did you choose Intermediate/Feature Fusion over Early or Late Fusion?
 **Answer:**  
-- **Early Fusion (Input Level)**: Concatenating tabular scalar features with pixel matrices at the input creates extreme dimensional asymmetry ($224 \times 224 \times 3 = 150,528$ values vs. $6$ scalars). The network would ignore the $6$ scalars.
+- **Early Fusion (Input Level)**: Concatenating tabular scalar features with pixel matrices at the input creates extreme dimensional asymmetry ($224 \times 224 \times 3 = 150,528$ values vs. $3$ scalars). The network would ignore the $3$ scalars.
 - **Late Fusion (Decision Level)**: Running two completely separate models and averaging predictions prevents cross-modal feature learning (e.g., knowing the temperature and humidity should directly contextualize whether a leaf spot is fungal or bacterial).
 - **Intermediate Fusion (Our Choice)**: Both modalities are independently compressed into high-level semantic latent vectors ($512$-dim visual, $64$-dim tabular) before being concatenated and mapped to a shared $128$-dim manifold.
 

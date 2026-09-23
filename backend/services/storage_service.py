@@ -96,11 +96,13 @@ class S3StorageProvider(StorageProvider):
 
     def __init__(
         self,
-        bucket_name: str = config.AWS_S3_BUCKET,
-        region: str = config.AWS_S3_REGION,
+        bucket_name: Optional[str] = None,
+        region: Optional[str] = None,
     ):
-        self.bucket_name = bucket_name
-        self.region = region
+        self.bucket_name = bucket_name or getattr(config, "AWS_S3_BUCKET", "")
+        self.region = region or getattr(config, "AWS_S3_REGION", "ap-south-1")
+        if not self.bucket_name:
+            raise ValueError("S3StorageProvider requires a configured AWS_S3_BUCKET.")
 
     async def save_image(
         self,
@@ -113,7 +115,6 @@ class S3StorageProvider(StorageProvider):
         filename = f"{timestamp_str}_{unique_suffix}.jpg"
         s3_key = f"uploads/{user_id}/{filename}"
 
-        # If s3 is not configured, fall back to local URL format
         public_url = f"https://{self.bucket_name}.s3.{self.region}.amazonaws.com/{s3_key}"
         return filename, public_url
 
@@ -123,7 +124,15 @@ class S3StorageProvider(StorageProvider):
 
 # Factory helper
 def get_storage_provider() -> StorageProvider:
-    """Instantiate the configured storage provider."""
-    if config.STORAGE_PROVIDER.lower() == "s3" and config.AWS_S3_BUCKET:
-        return S3StorageProvider()
+    """Instantiate the configured storage provider with automatic local fallback."""
+    provider_type = getattr(config, "STORAGE_PROVIDER", "local").lower()
+    s3_bucket = getattr(config, "AWS_S3_BUCKET", "")
+    if provider_type == "s3":
+        if s3_bucket:
+            return S3StorageProvider(bucket_name=s3_bucket)
+        logger.warning(
+            "[Storage] STORAGE_PROVIDER is 's3' but AWS_S3_BUCKET is empty. "
+            "Falling back to LocalStorageProvider."
+        )
+        return LocalStorageProvider()
     return LocalStorageProvider()

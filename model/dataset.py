@@ -118,7 +118,7 @@ class PlantDiseaseDataset(Dataset):
 
     Returns per item:
         image  : FloatTensor (3, 224, 224)
-        label  : int  class index (037)
+        label  : int  class index (0-133)
     """
 
     def __init__(

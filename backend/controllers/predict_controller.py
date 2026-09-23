@@ -427,9 +427,9 @@ async def email_report(
 
 
 
-@router.get("/disease/classes", summary="List all 38 disease classes")
+@router.get("/disease/classes", summary="List all 134 disease classes")
 async def list_diseases():
-    """Returns the full 38-class disease taxonomy with treatments."""
+    """Returns the full 134-class disease taxonomy with treatments."""
     diseases = [
         {
             "class_index":        d.class_idx,
