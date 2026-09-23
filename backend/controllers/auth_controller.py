@@ -135,6 +135,7 @@ async def send_otp(
 @router.get("/email-logs", summary="Get runtime email delivery logs and diagnostics")
 async def get_email_logs(
     limit: int = 50,
+    current_user: User = Depends(get_current_user),
 ):
     """
     Returns real-time email dispatch attempts, status, latency, and error details
@@ -155,6 +156,7 @@ async def get_email_logs(
 @router.post("/test-email", summary="Test dispatch an email to verify deliverability")
 async def test_email(
     req: TestEmailRequest,
+    current_user: User = Depends(get_current_user),
 ):
     """
     Dispatches a test verification code to the specified email address

@@ -330,4 +330,33 @@ class TestEmailOtpEndpoints:
         assert "invalid" in res_bad.json()["detail"].lower()
 
 
+class TestProtectedAdminEndpoints:
+    def test_email_logs_unauthenticated_returns_401(self):
+        res = client.get("/api/auth/email-logs")
+        assert res.status_code == 401
+
+    def test_test_email_unauthenticated_returns_401(self):
+        res = client.post("/api/auth/test-email", json={"email": "farmer@example.com"})
+        assert res.status_code == 401
+
+    def test_email_logs_authenticated_returns_200(self):
+        from services.auth_service import get_current_user
+        from database.models import User
+        mock_user = User(
+            id=1,
+            full_name="Admin Farmer",
+            phone_number="9999999999",
+            district="Pune",
+            hashed_password="mock_hashed_password_123",
+        )
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        try:
+            res = client.get("/api/auth/email-logs")
+            assert res.status_code == 200
+            assert res.json()["status"] == "success"
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)
+
+
+
 

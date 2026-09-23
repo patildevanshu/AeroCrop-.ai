@@ -218,17 +218,29 @@ class TestPredictEndpoint:
 
 # ── Model Reload ──────────────────────────────────────────────────────────────
 class TestModelReloadEndpoint:
-    def test_reload_200(self):
+    def test_reload_unauthenticated_returns_401(self):
         r = client.post("/api/model/reload")
-        assert r.status_code == 200
+        assert r.status_code == 401
 
-    def test_reload_has_status(self):
-        r = client.post("/api/model/reload")
-        assert r.json()["status"] == "reloaded"
-
-    def test_reload_has_mock_mode(self):
-        r = client.post("/api/model/reload")
-        assert "mock_mode" in r.json()
+    def test_reload_authenticated_200(self):
+        from services.auth_service import get_current_user
+        from database.models import User
+        mock_user = User(
+            id=1,
+            full_name="Admin Farmer",
+            phone_number="9999999999",
+            district="Pune",
+            hashed_password="mock_hashed_password_123",
+        )
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        try:
+            r = client.post("/api/model/reload")
+            assert r.status_code == 200
+            data = r.json()
+            assert data["status"] == "reloaded"
+            assert "mock_mode" in data
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)
 
 
 # ── Frontend Serving ─────────────────────────────────────────────────────────

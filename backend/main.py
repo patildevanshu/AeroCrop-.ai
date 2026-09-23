@@ -102,7 +102,16 @@ app = FastAPI(
 _raw_cors = os.getenv("CORS_ORIGINS", "")
 raw_list = [origin.strip() for origin in _raw_cors.split(",") if origin.strip()]
 
-allow_all_regex = "*" in _raw_cors or not raw_list or "devanshupatil.tech" in _raw_cors
+# Restrict CORS regex: avoid open wildcard regex with credentials by default
+_custom_regex = os.getenv("CORS_ORIGIN_REGEX", "")
+if _custom_regex:
+    cors_origin_regex = _custom_regex
+elif "*" in _raw_cors:
+    cors_origin_regex = r"^https?://.*$"
+elif "devanshupatil.tech" in _raw_cors:
+    cors_origin_regex = r"^https?://([a-zA-Z0-9-]+\.)*devanshupatil\.tech(:\d+)?$"
+else:
+    cors_origin_regex = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
 
 CORS_ORIGINS = list(dict.fromkeys([
     "http://localhost:5173",
@@ -119,7 +128,7 @@ CORS_ORIGINS = list(dict.fromkeys([
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
-    allow_origin_regex=r"^https?://.*$" if allow_all_regex else r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origin_regex=cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -31,7 +31,7 @@ import config
 from database.mongodb import get_db
 from database.models import User, FarmPlot
 from model.inference             import InferenceService, normalize_crop_name, AGRONOMIC_YIELD_BOUNDS
-from services.auth_service       import get_optional_user
+from services.auth_service       import get_optional_user, get_current_user
 from services.disease_service    import DiseaseService
 from services.history_service    import HistoryService
 from services.weather_service    import WeatherService
@@ -449,7 +449,7 @@ async def list_diseases():
 
 
 @router.post("/model/reload", summary="Hot-reload model weights from disk", tags=["System"])
-async def reload_model():
+async def reload_model(current_user: User = Depends(get_current_user)):
     """
     Reload model weights from disk without restarting the server.
     Useful immediately after a new training run completes.

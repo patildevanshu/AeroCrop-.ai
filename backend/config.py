@@ -56,12 +56,10 @@ JWT_SECRET_KEY             = os.getenv("JWT_SECRET_KEY", "aerocrop-maharashtra-f
 JWT_ALGORITHM              = "HS256"
 JWT_ACCESS_TOKEN_EXPIRE_DAYS = 7
 
-if JWT_SECRET_KEY == "aerocrop-maharashtra-farm-secret-key-2026" and os.getenv("ENVIRONMENT", "").lower() in ("prod", "production"):
-    import warnings
-    warnings.warn(
-        "CRITICAL SECURITY WARNING: Default JWT_SECRET_KEY is in use in production! "
-        "Set JWT_SECRET_KEY in environment variables immediately to prevent authentication token forgery.",
-        RuntimeWarning,
+if (not JWT_SECRET_KEY or JWT_SECRET_KEY == "aerocrop-maharashtra-farm-secret-key-2026") and os.getenv("ENVIRONMENT", "").lower() in ("prod", "production"):
+    raise RuntimeError(
+        "CRITICAL SECURITY CONFIGURATION ERROR: A secure custom JWT_SECRET_KEY must be configured in environment variables for production! "
+        "Refusing to start with missing or default JWT secret key to prevent token forgery."
     )
 
 # ─── Device ───────────────────────────────────────────────────────────────────
@@ -149,10 +147,10 @@ SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
 
 # Sanitize email and app password (strip surrounding whitespace and spaces within app password)
-_raw_user = os.getenv("SMTP_USER", os.getenv("FROM", "megabypass3@gmail.com"))
+_raw_user = os.getenv("SMTP_USER", os.getenv("FROM", ""))
 SMTP_USER = _raw_user.strip() if _raw_user else ""
 
-_raw_pass = os.getenv("SMTP_PASS", os.getenv("PASS", "jjckvganjyeowklt"))
+_raw_pass = os.getenv("SMTP_PASS", os.getenv("PASS", ""))
 SMTP_PASS = _raw_pass.replace(" ", "").strip() if _raw_pass else ""
 
 SMTP_FROM = os.getenv("SMTP_FROM", f"AeroCrop.ai Support <{SMTP_USER}>")
