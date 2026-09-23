@@ -41,36 +41,56 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
 
       {/* Out of Distribution / Unrecognized Specimen Advisory */}
       {result.out_of_distribution ? (
-        <div
-          className="low-conf-banner"
-          role="alert"
-          style={{
-            padding: '1rem 1.25rem',
-            borderRadius: '10px',
-            marginBottom: '1.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.85rem',
-            background: 'rgba(245, 158, 11, 0.14)',
-            border: '1px solid rgba(245, 158, 11, 0.45)',
-          }}
-        >
-          <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>⚠️</span>
-          <div>
-            <strong style={{ display: 'block', fontSize: '0.95rem', color: '#fbbf24', marginBottom: '3px' }}>
+        <div className="ood-advisory-card" role="alert">
+          <div className="ood-icon-box" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+          <div className="ood-body">
+            <div className="ood-badge-row">
+              <span className="ood-pill warning">
+                <span aria-hidden="true">⚠️</span>
+                <span>{language === 'mr' ? 'पडताळणी सूचना' : (language === 'hi' ? 'सत्यापन सूचना' : 'Validation Notice')}</span>
+              </span>
+              <span className="ood-pill internal">
+                <span aria-hidden="true">⚡</span>
+                <span>{language === 'mr' ? 'अंतर्गत मॉडेल सक्रिय' : (language === 'hi' ? 'आंतरिक मॉडल सक्रिय' : 'Internal Model Active')}</span>
+              </span>
+            </div>
+
+            <h3 className="ood-title">
               {language === 'mr'
-                ? 'मॉडेल सूचना — वनस्पती कदाचित डेटासेटमध्ये उपस्थित नसू शकते'
+                ? 'वनस्पती किंवा रोग कदाचित डेटासेटमध्ये उपस्थित नसू शकतो'
                 : (language === 'hi'
-                  ? 'मॉडल सलाह — यह पौधा संभवतः डेटासेट में मौजूद नहीं हो सकता है'
-                  : 'Model Advisory — Specimen May Not Be in Dataset')}
-            </strong>
-            <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: '1.45' }}>
+                  ? 'यह पौधा या रोग संभवतः डेटासेट में मौजूद नहीं हो सकता है'
+                  : 'Specimen May Not Be in Trained Dataset')}
+            </h3>
+
+            <p className="ood-desc">
               {language === 'mr'
-                ? 'अपलोड केलेली वनस्पती किंवा रोग आमच्या डेटासेटमध्ये उपस्थित नसू शकतो (याची कोणतीही खात्री नाही). खालील निकाल आमच्या अंतर्गत मॉडेलच्या अंदाजावर आधारित आहे. अचूकतेसाठी कृपया पानावरील स्पष्ट फोटो अपलोड करा.'
+                ? 'आमच्या दुय्यम पडताळणीनुसार ही वनस्पती किंवा रोग आमच्या 134-रोग डेटासेटमध्ये उपस्थित नसू शकतो (याची कोणतीही खात्री नाही). आपल्या मार्गदर्शनासाठी खालील निदान आमच्या अंतर्गत न्यूरल मॉडेलच्या सर्वोत्तम संभाव्य अंदाजावर आधारित आहे.'
                 : (language === 'hi'
-                  ? 'यह पौधा या रोग हमारे डेटासेट में मौजूद नहीं हो सकता है (इसकी कोई गारंटी नहीं है)। नीचे दिया गया परिणाम हमारे आंतरिक मॉडल के सर्वोत्तम अनुमान पर आधारित है। कृपया स्पष्ट पत्ती की फोटो अपलोड करें।'
-                  : 'This plant or disease specimen may not be present in our dataset (this is not guaranteed). The output below is based on our internal model\'s closest estimate. For best accuracy, please upload a clear, focused leaf photo.')}
-            </span>
+                  ? 'सत्यापन के अनुसार यह पौधा या रोग हमारे 134-रोग डेटासेट में मौजूद नहीं हो सकता है (इसकी कोई गारंटी नहीं है)। आपकी सहायता के लिए नीचे दिया गया निदान हमारे आंतरिक न्यूरल मॉडल के सर्वोत्तम संभव अनुमान पर आधारित है।'
+                  : 'Our secondary validator indicates this plant or disease specimen may not be present in our 134-class dataset (this is not guaranteed). To guide you, the diagnosis below is provided by our internal model as its closest agronomic estimate.')}
+            </p>
+
+            <div className="ood-tip-bar">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+              </svg>
+              <span>
+                {language === 'mr'
+                  ? 'शेतकरी सल्ला: अचूक निदानासाठी, चांगल्या सूर्यप्रकाशात एकाच पानाचा स्वच्छ आणि स्पष्ट फोटो काढा.'
+                  : (language === 'hi'
+                    ? 'किसान सलाह: सटीक परिणाम के लिए, प्राकृतिक रोशनी में एक पत्ती का स्पष्ट और केंद्रित फोटो लें।'
+                    : 'Farmer Tip: For highest diagnostic confidence, capture a sharp photo focused directly on leaf lesions in natural daylight.')}
+              </span>
+            </div>
           </div>
         </div>
       ) : (

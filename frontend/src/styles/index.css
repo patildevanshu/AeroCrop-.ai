@@ -554,6 +554,139 @@ img, video, canvas, svg, iframe, embed, object {
   font-weight: 500;
 }
 
+/* ── Out-of-Distribution & Advisory Warning Cards ─────────────────────────── */
+.ood-advisory-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.94) 0%, rgba(254, 243, 199, 0.82) 45%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 14px 32px -4px rgba(217, 119, 6, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  transition: transform var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease);
+  overflow: hidden;
+}
+
+.ood-advisory-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(180deg, #f59e0b, #d97706);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+.ood-advisory-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px -4px rgba(217, 119, 6, 0.16), 0 6px 14px -2px rgba(0, 0, 0, 0.04);
+}
+
+.ood-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px -2px rgba(217, 119, 6, 0.38);
+}
+
+.ood-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ood-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.ood-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.ood-pill.warning {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.28);
+}
+
+.ood-pill.internal {
+  background: rgba(46, 117, 89, 0.12);
+  color: #166534;
+  border: 1px solid rgba(46, 117, 89, 0.25);
+}
+
+.ood-title {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #78350f;
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+
+.ood-desc {
+  font-size: 0.88rem;
+  color: #451a03;
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+
+.ood-tip-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 9px;
+  padding: 7px 12px;
+  font-size: 0.78rem;
+  color: #78350f;
+  line-height: 1.4;
+}
+
+.ood-tip-bar svg {
+  flex-shrink: 0;
+  color: #d97706;
+}
+
+.low-conf-banner {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.85) 0%, rgba(254, 215, 170, 0.65) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  font-size: 0.88rem;
+  color: #92400e;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  box-shadow: 0 4px 14px -2px rgba(217, 119, 6, 0.08);
+}
+
 /* ── Metric Cards ─────────────────────────────────────────────────────────── */
 .metrics-row {
   display: grid;
