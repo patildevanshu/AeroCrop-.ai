@@ -22,6 +22,7 @@ class TestPlotManagement:
             "/api/auth/register",
             json={
                 "full_name": f"Farmer A {uid}",
+                "email": f"farmer_a_{uid}@example.com",
                 "phone_number": f"981{uid[:7]}",
                 "password": "Password123",
                 "district": "jalgaon",
@@ -37,6 +38,7 @@ class TestPlotManagement:
             "/api/auth/register",
             json={
                 "full_name": f"Farmer B {uid}",
+                "email": f"farmer_b_{uid}@example.com",
                 "phone_number": f"982{uid[:7]}",
                 "password": "Password123",
                 "district": "amravati",

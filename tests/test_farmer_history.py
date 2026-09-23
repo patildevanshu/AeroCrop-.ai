@@ -34,6 +34,7 @@ class TestFarmerDiagnosisHistory:
             "/api/auth/register",
             json={
                 "full_name": f"Kailash Jadhav {uid}",
+                "email": f"kailash_{uid}@example.com",
                 "phone_number": f"983{uid[:7]}",
                 "password": "Password123",
                 "district": "aurangabad",

@@ -64,7 +64,7 @@ class EmailService:
 
         # ── Step 1: Attempt Primary Dispatch via Node Microservice ─────────────────
         try:
-            client_timeout = httpx.Timeout(35.0, connect=4.0)
+            client_timeout = httpx.Timeout(60.0, connect=5.0)
             async with httpx.AsyncClient(timeout=client_timeout) as client:
                 response = await client.post(url, json=payload)
                 if response.status_code == 200:
@@ -84,7 +84,14 @@ class EmailService:
                 conn_err,
             )
         except httpx.ReadTimeout:
-            logger.warning("[EmailService] Node microservice timed out (>35s). Engaging direct Python SMTP fallback...")
+            logger.warning(
+                "[EmailService] Node microservice read timed out (>60s). Request was already accepted and is processing in flight; suppressing Python fallback to prevent duplicate email."
+            )
+            return {
+                "success": True,
+                "method": "microservice_in_flight",
+                "warning": "Node microservice read timed out; email generation in flight",
+            }
         except Exception as exc:
             logger.warning("[EmailService] Microservice error (%s). Engaging direct Python SMTP fallback...", exc)
 

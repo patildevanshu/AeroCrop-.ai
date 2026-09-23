@@ -42,6 +42,21 @@ async def test_email_service_fallback_when_microservice_unreachable():
 
 
 @pytest.mark.anyio
+async def test_email_service_read_timeout_suppresses_duplicate():
+    import httpx
+    with patch("httpx.AsyncClient.post", side_effect=httpx.ReadTimeout("Timed out waiting for response")):
+        with patch.object(EmailService, "_send_direct_smtp_sync") as mock_smtp:
+            res = await EmailService.dispatch_report_email(
+                farmer_email="farmer@example.com",
+                report_data={"crop": "Tomato", "district": "Pune"},
+                farmer_name="Ramesh",
+            )
+            assert res["success"] is True
+            assert res["method"] == "microservice_in_flight"
+            assert not mock_smtp.called
+
+
+@pytest.mark.anyio
 async def test_email_service_both_services_fail_gracefully():
     with patch("config.EMAIL_SERVICE_URL", "http://127.0.0.1:59999/send-email"):
         with patch.object(
