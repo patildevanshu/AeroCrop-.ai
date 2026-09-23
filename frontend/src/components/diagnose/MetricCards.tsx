@@ -44,15 +44,33 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ result }) => {
         <div className="metric-icon" aria-hidden="true">🎯</div>
         <div className="metric-body">
           <p className="metric-label">{t('confidence')}</p>
-          <p className="metric-value">{disease.confidence.toFixed(1)}%</p>
+          <p
+            className="metric-value"
+            style={disease.confidence < 40 ? { color: '#d97706' } : undefined}
+          >
+            {disease.confidence.toFixed(1)}%
+          </p>
           <div className="confidence-bar" aria-hidden="true">
             <div
               className="confidence-fill"
-              style={{ width: `${Math.min(disease.confidence, 100)}%` }}
+              style={{
+                width: `${Math.min(disease.confidence, 100)}%`,
+                background: disease.confidence < 40 ? 'linear-gradient(90deg, #f59e0b, #ef4444)' : undefined,
+              }}
             />
           </div>
-          <p className="metric-sub" style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            {t('confidence_desc', 'Certainty score for detected disease')}
+          <p
+            className="metric-sub"
+            style={{
+              fontSize: '0.72rem',
+              color: disease.confidence < 40 ? '#b45309' : 'var(--text-secondary)',
+              marginTop: '4px',
+              fontWeight: disease.confidence < 40 ? 600 : 400,
+            }}
+          >
+            {disease.confidence < 40
+              ? '⚠️ Low certainty (<40%): Specimen may not be in dataset'
+              : t('confidence_desc', 'Certainty score for detected disease')}
           </p>
         </div>
       </div>

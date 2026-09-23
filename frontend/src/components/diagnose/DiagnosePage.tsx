@@ -106,13 +106,13 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
         setWeather(data.weather);
       }
 
-      // If not persisted to server records, save to local storage history (skip if OOD / no match)
-      if (!data.saved_record_id && !data.out_of_distribution) {
+      // If not persisted to server records, save to local storage history
+      if (!data.saved_record_id) {
         saveToLocalHistory({
           created_at: new Date().toISOString(),
           crop_type: data.crop,
           district: data.district,
-          disease_name: data.disease.name,
+          disease_name: data.disease.name + (data.out_of_distribution ? ' (Estimated)' : ''),
           confidence: data.disease.confidence,
           predicted_yield_t_ha: data.yield_t_ha,
           severity: data.disease.severity,
@@ -124,7 +124,7 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
       }
 
       if (data.out_of_distribution) {
-        showToast('⚠️ Crop specimen not found in trained dataset (No Match).', 'warning');
+        showToast('⚠️ Specimen may not be in dataset (<40% conf). Showing closest model estimate.', 'warning');
       } else {
         showToast('Analysis completed successfully!', 'success');
       }

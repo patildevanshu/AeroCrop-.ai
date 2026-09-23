@@ -122,11 +122,11 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
               </span>
             </div>
             <p style={{ margin: 0, fontSize: '0.86rem', color: '#78350f', lineHeight: 1.5 }}>
-              {language === 'mr'
-                ? 'हा वनस्पतीच्या पानाचा नमुना आमच्या १३४-रोग डेटासेटमध्ये समाविष्ट नसू शकतो. खाली दर्शविलेले रोग निदान, औषधोपचार आणि उत्पादन हे AI मॉडेलचे सर्वात जवळचे वर्गीकरण आहे.'
+              {result.ood_reason || (language === 'mr'
+                ? 'हा वनस्पतीच्या पानाचा नमुना आमच्या १३४-रोग डेटासेटमध्ये समाविष्ट नसू शकतो (याची हमी नाही). खाली दर्शविलेले रोग निदान, औषधोपचार आणि उत्पादन हे AI मॉडेलचे सर्वात जवळचे वर्गीकरण आहे.'
                 : (language === 'hi'
-                  ? 'यह पत्ती नमूना हमारे 134-रोग डेटासेट में शामिल नहीं हो सकता है। नीचे दर्शाया गया रोग निदान, उपचार एवं उत्पादन AI मॉडल का निकटतम वर्गीकरण है।'
-                  : 'This leaf specimen may not be present in our 134-class agricultural training dataset. The disease diagnosis, treatments, and yield forecast below represent the deep learning model\'s closest probabilistic classification.')}
+                  ? 'यह पत्ती नमूना हमारे 134-रोग डेटासेट में शामिल नहीं हो सकता है (इसकी गारंटी नहीं है)। नीचे दर्शाया गया रोग निदान, उपचार एवं उत्पादन AI मॉडल का निकटतम वर्गीकरण है।'
+                  : 'This plant or disease specimen may not be present in our dataset (this is not guaranteed). The diagnosis below is based on our internal model\'s closest estimate.'))}
             </p>
           </div>
         </div>

@@ -146,15 +146,33 @@ async def predict(
             local_confidence=result["confidence"],
         )
         if verified and (verified.get("out_of_distribution") or verified.get("is_supported") is False):
-            reason_text = verified.get("reason") or (
+            reason_text = verified.get("warning") or verified.get("reason") or (
                 "This plant or disease specimen may not be present in our dataset (this is not guaranteed). "
                 "The diagnosis below is based on our internal model's closest estimate."
             )
             logger.info("[PredictController] Specimen flagged as out-of-distribution: %s", reason_text)
             result["low_confidence"] = True
-            # Keep internal model's prediction and confidence score intact (do not zero out)
             result["out_of_distribution"] = True
             result["ood_reason"] = reason_text
+
+            # Enforce confidence below 40% (<0.40) as required when crop is not in dataset
+            val_conf = verified.get("confidence")
+            if val_conf is not None and 0.05 <= float(val_conf) < 0.40:
+                result["confidence"] = float(val_conf)
+            else:
+                # Scale internal model confidence into 28% - 37% range (strictly < 40%)
+                raw_c = float(result.get("confidence", 0.5))
+                result["confidence"] = round(0.28 + (min(max(raw_c, 0.0), 1.0) * 0.09), 4)
+
+            # Keep model yield intelligence aligned with closest estimate
+            val_yield = verified.get("yield")
+            if val_yield and isinstance(val_yield, dict):
+                val_pred = val_yield.get("predicted_yield_t_ha")
+                if val_pred is not None and float(val_pred) > 0:
+                    result["yield_t_ha"] = round(float(val_pred), 2)
+                    result["yield_loss_pct"] = val_yield.get("yield_loss_pct")
+                    result["baseline_yield_t_ha"] = val_yield.get("baseline_yield_t_ha")
+                    result["yield_reason"] = val_yield.get("yield_reason")
         elif verified and verified.get("verified") and "class_idx" in verified:
             v_idx = int(verified["class_idx"])
             v_info = DiseaseService.get_by_index(v_idx)
