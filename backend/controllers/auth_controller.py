@@ -135,29 +135,19 @@ async def send_otp(
 @router.get("/email-logs", summary="Get runtime email delivery logs and diagnostics")
 async def get_email_logs(
     limit: int = 50,
-    db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """
     Returns real-time email dispatch attempts, status, latency, and error details
-    recorded in memory, MongoDB, and logs/email_runtime.log.
+    from runtime in-memory terminal buffer.
     """
     recent = EmailAuditLogger.get_recent_logs(limit=limit)
-    db_logs = []
-    if db is not None:
-        try:
-            cursor = db.email_logs.find({}, {"_id": 0}).sort("created_at", -1).limit(limit)
-            db_logs = await cursor.to_list(length=limit)
-        except Exception as exc:
-            logger.debug("Could not query db email_logs: %s", exc)
-
     return {
         "status": "success",
-        "log_file": config.EMAIL_RUNTIME_LOG_PATH,
+        "storage_mode": "runtime_terminal_only",
         "smtp_server": f"{config.SMTP_HOST}:{config.SMTP_PORT}",
         "sender_email": config.SMTP_USER,
         "microservice_url": config.EMAIL_OTP_SERVICE_URL,
-        "recent_in_memory_events": recent,
-        "db_audit_records": db_logs,
+        "recent_runtime_events": recent,
         "runtime_log_tail": EmailAuditLogger.get_runtime_log_tail(max_lines=50),
     }
 
@@ -165,7 +155,6 @@ async def get_email_logs(
 @router.post("/test-email", summary="Test dispatch an email to verify deliverability")
 async def test_email(
     req: TestEmailRequest,
-    db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """
     Dispatches a test verification code to the specified email address
@@ -177,7 +166,6 @@ async def test_email(
 
     code = OtpService.generate_otp()
     success, msg, audit = await OtpService.dispatch_otp_email(clean_email, code, "test_deliverability")
-    await EmailAuditLogger.record_to_mongodb(db, audit)
 
     return {
         "status": "success" if success else "failed",

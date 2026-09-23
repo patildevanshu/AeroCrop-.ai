@@ -1,18 +1,16 @@
 """
-AeroCrop.ai — Dedicated Email Runtime Logging & Auditing Subsystem
+AeroCrop.ai — Dedicated Email Runtime Terminal Logging Subsystem
 
-Guarantees:
-  1. Persistent file logging to logs/email_runtime.log with auto-rotation (5MB x 5 backups).
-  2. Clear console output with high-visibility tags for every dispatch attempt.
-  3. In-memory circular buffer for immediate live API inspection via GET /api/auth/email-logs.
-  4. Asynchronous MongoDB audit trail in email_logs collection.
+Pure in-memory and runtime terminal logging.
+No persistent files or database records are stored on disk.
+Prints rich, structured diagnostic details for every email attempt, retry, success, and failure.
+Guarantees full compatibility across Windows cmd, PowerShell, Linux, and macOS terminals.
 """
 
 from __future__ import annotations
 import collections
 import logging
-from logging.handlers import RotatingFileHandler
-import os
+import sys
 import time
 import traceback
 from datetime import datetime, timezone
@@ -23,40 +21,41 @@ try:
 except ImportError:
     import config
 
+logger = logging.getLogger("aerocrop.email")
 
-# ── Ensure Log Directory & Handlers ───────────────────────────────────────────
-os.makedirs(config.LOGS_DIR, exist_ok=True)
-
-dispatcher_logger = logging.getLogger("aerocrop.email.dispatcher")
-
-_formatter = logging.Formatter(
-    fmt="%(asctime)s  %(levelname)-8s  [%(name)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
-_file_handler_exists = any(
-    isinstance(h, RotatingFileHandler) and getattr(h, "baseFilename", "") == os.path.abspath(config.EMAIL_RUNTIME_LOG_PATH)
-    for h in dispatcher_logger.handlers
-)
-
-if not _file_handler_exists:
+# Try to ensure UTF-8 on Windows stdout if supported
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     try:
-        file_handler = RotatingFileHandler(
-            config.EMAIL_RUNTIME_LOG_PATH,
-            maxBytes=5 * 1024 * 1024,  # 5 MB
-            backupCount=5,
-            encoding="utf-8",
-        )
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(_formatter)
-        dispatcher_logger.addHandler(file_handler)
-        dispatcher_logger.setLevel(logging.INFO)
-    except Exception as exc:
-        print(f"[EmailLogger] Warning: Could not initialize rotating file handler: {exc}")
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
-
-# ── In-Memory Audit Buffer (Most recent 100 dispatch events) ───────────────────
+# In-memory circular buffer for active runtime inspection (last 100 events in RAM only)
 _RECENT_EMAIL_LOGS: collections.deque = collections.deque(maxlen=100)
+
+
+def _print_box(title: str, lines: List[str], border_char: str = "=", width: int = 78) -> None:
+    """Print a clean visual box to terminal stdout safely across all encodings."""
+    border = border_char * width
+    output = [
+        "",
+        border,
+        f" {title}",
+        "-" * width,
+    ]
+    for line in lines:
+        output.append(f"   {line}")
+    output.append(border)
+    output.append("")
+    text = "\n".join(output) + "\n"
+    try:
+        sys.stdout.write(text)
+        sys.stdout.flush()
+    except (UnicodeEncodeError, Exception):
+        encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+        safe_text = text.encode(encoding, errors="replace").decode(encoding)
+        sys.stdout.write(safe_text)
+        sys.stdout.flush()
 
 
 class EmailAuditLogger:
@@ -68,11 +67,22 @@ class EmailAuditLogger:
         method: str,
     ) -> float:
         """
-        Logs the initiation of an email delivery try. Returns start time epoch for latency tracking.
+        Logs initiation of an email delivery attempt with full runtime parameters to terminal.
         """
         start_time = time.time()
-        msg = f"[EMAIL_DISPATCH_ATTEMPT] Recipient: {recipient} | Purpose: {purpose} | Provider: {provider} | Method: {method}"
-        dispatcher_logger.info(msg)
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+        lines = [
+            f"Timestamp    : {now_str}",
+            f"Recipient    : {recipient}",
+            f"Purpose      : {purpose}",
+            f"Channel      : {method}",
+            f"Server Host  : {provider}",
+            f"Sender User  : {config.SMTP_USER}",
+            f"Timeout      : {config.SMTP_TIMEOUT_SECONDS}s",
+            f"Status       : INITIATING CONNECTION...",
+        ]
+        _print_box("[EMAIL RUNTIME ATTEMPT] - Dispatching Verification Message", lines, border_char="=")
 
         _RECENT_EMAIL_LOGS.append({
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -86,6 +96,37 @@ class EmailAuditLogger:
         return start_time
 
     @staticmethod
+    def log_retry(
+        recipient: str,
+        purpose: str,
+        failed_method: str,
+        next_method: str,
+        error: str,
+    ) -> None:
+        """
+        Logs a transient connection failure and switch to alternate fallback channel in terminal.
+        """
+        lines = [
+            f"Recipient    : {recipient}",
+            f"Purpose      : {purpose}",
+            f"Failed Via   : {failed_method}",
+            f"Failure Cause: {error}",
+            f"Action Taken : [RETRY] Switching immediately to fallback -> [{next_method}]",
+        ]
+        _print_box("[EMAIL RUNTIME RETRY] - Channel Failed, Engaging Fallback", lines, border_char="-")
+
+        _RECENT_EMAIL_LOGS.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "event": "retry",
+            "recipient": recipient,
+            "purpose": purpose,
+            "failed_method": failed_method,
+            "next_method": next_method,
+            "error": str(error),
+            "status": "retrying",
+        })
+
+    @staticmethod
     def log_success(
         recipient: str,
         purpose: str,
@@ -95,14 +136,25 @@ class EmailAuditLogger:
         details: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
-        Logs successful delivery with latency and provider details.
+        Logs successful delivery with duration in ms and relay info in terminal.
         """
         duration_ms = round((time.time() - start_time) * 1000, 1)
-        msg = (
-            f"[EMAIL_DISPATCH_SUCCESS] Successfully delivered to {recipient} [{purpose}] "
-            f"via {method} ({provider}) in {duration_ms}ms"
-        )
-        dispatcher_logger.info(msg)
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+        lines = [
+            f"Timestamp    : {now_str}",
+            f"Recipient    : {recipient}",
+            f"Purpose      : {purpose}",
+            f"Delivered Via: {method} ({provider})",
+            f"Latency      : {duration_ms} ms ({duration_ms/1000:.2f}s)",
+            f"Delivery Res : [SUCCESS] Accepted by remote mail server (DELIVERED)",
+        ]
+        if details:
+            msg_id = details.get("details", {}).get("messageId") or details.get("messageId")
+            if msg_id:
+                lines.append(f"Message-ID   : {msg_id}")
+
+        _print_box("[EMAIL RUNTIME SUCCESS] - Delivery Succeeded", lines, border_char="=")
 
         entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -119,34 +171,6 @@ class EmailAuditLogger:
         return entry
 
     @staticmethod
-    def log_retry(
-        recipient: str,
-        purpose: str,
-        failed_method: str,
-        next_method: str,
-        error: str,
-    ) -> None:
-        """
-        Logs a transient failure and indicates the switch to a fallback channel.
-        """
-        msg = (
-            f"[EMAIL_DISPATCH_RETRY] Delivery to {recipient} via {failed_method} failed: {error}. "
-            f"Flipping to secondary fallback {next_method}..."
-        )
-        dispatcher_logger.warning(msg)
-
-        _RECENT_EMAIL_LOGS.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "event": "retry",
-            "recipient": recipient,
-            "purpose": purpose,
-            "failed_method": failed_method,
-            "next_method": next_method,
-            "error": str(error),
-            "status": "retrying",
-        })
-
-    @staticmethod
     def log_failure(
         recipient: str,
         purpose: str,
@@ -158,22 +182,33 @@ class EmailAuditLogger:
         code_for_dev_fallback: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Logs a final delivery failure with full stack trace and optional DEV_FALLBACK code.
+        Logs final failure with error type, message, traceback, and OTP recovery in terminal.
         """
         duration_ms = round((time.time() - start_time) * 1000, 1) if start_time else 0.0
-        tb_str = "".join(traceback.format_exception(type(exc_info), exc_info, exc_info.__traceback__)) if exc_info else None
-        
-        msg = (
-            f"[EMAIL_DISPATCH_FAILED] Delivery failed for {recipient} [{purpose}] via {method} ({provider}) "
-            f"after {duration_ms}ms. Error: {error}"
-        )
-        dispatcher_logger.error(msg)
-        if tb_str:
-            dispatcher_logger.debug(f"[EMAIL_DISPATCH_TRACEBACK]\n{tb_str}")
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        tb_lines = traceback.format_exception(type(exc_info), exc_info, exc_info.__traceback__) if exc_info else []
+
+        lines = [
+            f"Timestamp    : {now_str}",
+            f"Recipient    : {recipient}",
+            f"Purpose      : {purpose}",
+            f"Exhausted On : {method} ({provider})",
+            f"Elapsed Time : {duration_ms} ms",
+            f"Error Type   : {type(exc_info).__name__ if exc_info else 'UnknownError'}",
+            f"Error Details: {error}",
+        ]
+
+        if tb_lines:
+            lines.append("Traceback    :")
+            for tb_l in "".join(tb_lines).strip().splitlines()[-4:]:
+                lines.append(f"   {tb_l}")
 
         if code_for_dev_fallback:
-            dev_msg = f"[DEV_FALLBACK] Generated OTP for {recipient} is [{code_for_dev_fallback}]. Note: External delivery failed."
-            dispatcher_logger.warning(dev_msg)
+            lines.append("-" * 72)
+            lines.append(f"[DEV / RECOVERY OTP CODE] : [{code_for_dev_fallback}]")
+            lines.append("   (Use this code to sign in/verify if external SMTP is offline)")
+
+        _print_box("[EMAIL RUNTIME FAILURE] - All Channels Failed", lines, border_char="=")
 
         entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -185,48 +220,29 @@ class EmailAuditLogger:
             "duration_ms": duration_ms,
             "status": "failed",
             "error": str(error),
-            "traceback": tb_str,
         }
         _RECENT_EMAIL_LOGS.append(entry)
         return entry
 
     @staticmethod
-    async def record_to_mongodb(
-        db: Any,
-        log_entry: Dict[str, Any],
-    ) -> None:
-        """
-        Asynchronously persists the log entry to MongoDB email_logs collection.
-        Fails silently to avoid impeding request execution.
-        """
-        if db is None:
-            return
-        try:
-            doc = {**log_entry, "created_at": datetime.now(timezone.utc)}
-            await db.email_logs.insert_one(doc)
-        except Exception as exc:
-            dispatcher_logger.debug("[EmailLogger] Non-critical: Could not record email log to MongoDB: %s", exc)
+    async def record_to_mongodb(db: Any, log_entry: Dict[str, Any]) -> None:
+        """No-op: persistent database storage is disabled per user preference."""
+        pass
 
     @classmethod
     def get_recent_logs(cls, limit: int = 50) -> List[Dict[str, Any]]:
-        """
-        Returns recent in-memory log entries in reverse chronological order.
-        """
+        """Returns recent in-memory log entries in reverse chronological order (RAM only)."""
         items = list(_RECENT_EMAIL_LOGS)
         items.reverse()
         return items[:limit]
 
     @classmethod
-    def get_runtime_log_tail(cls, max_lines: int = 150) -> str:
-        """
-        Reads the tail of logs/email_runtime.log directly from disk for raw runtime log inspection.
-        """
-        log_file = config.EMAIL_RUNTIME_LOG_PATH
-        if not os.path.exists(log_file):
-            return f"Log file {log_file} does not exist yet."
-        try:
-            with open(log_file, "r", encoding="utf-8", errors="replace") as f:
-                lines = f.readlines()
-                return "".join(lines[-max_lines:])
-        except Exception as exc:
-            return f"Error reading runtime log: {exc}"
+    def get_runtime_log_tail(cls, max_lines: int = 50) -> str:
+        """Returns recent in-memory log summary."""
+        items = cls.get_recent_logs(max_lines)
+        if not items:
+            return "No runtime email events logged in current session."
+        return "\n".join(
+            f"[{item['timestamp']}] {item['event'].upper()}: {item.get('recipient')} ({item.get('purpose')}) - {item.get('status')} [{item.get('method', '')}]"
+            for item in items
+        )

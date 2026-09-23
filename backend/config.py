@@ -35,10 +35,6 @@ FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 FRONTEND_DIST_DIR = os.path.join(FRONTEND_DIR, "dist")
 DATA_DIR    = os.path.join(BASE_DIR, "data")
 UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
-LOGS_DIR    = os.path.join(BASE_DIR, "logs")
-os.makedirs(LOGS_DIR, exist_ok=True)
-EMAIL_RUNTIME_LOG_PATH = os.path.join(LOGS_DIR, "email_runtime.log")
-APP_RUNTIME_LOG_PATH   = os.path.join(LOGS_DIR, "runtime.log")
 
 # ─── Database & Auth ──────────────────────────────────────────────────────────
 MONGODB_URL     = os.getenv("MONGODB_URL", "mongodb://localhost:27017")

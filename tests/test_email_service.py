@@ -180,9 +180,9 @@ async def test_email_logs_api_endpoint():
         assert res.status_code == 200
         data = res.json()
         assert data["status"] == "success"
-        assert "log_file" in data
+        assert data["storage_mode"] == "runtime_terminal_only"
         assert "smtp_server" in data
-        assert "recent_in_memory_events" in data
+        assert "recent_runtime_events" in data
 
 
 @pytest.mark.anyio

@@ -392,9 +392,6 @@ class OtpService:
         # Dispatch via multi-tier email pipeline with runtime logging
         success, msg, audit = await cls.dispatch_otp_email(clean_email, code, purpose)
 
-        # Asynchronously record delivery audit log to MongoDB email_logs
-        await EmailAuditLogger.record_to_mongodb(db, audit)
-
         return success, msg
 
     @classmethod
