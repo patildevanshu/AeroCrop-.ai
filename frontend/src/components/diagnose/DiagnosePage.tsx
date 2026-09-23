@@ -6,7 +6,6 @@ import { WeatherStrip } from '../layout/WeatherStrip';
 import { UploadCard } from './UploadCard';
 import { ParamsCard } from './ParamsCard';
 import { ResultsArea } from './ResultsArea';
-import { AnalyzingOverlay } from './AnalyzingOverlay';
 import { fetchDistricts, fetchWeatherForDistrict } from '../../api/weather';
 import { submitCropPrediction } from '../../api/predict';
 import { saveToLocalHistory } from '../../api/history';
@@ -18,7 +17,7 @@ interface DiagnosePageProps {
 }
 
 export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', initialCrop = '' }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { currentUser, refreshPlots } = useAuth();
   const { showToast } = useToast();
 
@@ -93,7 +92,6 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
 
     setIsLoading(true);
     setResult(null);          // ← Clear previous analysis immediately so stale data never persists
-    const startTime = Date.now();
     try {
       const data = await submitCropPrediction({
         image: selectedFile,
@@ -102,13 +100,6 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
         plot_id: selectedPlotId ? parseInt(selectedPlotId, 10) : null,
         email: farmerEmail.trim() || null,
       });
-
-      // Ensure the user gets to experience the ISRO/NASA satellite telemetry scanner for at least 2.8s
-      const elapsed = Date.now() - startTime;
-      const minDisplayTimeMs = 2800;
-      if (elapsed < minDisplayTimeMs) {
-        await new Promise((resolve) => setTimeout(resolve, minDisplayTimeMs - elapsed));
-      }
 
       setResult(data);
       if (data.weather) {
@@ -176,18 +167,52 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
         />
       </div>
 
-      {/* Results Area */}
+      {/* Results Area with Clean Spinning Wheel Loader */}
       <div ref={resultsRef}>
+        {isLoading && (
+          <div
+            className="card glass spinning-wheel-loader"
+            role="status"
+            aria-live="polite"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '44px 20px',
+              marginTop: '24px',
+              textAlign: 'center',
+              borderRadius: '16px',
+              border: '1.5px solid rgba(16, 185, 129, 0.35)',
+              background: 'rgba(255, 255, 255, 0.9)',
+              boxShadow: '0 8px 24px rgba(16, 185, 129, 0.1)',
+            }}
+          >
+            <div
+              className="spinning-wheel"
+              style={{
+                width: '48px',
+                height: '48px',
+                border: '4px solid rgba(16, 185, 129, 0.2)',
+                borderTopColor: '#10b981',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+                marginBottom: '16px',
+              }}
+            />
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {t('analyzing_btn')}...
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+              {language === 'mr'
+                ? 'कृपया प्रतीक्षा करा, पानाचे विश्लेषण सुरू आहे...'
+                : (language === 'hi' ? 'कृपया प्रतीक्षा करें, पत्ती का विश्लेषण जारी है...' : 'Please wait, analyzing leaf specimen...')}
+            </p>
+          </div>
+        )}
+
         {result && <ResultsArea result={result} />}
       </div>
-
-      {/* Futuristic Satellite & ISRO/NASA Telemetry Scanner Overlay */}
-      <AnalyzingOverlay
-        isOpen={isLoading}
-        selectedFile={selectedFile}
-        crop={crop}
-        district={district}
-      />
     </section>
   );
 };

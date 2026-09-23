@@ -121,11 +121,10 @@ export const ParamsCard: React.FC<ParamsCardProps> = ({
       </div>
 
 
-      {/* Optional Email for Direct PDF Report */}
+      {/* Email for Direct PDF Report */}
       <div className="form-group" style={{ marginBottom: '0.75rem' }}>
-        <label htmlFor="farmer-email" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>📧 {t('email_optional') || 'Email (for PDF Report)'}</span>
-          <span className="optional-tag" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t('optional')}</span>
+        <label htmlFor="farmer-email">
+          <span>📧 {t('email_optional')}</span>
         </label>
         <input
           id="farmer-email"

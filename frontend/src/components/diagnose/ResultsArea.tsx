@@ -10,24 +10,6 @@ interface ResultsAreaProps {
   result: PredictionResult;
 }
 
-const SUPPORTED_CROPS = [
-  { icon: '🍅', en: 'Tomato', mr: 'टोमॅटो', hi: 'टमाटर' },
-  { icon: '🥔', en: 'Potato', mr: 'बटाटा', hi: 'आलू' },
-  { icon: '🌿', en: 'Cotton', mr: 'कापूस', hi: 'कपास' },
-  { icon: '🌾', en: 'Wheat', mr: 'गहू', hi: 'गेहूं' },
-  { icon: '🎋', en: 'Sugarcane', mr: 'ऊस', hi: 'गन्ना' },
-  { icon: '🫘', en: 'Soybean', mr: 'सोयाबीन', hi: 'सोयाबीन' },
-  { icon: '🍌', en: 'Banana', mr: 'केळी', hi: 'केला' },
-  { icon: '🌽', en: 'Maize / Corn', mr: 'मका', hi: 'मक्का' },
-  { icon: '🍚', en: 'Rice / Paddy', mr: 'भात', hi: 'चावल' },
-  { icon: '🧅', en: 'Onion', mr: 'कांदा', hi: 'प्याज' },
-  { icon: '🌶️', en: 'Chili / Pepper', mr: 'मिरची', hi: 'मिर्च' },
-  { icon: '🍊', en: 'Orange', mr: 'संत्रा', hi: 'संतरा' },
-  { icon: '🍇', en: 'Grape', mr: 'द्राक्षे', hi: 'अंगूर' },
-  { icon: '🍎', en: 'Apple', mr: 'सफरचंद', hi: 'सेब' },
-  { icon: '🟡', en: 'Turmeric', mr: 'हळद', hi: 'हल्दी' },
-];
-
 export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
   const { language, t } = useI18n();
   const { mock_mode, low_confidence, saved_record_id, disease, weather, mandi } = result;
@@ -43,13 +25,6 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
   const sprayBadgeLocalized = sprayWindow
     ? (sprayWindow.safe ? t('spray_safe') : (sprayWindow.status === 'warning' ? t('spray_caution') : t('spray_hold')))
     : '';
-
-  const handleRetryUpload = () => {
-    const uploadElem = document.getElementById('upload-card') || document.querySelector('.upload-card');
-    if (uploadElem) {
-      uploadElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  };
 
   return (
     <div id="results-area" className="results-area" aria-live="polite" aria-label="Analysis results">
@@ -105,85 +80,65 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
         </div>
       )}
 
-      {/* Out of Distribution / Unrecognized Specimen: Dedicated No Match Display */}
-      {isOod ? (
-        <div className="ood-no-match-card" role="alert">
-          <div className="ood-header-row">
-            <div className="ood-header-icon" aria-hidden="true">
-              🔍❌
+      {/* Out of Distribution / Unrecognized Specimen: Formal Notice Banner */}
+      {isOod && (
+        <div
+          className="ood-formal-notice-banner"
+          role="alert"
+          style={{
+            background: 'linear-gradient(135deg, rgba(254, 243, 199, 0.95) 0%, rgba(255, 251, 235, 0.98) 100%)',
+            border: '1.5px solid rgba(245, 158, 11, 0.5)',
+            borderRadius: '12px',
+            padding: '14px 18px',
+            marginBottom: '18px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px',
+            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.1)',
+          }}
+        >
+          <span style={{ fontSize: '1.5rem', lineHeight: 1 }} aria-hidden="true">⚠️</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+              <strong style={{ fontSize: '0.98rem', color: '#92400e', fontWeight: 700 }}>
+                {language === 'mr'
+                  ? 'सूचना: नमुना डेटासेटमध्ये उपलब्ध नाही (मॉडेलचा जवळचा अंदाज)'
+                  : (language === 'hi'
+                    ? 'सूचना: नमूना डेटासेट में उपलब्ध नहीं (मॉडल का निकटतम अनुमान)'
+                    : 'Notice: Specimen Not Found in Trained Dataset (Closest Model Match)')}
+              </strong>
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  background: 'rgba(245, 158, 11, 0.2)',
+                  color: '#b45309',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                }}
+              >
+                134-Class Dataset
+              </span>
             </div>
-            <div className="ood-header-content">
-              <div className="ood-badge-row">
-                <span className="ood-pill warning">
-                  <span aria-hidden="true">⚠️</span>
-                  <span>{t('ood_no_match_badge')}</span>
-                </span>
-                <span className="ood-pill internal">
-                  <span aria-hidden="true">🔬</span>
-                  <span>
-                    {language === 'mr'
-                      ? '१३४-रोग डेटासेट तपासणी'
-                      : (language === 'hi' ? '134-रोग डेटासेट जांच' : '134-Class Dataset Screened')}
-                  </span>
-                </span>
-              </div>
-
-              <h3 className="ood-main-title">{t('ood_no_match_title')}</h3>
-              <p className="ood-main-desc">{t('ood_no_match_desc')}</p>
-            </div>
-          </div>
-
-          {/* Supported Crops Badges */}
-          <div className="ood-supported-section">
-            <div className="ood-section-title">
-              <span aria-hidden="true">🌾</span>
-              <span>{t('ood_supported_crops_heading')}</span>
-            </div>
-            <div className="ood-crops-grid">
-              {SUPPORTED_CROPS.map((c, idx) => (
-                <div key={idx} className="ood-crop-chip">
-                  <span aria-hidden="true">{c.icon}</span>
-                  <span>
-                    {language === 'mr' ? `${c.mr} (${c.en})` : (language === 'hi' ? `${c.hi} (${c.en})` : c.en)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Guidance / Tips Box */}
-          <div className="ood-tips-section">
-            <div className="ood-section-title">
-              <span aria-hidden="true">💡</span>
-              <span>{t('ood_how_to_capture_heading')}</span>
-            </div>
-            <ul className="ood-tips-list">
-              <li>{t('ood_tip_1')}</li>
-              <li>{t('ood_tip_2')}</li>
-            </ul>
-          </div>
-
-          {/* Try Again Action Button */}
-          <div className="ood-actions">
-            <button
-              type="button"
-              className="btn-ood-retry"
-              onClick={handleRetryUpload}
-            >
-              <span aria-hidden="true">🔄</span>
-              <span>{t('ood_try_again_btn')}</span>
-            </button>
+            <p style={{ margin: 0, fontSize: '0.86rem', color: '#78350f', lineHeight: 1.5 }}>
+              {language === 'mr'
+                ? 'हा वनस्पतीच्या पानाचा नमुना आमच्या १३४-रोग डेटासेटमध्ये समाविष्ट नसू शकतो. खाली दर्शविलेले रोग निदान, औषधोपचार आणि उत्पादन हे AI मॉडेलचे सर्वात जवळचे वर्गीकरण आहे.'
+                : (language === 'hi'
+                  ? 'यह पत्ती नमूना हमारे 134-रोग डेटासेट में शामिल नहीं हो सकता है। नीचे दर्शाया गया रोग निदान, उपचार एवं उत्पादन AI मॉडल का निकटतम वर्गीकरण है।'
+                  : 'This leaf specimen may not be present in our 134-class agricultural training dataset. The disease diagnosis, treatments, and yield forecast below represent the deep learning model\'s closest probabilistic classification.')}
+            </p>
           </div>
         </div>
-      ) : (
-        <>
-          {/* Low Confidence Notice for supported crops with blurry/unclear leaves */}
-          {low_confidence && (
-            <div className="low-conf-banner" role="alert">
-              <span aria-hidden="true">⚠️</span>
-              <span>{t('low_confidence_notice')}</span>
-            </div>
-          )}
+      )}
+
+      {/* Low Confidence Notice for supported crops with blurry/unclear leaves */}
+      {low_confidence && !isOod && (
+        <div className="low-conf-banner" role="alert">
+          <span aria-hidden="true">⚠️</span>
+          <span>{t('low_confidence_notice')}</span>
+        </div>
+      )}
 
           {/* Action Bar: Create Report & Send to Email Button */}
           <div
@@ -268,8 +223,6 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
 
           {/* Mandi Intelligence Card */}
           {mandi && <MandiCard mandi={mandi} />}
-        </>
-      )}
 
       {/* On-Demand Email Report Modal */}
       <EmailReportModal
