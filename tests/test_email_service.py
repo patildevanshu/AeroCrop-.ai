@@ -174,29 +174,65 @@ async def test_otp_service_dispatch_fallback_tier():
 
 @pytest.mark.anyio
 async def test_email_logs_api_endpoint():
+    from services.auth_service import get_current_user
+    from database.models import User
+    mock_user = User(
+        id=1,
+        full_name="Admin Farmer",
+        phone_number="9999999999",
+        district="Pune",
+        hashed_password="mock_password",
+    )
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.get("/api/auth/email-logs?limit=10")
-        assert res.status_code == 200
-        data = res.json()
-        assert data["status"] == "success"
-        assert data["storage_mode"] == "runtime_terminal_only"
-        assert "smtp_server" in data
-        assert "recent_runtime_events" in data
+        # Unauthenticated request rejected
+        res_unauth = await client.get("/api/auth/email-logs?limit=10")
+        assert res_unauth.status_code == 401
+
+        # Authenticated request succeeds
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        try:
+            res = await client.get("/api/auth/email-logs?limit=10")
+            assert res.status_code == 200
+            data = res.json()
+            assert data["status"] == "success"
+            assert data["storage_mode"] == "runtime_terminal_only"
+            assert "smtp_server" in data
+            assert "recent_runtime_events" in data
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.mark.anyio
 async def test_test_email_api_endpoint():
+    from services.auth_service import get_current_user
+    from database.models import User
+    mock_user = User(
+        id=1,
+        full_name="Admin Farmer",
+        phone_number="9999999999",
+        district="Pune",
+        hashed_password="mock_password",
+    )
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        with patch.object(
-            OtpService,
-            "dispatch_otp_email",
-            new_callable=AsyncMock,
-            return_value=(True, "Delivered", {"status": "delivered", "method": "mock"}),
-        ):
-            res = await client.post("/api/auth/test-email", json={"email": "diag@example.com"})
-            assert res.status_code == 200
-            data = res.json()
-            assert data["status"] == "success"
-            assert "audit" in data
+        # Unauthenticated request rejected
+        res_unauth = await client.post("/api/auth/test-email", json={"email": "diag@example.com"})
+        assert res_unauth.status_code == 401
+
+        # Authenticated request succeeds
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        try:
+            with patch.object(
+                OtpService,
+                "dispatch_otp_email",
+                new_callable=AsyncMock,
+                return_value=(True, "Delivered", {"status": "delivered", "method": "mock"}),
+            ):
+                res = await client.post("/api/auth/test-email", json={"email": "diag@example.com"})
+                assert res.status_code == 200
+                data = res.json()
+                assert data["status"] == "success"
+                assert "audit" in data
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)

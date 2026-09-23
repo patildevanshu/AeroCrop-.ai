@@ -9,7 +9,7 @@ interface AnalyzingOverlayProps {
 }
 
 interface TelemetryStep {
-  agency: 'ISRO' | 'NASA' | 'AEROCROP' | 'ICAR' | 'OPEN-METEO';
+  agency: 'ISRO' | 'NASA' | 'AEROCROP' | 'ICAR' | 'OPEN-METEO' | 'IMD';
   icon: string;
   title: string;
   detail: string;
