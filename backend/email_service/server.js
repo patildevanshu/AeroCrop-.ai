@@ -87,6 +87,7 @@ app.post('/send-email', async (req, res) => {
 
         // 1. Generate High-Fidelity Trilingual PDF
         let pdfBuffer = null;
+        let engineUsed = pdfBase64 ? 'provided_base64' : 'puppeteer';
         if (pdfBase64) {
             try {
                 pdfBuffer = Buffer.from(pdfBase64.replace(/^data:application\/pdf;base64,/, ''), 'base64');
@@ -107,7 +108,7 @@ app.post('/send-email', async (req, res) => {
                 weather,
             };
 
-            let engineUsed = 'puppeteer';
+            engineUsed = 'puppeteer';
             try {
                 console.log(`📄 Generating Trilingual PDF Advisory for ${name} (${crop}, ${district})...`);
                 pdfBuffer = await generateTrilingualPDF(reportData);
