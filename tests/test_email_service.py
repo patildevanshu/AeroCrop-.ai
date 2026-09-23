@@ -149,12 +149,17 @@ async def test_email_logger_runtime_file_and_buffer():
 
 @pytest.mark.anyio
 async def test_otp_service_message_headers():
+    import backend.config as conf
+    with patch.object(conf, "SMTP_USER", ""):
+        msg_default = OtpService._build_email_message("farmer@test.com", "654321", "register")
+        assert "aerocrop.ai" in msg_default["Message-ID"]
+
     msg = OtpService._build_email_message("farmer@test.com", "654321", "register")
     assert msg["To"] == "farmer@test.com"
     assert "654321" in msg["Subject"]
     assert msg["Date"] is not None
     assert msg["Message-ID"] is not None
-    assert "aerocrop.ai" in msg["Message-ID"]
+    assert "@" in msg["Message-ID"]
     assert msg["Auto-Submitted"] == "auto-generated"
 
 

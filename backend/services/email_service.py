@@ -209,7 +209,12 @@ class EmailService:
         msg["From"] = from_email
         msg["To"] = farmer_email
         msg["Date"] = email.utils.formatdate(localtime=True)
-        msg["Message-ID"] = email.utils.make_msgid(domain="aerocrop.ai")
+        sender_domain = (
+            smtp_user.split("@")[-1]
+            if (smtp_user and "@" in smtp_user and "." in smtp_user.split("@")[-1])
+            else "aerocrop.ai"
+        )
+        msg["Message-ID"] = email.utils.make_msgid(domain=sender_domain)
         msg["Reply-To"] = config.SUPPORT_EMAIL
         msg["X-Mailer"] = "AeroCrop.ai Crop Advisory Engine v2.0"
         msg["Auto-Submitted"] = "auto-generated"
@@ -394,11 +399,13 @@ class EmailService:
         msg.add_alternative(html_content, subtype="html")
 
         timeout = config.SMTP_TIMEOUT_SECONDS
+        if not smtp_user or not smtp_pass:
+            raise RuntimeError("SMTP credentials (SMTP_USER / SMTP_PASS) are not configured.")
+
         if smtp_port == 465:
             ssl_context = ssl.create_default_context()
             with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=timeout, context=ssl_context) as server:
-                if smtp_user and smtp_pass:
-                    server.login(smtp_user, smtp_pass)
+                server.login(smtp_user, smtp_pass)
                 server.send_message(msg)
         else:
             ssl_context = ssl.create_default_context()
@@ -406,8 +413,7 @@ class EmailService:
                 server.ehlo()
                 server.starttls(context=ssl_context)
                 server.ehlo()
-                if smtp_user and smtp_pass:
-                    server.login(smtp_user, smtp_pass)
+                server.login(smtp_user, smtp_pass)
                 server.send_message(msg)
 
         logger.info("[EmailService] Direct SMTP advisory email successfully delivered to %s", farmer_email)

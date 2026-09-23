@@ -58,7 +58,12 @@ class OtpService:
         - Zero spam trigger keywords ("spam", "junk", etc.)
         """
         sender_user = config.SMTP_USER
-        from_display = f"AeroCrop <{sender_user}>"
+        from_display = f"AeroCrop <{sender_user}>" if sender_user else config.SMTP_FROM
+        sender_domain = (
+            sender_user.split("@")[-1]
+            if (sender_user and "@" in sender_user and "." in sender_user.split("@")[-1])
+            else "aerocrop.ai"
+        )
 
         purpose_titles = {
             "register": ("Registration Verification Code", "नोंदणी पडताळणी कोड"),
@@ -72,13 +77,9 @@ class OtpService:
         msg["From"] = from_display
         msg["To"] = to_email
         msg["Date"] = email.utils.formatdate(localtime=True)
-        msg["Message-ID"] = email.utils.make_msgid(domain="aerocrop.ai")
-        msg["Reply-To"] = sender_user
+        msg["Message-ID"] = email.utils.make_msgid(domain=sender_domain)
+        msg["Reply-To"] = sender_user if sender_user else config.SUPPORT_EMAIL
         msg["Auto-Submitted"] = "auto-generated"
-        msg["X-Priority"] = "1"
-        msg["Priority"] = "urgent"
-        msg["Importance"] = "high"
-        msg["X-MSMail-Priority"] = "High"
 
         plain_text = (
             f"Your AeroCrop verification code is: {otp_code}\n\n"
@@ -178,14 +179,16 @@ class OtpService:
         smtp_pass = config.SMTP_PASS
         timeout = config.SMTP_TIMEOUT_SECONDS
 
+        if not smtp_user or not smtp_pass:
+            raise RuntimeError("SMTP credentials (SMTP_USER / SMTP_PASS) are not configured.")
+
         msg = cls._build_email_message(to_email, otp_code, purpose)
 
         if smtp_port == 465:
             # Implicit SSL
             ssl_context = ssl.create_default_context()
             with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=timeout, context=ssl_context) as server:
-                if smtp_user and smtp_pass:
-                    server.login(smtp_user, smtp_pass)
+                server.login(smtp_user, smtp_pass)
                 server.send_message(msg)
         else:
             # Plain or STARTTLS (e.g. 587)
@@ -194,8 +197,7 @@ class OtpService:
                 server.ehlo()
                 server.starttls(context=ssl_context)
                 server.ehlo()
-                if smtp_user and smtp_pass:
-                    server.login(smtp_user, smtp_pass)
+                server.login(smtp_user, smtp_pass)
                 server.send_message(msg)
 
         return {
@@ -224,6 +226,9 @@ class OtpService:
             resp = await client.post(url, json=payload)
             if resp.status_code == 200:
                 data = resp.json()
+                is_prod = os.getenv("ENVIRONMENT", "").lower().startswith("prod")
+                if is_prod and data.get("channel") == "dev_terminal_simulation":
+                    raise RuntimeError("Microservice returned simulated OTP in production environment.")
                 return {
                     "success": True,
                     "method": "node_microservice",
@@ -320,10 +325,11 @@ class OtpService:
         )
 
         # Check if running under test suite or local dev bypass mode
+        is_prod = os.getenv("ENVIRONMENT", "").lower().startswith("prod")
         is_test_or_dev = (
             ("pytest" in sys.modules)
-            or config.DEV_ALLOW_OTP_BYPASS
-            or os.getenv("ENVIRONMENT", "").lower() in ("dev", "development", "test", "testing", "")
+            or (config.DEV_ALLOW_OTP_BYPASS and not is_prod)
+            or (not is_prod and os.getenv("ENVIRONMENT", "").lower() in ("dev", "development", "test", "testing", ""))
         )
 
         if is_test_or_dev:
@@ -339,7 +345,8 @@ class OtpService:
             )
             return True, f"Verification code sent to {to_email}. (Dev Code: {otp_code})", audit
 
-        return False, f"Unable to deliver verification email. Please verify your email address or check server runtime logs.", audit
+        err_detail = f" ({last_error})" if last_error else ""
+        return False, f"Unable to deliver verification email. Please verify your email address or check server runtime logs{err_detail}.", audit
 
     @classmethod
     async def create_and_send_otp(

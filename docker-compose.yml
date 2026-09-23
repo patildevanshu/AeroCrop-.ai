@@ -19,6 +19,15 @@ services:
       - EMAIL_MICROSERVICE_BASE_URL=http://email-service:5000
       - EMAIL_SERVICE_URL=http://email-service:5000/send-email
       - EMAIL_OTP_SERVICE_URL=http://email-service:5000/send-otp
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_USER=${SMTP_USER:-${FROM:-${EMAIL_USER:-}}}
+      - SMTP_PASS=${SMTP_PASS:-${PASS:-${EMAIL_PASS:-}}}
+      - SMTP_FROM=${SMTP_FROM:-}
+      - FROM=${FROM:-${SMTP_USER:-${EMAIL_USER:-}}}
+      - PASS=${PASS:-${SMTP_PASS:-${EMAIL_PASS:-}}}
+      - EMAIL_USER=${EMAIL_USER:-${SMTP_USER:-${FROM:-}}}
+      - EMAIL_PASS=${EMAIL_PASS:-${SMTP_PASS:-${PASS:-}}}
       - VALIDATOR_SERVICE_URL=${VALIDATOR_SERVICE_URL:-}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8000,http://localhost:3000}
     volumes:
@@ -49,13 +58,16 @@ services:
       - "5000:5000"
     environment:
       - PORT=5000
+      - ENVIRONMENT=${ENVIRONMENT:-production}
       - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-465}
       - SMTP_SECURE=${SMTP_SECURE:-true}
-      - FROM=${FROM:-${EMAIL_USER:-}}
-      - PASS=${PASS:-${EMAIL_PASS:-}}
-      - EMAIL_USER=${EMAIL_USER:-${FROM:-}}
-      - EMAIL_PASS=${EMAIL_PASS:-${PASS:-}}
+      - SMTP_USER=${SMTP_USER:-${FROM:-${EMAIL_USER:-}}}
+      - SMTP_PASS=${SMTP_PASS:-${PASS:-${EMAIL_PASS:-}}}
+      - FROM=${FROM:-${SMTP_USER:-${EMAIL_USER:-}}}
+      - PASS=${PASS:-${SMTP_PASS:-${EMAIL_PASS:-}}}
+      - EMAIL_USER=${EMAIL_USER:-${SMTP_USER:-${FROM:-}}}
+      - EMAIL_PASS=${EMAIL_PASS:-${SMTP_PASS:-${PASS:-}}}
 
 volumes:
   aerocrop_data:

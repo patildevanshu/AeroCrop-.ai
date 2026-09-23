@@ -148,17 +148,23 @@ SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
 
 # Sanitize email and app password (strip surrounding whitespace and spaces within app password)
-_raw_user = os.getenv("SMTP_USER", os.getenv("FROM", ""))
+_raw_user = os.getenv("SMTP_USER") or os.getenv("FROM") or os.getenv("EMAIL_USER") or ""
 SMTP_USER = _raw_user.strip() if _raw_user else ""
 
-_raw_pass = os.getenv("SMTP_PASS", os.getenv("PASS", ""))
+_raw_pass = os.getenv("SMTP_PASS") or os.getenv("PASS") or os.getenv("EMAIL_PASS") or ""
 SMTP_PASS = _raw_pass.replace(" ", "").strip() if _raw_pass else ""
 
-SMTP_FROM = os.getenv("SMTP_FROM", f"AeroCrop.ai Support <{SMTP_USER}>")
+SMTP_FROM = os.getenv("SMTP_FROM", f"AeroCrop.ai Support <{SMTP_USER}>" if SMTP_USER else "AeroCrop.ai Support")
 SMTP_TIMEOUT_SECONDS = float(os.getenv("SMTP_TIMEOUT_SECONDS", "8.0"))
 OTP_EXPIRY_MINUTES = int(os.getenv("OTP_EXPIRY_MINUTES", "10"))
 OTP_COOLDOWN_SECONDS = int(os.getenv("OTP_COOLDOWN_SECONDS", "30"))
 DEV_ALLOW_OTP_BYPASS = os.getenv("DEV_ALLOW_OTP_BYPASS", "true" if os.getenv("ENVIRONMENT", "").lower() not in ("prod", "production") else "false").lower() == "true"
+IS_SMTP_CONFIGURED = bool(
+    SMTP_USER
+    and SMTP_PASS
+    and "your_email" not in SMTP_USER
+    and "your_16_char" not in SMTP_PASS
+)
 
 # ─── Object Storage Provider (Local Filesystem / AWS S3) ──────────────────────
 STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", "local").lower()

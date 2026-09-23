@@ -63,6 +63,11 @@ async def lifespan(app: FastAPI):
     logger.info("  API Docs : http://localhost:8000/docs")
     logger.info("  Frontend : http://localhost:8000/")
     logger.info("  Email Svc: %s (SMTP: %s:%s, User: %s)", config.EMAIL_SERVICE_URL, config.SMTP_HOST, config.SMTP_PORT, config.SMTP_USER)
+    if os.getenv("ENVIRONMENT", "").lower().startswith("prod") and not config.IS_SMTP_CONFIGURED:
+        logger.error(
+            "  ❌ [CRITICAL PRODUCTION CONFIGURATION] SMTP credentials (SMTP_USER / SMTP_PASS) are NOT configured! "
+            "Real OTP verification and advisory emails cannot be delivered. Please configure SMTP credentials in .env."
+        )
     logger.info("=" * 60)
 
     # Initialize MongoDB connection, indexes, and sequences

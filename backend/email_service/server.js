@@ -10,19 +10,38 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 
-const SENDER_EMAIL = (process.env.FROM || process.env.EMAIL_USER || '').trim();
-const SENDER_PASS  = (process.env.PASS || process.env.EMAIL_PASS || '').trim();
+const SENDER_EMAIL = (process.env.FROM || process.env.EMAIL_USER || process.env.SMTP_USER || '').trim();
+const SENDER_PASS  = (process.env.PASS || process.env.EMAIL_PASS || process.env.SMTP_PASS || '').trim();
+const SMTP_HOST    = (process.env.SMTP_HOST || '').trim();
+const SMTP_PORT    = parseInt(process.env.SMTP_PORT || '465', 10);
 const PORT         = process.env.PORT || 5000;
+
+const isProd = (process.env.ENVIRONMENT || process.env.NODE_ENV || '').toLowerCase().startsWith('prod');
 
 const isPlaceholder = !SENDER_EMAIL || !SENDER_PASS || 
     SENDER_EMAIL.includes('your_email') || 
     SENDER_PASS.includes('your_16_char') ||
     SENDER_EMAIL === 'your_email@gmail.com';
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: SENDER_EMAIL, pass: SENDER_PASS },
-});
+const isCustomSmtp = SMTP_HOST && SMTP_HOST !== 'smtp.gmail.com';
+
+// ── Nodemailer Transporter (Singleton with IPv4 preference for Docker) ───────
+const transporter = nodemailer.createTransport(
+    isCustomSmtp
+        ? {
+            host: SMTP_HOST,
+            port: SMTP_PORT,
+            secure: SMTP_PORT === 465,
+            auth: { user: SENDER_EMAIL, pass: SENDER_PASS },
+            family: 4, // Prevent IPv6 timeout issues in Docker Linux bridges
+            tls: { rejectUnauthorized: false },
+        }
+        : {
+            service: 'gmail',
+            auth: { user: SENDER_EMAIL, pass: SENDER_PASS },
+            family: 4, // Prevent IPv6 timeout issues in Docker Linux bridges
+        }
+);
 
 if (!isPlaceholder && SENDER_EMAIL && SENDER_PASS) {
     transporter.verify((err) => {
@@ -30,9 +49,11 @@ if (!isPlaceholder && SENDER_EMAIL && SENDER_PASS) {
             console.error('❌ SMTP Connection Error:', err.message);
             console.warn('💡 Tip: Ensure 2-Step Verification is ON and use a 16-character Google App Password.');
         } else {
-            console.log(`✅ SMTP Server connected successfully as: ${SENDER_EMAIL}`);
+            console.log(`✅ SMTP Server connected successfully as: ${SENDER_EMAIL} (Host: ${isCustomSmtp ? SMTP_HOST : 'Gmail'}, Port: ${SMTP_PORT})`);
         }
     });
+} else if (isProd) {
+    console.error('❌ [CRITICAL PRODUCTION WARNING] SMTP credentials (FROM/PASS or SMTP_USER/SMTP_PASS) are NOT configured in production environment!');
 } else {
     console.log('ℹ️  [DEV MODE] Placeholder SMTP credentials detected in .env.');
     console.log('💡 Live email dispatch will be simulated in the console terminal.');
@@ -205,6 +226,13 @@ app.post('/send-email', async (req, res) => {
         };
 
         if (isPlaceholder) {
+            if (isProd) {
+                console.error(`❌ [PRODUCTION FAILURE] Attempted to dispatch advisory report to ${email} but SMTP credentials are not configured!`);
+                return res.status(503).json({
+                    success: false,
+                    error: 'Production SMTP credentials are not configured. Real email dispatch cannot proceed.',
+                });
+            }
             console.log(`\n======================================================`);
             console.log(`📄 [AEROCROP LOCAL DEV PDF REPORT GENERATED]`);
             console.log(`✉️  Recipient: ${email}`);
@@ -245,6 +273,13 @@ app.post('/send-otp', async (req, res) => {
             return res.status(400).json({ success: false, error: `Invalid email address format: ${email}` });
         }
         if (isPlaceholder) {
+            if (isProd) {
+                console.error(`❌ [PRODUCTION FAILURE] Attempted to dispatch OTP to ${email} but SMTP credentials are not configured!`);
+                return res.status(503).json({
+                    success: false,
+                    error: 'Production SMTP credentials are not configured. Real OTP delivery cannot proceed.',
+                });
+            }
             console.log(`\n======================================================`);
             console.log(`🔑 [AEROCROP LOCAL DEV OTP SIMULATOR]`);
             console.log(`✉️  Recipient: ${email}`);
