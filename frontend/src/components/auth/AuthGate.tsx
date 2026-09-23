@@ -146,6 +146,11 @@ export const AuthGate: React.FC = () => {
       showToast('A valid email address is compulsory.', 'warning');
       return;
     }
+    if (!otpSentForRegister && (!regOtp.trim() || regOtp.trim().length !== 6)) {
+      showToast(`Sending 6-digit verification code to ${cleanEmail}...`, 'info');
+      await handleSendRegisterOtp();
+      return;
+    }
     if (!regOtp.trim() || regOtp.trim().length !== 6) {
       showToast('Please enter the 6-digit verification code sent to your email.', 'warning');
       return;
@@ -556,9 +561,9 @@ export const AuthGate: React.FC = () => {
               <input
                 id="gate-reg-otp"
                 type="text"
-                required
+                required={otpSentForRegister}
                 maxLength={6}
-                placeholder="Enter 6-digit code"
+                placeholder={otpSentForRegister ? "Enter 6-digit code" : "Click Get OTP or Register to receive code"}
                 value={regOtp}
                 onChange={(e) => setRegOtp(e.target.value.replace(/\D/g, ''))}
                 style={{
@@ -714,7 +719,7 @@ export const AuthGate: React.FC = () => {
                 <RefreshCw size={18} className="animate-spin" />
               ) : (
                 <>
-                  <span>Verify OTP & Create Account</span>
+                  <span>{otpSentForRegister ? 'Verify OTP & Create Account' : 'Send Verification OTP & Continue'}</span>
                   <ArrowRight size={16} />
                 </>
               )}

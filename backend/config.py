@@ -7,16 +7,24 @@ import os
 import torch
 
 try:
-    from dotenv import load_dotenv
+    from dotenv import load_dotenv, dotenv_values
     _backend_dir = os.path.dirname(os.path.abspath(__file__))
     _root_dir = os.path.dirname(_backend_dir)
+    # 1. Load root .env and backend/.env for backend settings
     for _env_file in [
-        os.path.join(_backend_dir, "email_service", ".env"),
-        os.path.join(_backend_dir, ".env"),
         os.path.join(_root_dir, ".env"),
+        os.path.join(_backend_dir, ".env"),
     ]:
         if os.path.exists(_env_file):
             load_dotenv(_env_file, override=False)
+
+    # 2. Extract SMTP credentials from email_service/.env without overriding backend PORT (PORT 5000 is for node microservice)
+    _email_env = os.path.join(_backend_dir, "email_service", ".env")
+    if os.path.exists(_email_env):
+        _email_vals = dotenv_values(_email_env)
+        for _k in ("FROM", "PASS", "EMAIL_USER", "EMAIL_PASS", "SMTP_USER", "SMTP_PASS"):
+            if _k in _email_vals and _email_vals[_k] and _k not in os.environ:
+                os.environ[_k] = str(_email_vals[_k])
 except ImportError:
     pass
 

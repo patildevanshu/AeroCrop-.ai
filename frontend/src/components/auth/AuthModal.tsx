@@ -92,6 +92,11 @@ export const AuthModal: React.FC = () => {
       showToast('A valid email address is compulsory.', 'warning');
       return;
     }
+    if (!otpSent && (!regOtp.trim() || regOtp.trim().length !== 6)) {
+      showToast(`Sending 6-digit verification code to ${cleanEmail}...`, 'info');
+      await handleSendOtp();
+      return;
+    }
     if (!regOtp.trim() || regOtp.trim().length !== 6) {
       showToast('Please enter the 6-digit verification code sent to your email.', 'warning');
       return;
@@ -238,7 +243,7 @@ export const AuthModal: React.FC = () => {
               <input
                 id="reg-otp"
                 type="text"
-                required
+                required={otpSent}
                 maxLength={6}
                 placeholder="Enter 6-digit code"
                 value={regOtp}
@@ -315,7 +320,9 @@ export const AuthModal: React.FC = () => {
               {isSubmitting ? (
                 <span className="btn-spinner" />
               ) : (
-                <span className="btn-text">Verify OTP & Register</span>
+                <span className="btn-text">
+                  {otpSent ? 'Verify OTP & Register' : 'Send Verification OTP & Continue'}
+                </span>
               )}
             </button>
           </form>
