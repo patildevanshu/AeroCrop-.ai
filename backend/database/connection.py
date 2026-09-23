@@ -1,23 +1,28 @@
 """
-AeroCrop.ai — Async Database Connection & Session Management
+AeroCrop.ai — Legacy Async Database Connection & Session Management
 
-Provides:
-  - Async SQLAlchemy engine configuration
-  - Scoped async session maker
-  - FastAPI dependency generator: get_db()
-  - Database schema initialization: init_db()
+[DEPRECATED]
+Primary persistence has migrated to MongoDB (backend.database.mongodb).
+This module is preserved strictly for legacy SQLite archival and migration utilities.
+Do NOT use for new endpoints or services.
 """
 
 import logging
 import os
+import warnings
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-import config
-from database.models import Base
+try:
+    import config
+    from database.models import Base
+except ImportError:
+    import backend.config as config
+    from backend.database.models import Base
 
-logger = logging.getLogger("aerocrop.database")
+logger = logging.getLogger("aerocrop.database.legacy")
+
 
 # Ensure local data directory and uploads directory exist
 os.makedirs(config.DATA_DIR, exist_ok=True)
@@ -53,8 +58,10 @@ async def init_db() -> None:
             if config.DATABASE_URL.startswith("sqlite"):
                 from sqlalchemy import text
                 await conn.execute(text("PRAGMA journal_mode=WAL;"))
-                await conn.execute(text("PRAGMA foreign_keys=ON;"))
-            await conn.run_sync(Base.metadata.create_all)
+            if Base is not None and hasattr(Base, "metadata"):
+                await conn.run_sync(Base.metadata.create_all)
+            else:
+                logger.debug("[Legacy Database] Base is None; skipping SQLAlchemy table auto-generation (managed by MongoDB).")
 
             # Auto-migration: Ensure new columns and constraints exist on existing SQLite tables
             if config.DATABASE_URL.startswith("sqlite"):
