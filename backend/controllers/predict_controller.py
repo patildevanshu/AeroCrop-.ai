@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 from database.mongodb import get_db
 from database.models import User, FarmPlot
-from model.inference             import InferenceService
+from model.inference             import InferenceService, normalize_crop_name, AGRONOMIC_YIELD_BOUNDS
 from services.auth_service       import get_optional_user
 from services.disease_service    import DiseaseService
 from services.history_service    import HistoryService
@@ -199,20 +199,32 @@ async def predict(
     else:
         detected_crop_raw = disease_info.crop if disease_info else "Tomato"
     
-    # Standardize crop key for mandi lookups
+    # Standardize crop key for mandi lookups & agronomic validation
     det_lower = detected_crop_raw.lower().strip()
-    if "corn" in det_lower or "maize" in det_lower:
-        effective_crop_key = "maize"
-    elif "pepper" in det_lower or "chili" in det_lower or "capsicum" in det_lower:
-        effective_crop_key = "pepper"
-    elif "orange" in det_lower or "citrus" in det_lower:
-        effective_crop_key = "orange"
+    norm_key = normalize_crop_name(det_lower)
+    if norm_key in config.SUPPORTED_CROPS:
+        effective_crop_key = norm_key
     elif det_lower in config.SUPPORTED_CROPS:
         effective_crop_key = det_lower
     else:
         effective_crop_key = "tomato"
 
     final_crop_name = detected_crop_raw
+
+    # Final agronomic calibration and clamping against the resolved crop
+    bounds = AGRONOMIC_YIELD_BOUNDS.get(effective_crop_key)
+    if bounds:
+        min_y, max_y = bounds["min"], bounds["max"]
+        curr_y = float(result.get("yield_t_ha", bounds["typical"]))
+        if curr_y > max_y * 1.25 or curr_y < min_y * 0.65:
+            result["yield_t_ha"] = round(min(max_y, max(min_y, bounds["typical"])), 2)
+        else:
+            result["yield_t_ha"] = round(min(max_y, max(min_y, curr_y)), 2)
+        result["yield_category"] = bounds["category"]
+        result["yield_category_label"] = bounds["category_label"]
+    else:
+        result.setdefault("yield_category", "general_crop")
+        result.setdefault("yield_category_label", "Crop Yield")
 
     disease_payload = {
         "class_index":  disease_idx,
@@ -344,6 +356,8 @@ async def predict(
         "weather":             weather,
         "disease":             disease_payload,
         "yield_t_ha":          result["yield_t_ha"],
+        "yield_category":      result.get("yield_category", "general_crop"),
+        "yield_category_label": result.get("yield_category_label", "Crop Yield"),
         "yield_loss_pct":      result.get("yield_loss_pct"),
         "baseline_yield_t_ha": result.get("baseline_yield_t_ha"),
         "yield_reason":        result.get("yield_reason"),

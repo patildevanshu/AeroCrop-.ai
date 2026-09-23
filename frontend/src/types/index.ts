@@ -116,6 +116,8 @@ export interface PredictionResult {
   image_url: string | null;
   disease: DiseaseInfo;
   yield_t_ha: number;
+  yield_category?: string;
+  yield_category_label?: string;
   yield_loss_pct?: number | null;
   baseline_yield_t_ha?: number | null;
   yield_reason?: string | null;

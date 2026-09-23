@@ -67,6 +67,17 @@ async def lifespan(app: FastAPI):
     # Initialize MongoDB connection, indexes, and sequences
     await init_mongodb()
 
+    # Pre-load and verify neural model weights (.pth) at application startup
+    try:
+        from model.inference import InferenceService
+        inference_svc = InferenceService()
+        if inference_svc.mock_mode:
+            logger.warning("  ⚠️ WARNING: Neural model running in MOCK mode (weights not loaded from %s)", config.WEIGHTS_PATH)
+        else:
+            logger.info("  🚀 Neural Model: LOADED active .pth weights (%s, %d classes, Device: %s)", config.WEIGHTS_PATH, getattr(inference_svc, "num_classes", 134), inference_svc.device)
+    except Exception as exc:
+        logger.error("  ❌ Neural Model startup error: %s", exc)
+
     yield
     # ── Shutdown ───────────────────────────────────────────────────────────
     logger.info("  🌿  AeroCrop.ai — Shutting down gracefully")
@@ -155,12 +166,17 @@ async def serve_index():
 # ── Health Check ───────────────────────────────────────────────────────────
 @app.get("/api/health", tags=["System"])
 async def health():
-    """Returns service health, database status, and device info."""
+    """Returns service health, database status, device info, and active model status."""
+    from model.inference import InferenceService
+    svc = InferenceService()
     return {
-        "status":  "ok",
-        "device":  config.DEVICE,
-        "version": "1.0.0",
-        "crops":   config.SUPPORTED_CROPS,
+        "status":        "ok",
+        "device":        config.DEVICE,
+        "version":       "1.0.0",
+        "crops":         config.SUPPORTED_CROPS,
+        "model_loaded":  not svc.mock_mode,
+        "weights_file":  os.path.basename(svc.active_weights_path) if hasattr(svc, "active_weights_path") else None,
+        "num_classes":   getattr(svc, "num_classes", 134),
     }
 
 

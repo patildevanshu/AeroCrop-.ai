@@ -134,3 +134,50 @@ class TestNormalisation:
             temperature=28, humidity=65, rainfall=3.0
         )
         assert tensor.shape == (1, 3), f"Expected shape (1,3), got {tensor.shape}"
+
+
+class TestAgronomicYieldBounds:
+    """
+    Validates that yield predictions across crops adhere to ICAR & Maharashtra
+    agricultural benchmarks, preventing high-yield anomalies.
+    """
+
+    @pytest.mark.parametrize("crop,min_expected,max_expected", [
+        ("cotton", 0.6, 2.8),
+        ("Cotton (Kapas)", 0.6, 2.8),
+        ("soybean", 0.6, 2.5),
+        ("wheat", 1.0, 4.5),
+        ("rice", 1.2, 5.5),
+        ("maize", 1.2, 6.0),
+        ("turmeric", 1.0, 5.0),
+        ("sugarcane", 40.0, 110.0),
+        ("tomato", 12.0, 42.0),
+        ("orange", 8.0, 25.0),
+    ])
+    def test_crop_yield_within_icar_bounds(self, crop, min_expected, max_expected):
+        svc = InferenceService()
+        result = svc.predict(
+            image_bytes=DUMMY_IMAGE,
+            temperature=28.0,
+            humidity=65.0,
+            rainfall=3.0,
+            crop=crop,
+        )
+        yield_val = result["yield_t_ha"]
+        assert min_expected <= yield_val <= max_expected, (
+            f"Yield for {crop} ({yield_val} t/ha) must be in [{min_expected}, {max_expected}] t/ha"
+        )
+        assert "yield_category" in result
+        assert "yield_category_label" in result
+
+    def test_mock_cotton_not_default_25(self):
+        res = InferenceService._mock_predict(crop="cotton")
+        assert res["yield_t_ha"] < 3.0, f"Mock cotton yield must be realistic, got {res['yield_t_ha']}"
+        assert res["yield_category"] == "dry_fiber"
+
+    def test_mock_auto_crop_resolution(self):
+        res = InferenceService._mock_predict(crop="auto")
+        assert res["yield_t_ha"] > 0
+        assert "yield_category" in res
+        assert "yield_category_label" in res
+
