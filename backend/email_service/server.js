@@ -264,6 +264,13 @@ app.post('/send-otp', async (req, res) => {
     &copy; 2026 AeroCrop.ai &bull; Maharashtra Agricultural Advisory Platform
   </div>
 </div>`,
+            headers: {
+                'X-Priority': '1',
+                'Priority': 'urgent',
+                'Importance': 'high',
+                'Auto-Submitted': 'auto-generated',
+                'X-MSMail-Priority': 'High',
+            },
         };
 
         const info = await transporter.sendMail(mailOptions);

@@ -72,7 +72,13 @@ class OtpService:
         msg["From"] = from_display
         msg["To"] = to_email
         msg["Date"] = email.utils.formatdate(localtime=True)
+        msg["Message-ID"] = email.utils.make_msgid(domain="aerocrop.ai")
         msg["Reply-To"] = sender_user
+        msg["Auto-Submitted"] = "auto-generated"
+        msg["X-Priority"] = "1"
+        msg["Priority"] = "urgent"
+        msg["Importance"] = "high"
+        msg["X-MSMail-Priority"] = "High"
 
         plain_text = (
             f"Your AeroCrop verification code is: {otp_code}\n\n"

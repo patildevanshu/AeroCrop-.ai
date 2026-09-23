@@ -146,7 +146,7 @@ SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@devanshupatil.tech")
 
 # ─── SMTP Email Delivery (Gmail / Standard SMTP) ─────────────────────────────
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
 
 # Sanitize email and app password (strip surrounding whitespace and spaces within app password)
 _raw_user = os.getenv("SMTP_USER", os.getenv("FROM", "megabypass3@gmail.com"))
@@ -156,7 +156,7 @@ _raw_pass = os.getenv("SMTP_PASS", os.getenv("PASS", "jjckvganjyeowklt"))
 SMTP_PASS = _raw_pass.replace(" ", "").strip() if _raw_pass else ""
 
 SMTP_FROM = os.getenv("SMTP_FROM", f"AeroCrop.ai Support <{SMTP_USER}>")
-SMTP_TIMEOUT_SECONDS = float(os.getenv("SMTP_TIMEOUT_SECONDS", "25.0"))
+SMTP_TIMEOUT_SECONDS = float(os.getenv("SMTP_TIMEOUT_SECONDS", "8.0"))
 OTP_EXPIRY_MINUTES = int(os.getenv("OTP_EXPIRY_MINUTES", "10"))
-OTP_COOLDOWN_SECONDS = int(os.getenv("OTP_COOLDOWN_SECONDS", "60"))
+OTP_COOLDOWN_SECONDS = int(os.getenv("OTP_COOLDOWN_SECONDS", "30"))
 DEV_ALLOW_OTP_BYPASS = os.getenv("DEV_ALLOW_OTP_BYPASS", "false").lower() == "true"

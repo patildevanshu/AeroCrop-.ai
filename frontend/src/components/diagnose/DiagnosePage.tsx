@@ -92,6 +92,7 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
     }
 
     setIsLoading(true);
+    setResult(null);          // ← Clear previous analysis immediately so stale data never persists
     const startTime = Date.now();
     try {
       const data = await submitCropPrediction({

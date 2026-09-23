@@ -189,6 +189,31 @@ async def predict(
     except Exception as exc:
         logger.debug("[PredictController] Ensemble cross-verification bypassed: %s", exc)
 
+    # ── 3c. Local OOD heuristic fallback ──────────────────────────────────────
+    # When the validator microservice (port 5005) is offline, `out_of_distribution`
+    # is never set, and unsupported crops (e.g. mango) get classified as a random
+    # disease from the 134-class taxonomy.  This local fallback catches those:
+    #   • crop was auto-detected (user did not explicitly pick a crop)
+    #   • model confidence is very low (< 45%), signalling the input doesn't
+    #     map cleanly to any trained class.
+    if (
+        not result.get("out_of_distribution")
+        and prelim_crop == "auto"
+        and result.get("confidence", 1.0) < 0.45
+    ):
+        logger.info(
+            "[PredictController] Local OOD heuristic triggered — auto-detect "
+            "confidence %.2f%% < 45%% threshold. Flagging as out-of-distribution.",
+            result["confidence"] * 100,
+        )
+        result["out_of_distribution"] = True
+        result["low_confidence"] = True
+        result["ood_reason"] = (
+            "The uploaded plant specimen could not be confidently matched to any "
+            "crop or disease in our 134-class agricultural dataset. "
+            "Please upload a clear photograph of a supported crop leaf."
+        )
+
     # ── 4. Disease knowledge lookup & Automatic Crop Resolution ──────────────
     disease_idx  = result["disease_class"]
     disease_info = DiseaseService.get_by_index(disease_idx)
