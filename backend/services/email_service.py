@@ -16,11 +16,15 @@ import smtplib
 from email.message import EmailMessage
 from typing import Any, Dict, Optional
 
+import email.utils
+import ssl
 import httpx
 try:
     import backend.config as config
+    from backend.services.email_logger import EmailAuditLogger
 except ImportError:
     import config
+    from services.email_logger import EmailAuditLogger
 
 
 logger = logging.getLogger("aerocrop.email")
@@ -61,6 +65,7 @@ class EmailService:
 
         url = config.EMAIL_SERVICE_URL
         logger.info("[EmailService] Dispatching advisory PDF email to %s via %s", farmer_email, url)
+        t0 = EmailAuditLogger.log_attempt(farmer_email, "advisory_report", url, "microservice_pdf")
 
         # ── Step 1: Attempt Primary Dispatch via Node Microservice ─────────────────
         try:
@@ -70,6 +75,7 @@ class EmailService:
                 if response.status_code == 200:
                     resp_json = response.json()
                     logger.info("[EmailService] Primary PDF email successfully dispatched to %s: %s", farmer_email, resp_json)
+                    EmailAuditLogger.log_success(farmer_email, "advisory_report", "microservice_pdf", url, t0, resp_json)
                     return {"success": True, "method": "microservice_pdf", "details": resp_json}
                 else:
                     logger.warning(
@@ -202,6 +208,11 @@ class EmailService:
         msg["Subject"] = f"🌾 AeroCrop.ai — पीक सल्ला व रोग निदान अहवाल | Crop Advisory: {crop} ({condition})"
         msg["From"] = from_email
         msg["To"] = farmer_email
+        msg["Date"] = email.utils.formatdate(localtime=True)
+        msg["Message-ID"] = email.utils.make_msgid(domain="aerocrop.ai")
+        msg["Reply-To"] = config.SUPPORT_EMAIL
+        msg["X-Mailer"] = "AeroCrop.ai Crop Advisory Engine v2.0"
+        msg["Auto-Submitted"] = "auto-generated"
 
         plain_text = (
             f"AeroCrop.ai Crop Diagnostic & Advisory Report\n"
@@ -382,15 +393,25 @@ class EmailService:
 """
         msg.add_alternative(html_content, subtype="html")
 
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=12) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            if smtp_user and smtp_pass:
-                server.login(smtp_user, smtp_pass)
-            server.send_message(msg)
+        timeout = config.SMTP_TIMEOUT_SECONDS
+        if smtp_port == 465:
+            ssl_context = ssl.create_default_context()
+            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=timeout, context=ssl_context) as server:
+                if smtp_user and smtp_pass:
+                    server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
+        else:
+            ssl_context = ssl.create_default_context()
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=timeout) as server:
+                server.ehlo()
+                server.starttls(context=ssl_context)
+                server.ehlo()
+                if smtp_user and smtp_pass:
+                    server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
 
         logger.info("[EmailService] Direct SMTP advisory email successfully delivered to %s", farmer_email)
+        EmailAuditLogger.log_success(farmer_email, "advisory_report", f"python_smtp_{smtp_port}", f"{smtp_host}:{smtp_port}", time.time(), {"crop": crop})
         return {
             "success": True,
             "method": "python_smtp_direct",

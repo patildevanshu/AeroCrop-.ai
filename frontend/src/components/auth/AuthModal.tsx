@@ -59,7 +59,7 @@ export const AuthModal: React.FC = () => {
       const res = await sendEmailOtp({ email: cleanEmail, purpose: 'register' });
       setOtpSent(true);
       setCooldown(res.cooldown_seconds || 60);
-      showToast(`Verification code sent to ${cleanEmail}!`, 'success');
+      showToast(`Verification code sent to ${cleanEmail}! Please check your Inbox and Spam/Junk folder.`, 'success');
     } catch (err: any) {
       showToast(err.message || 'Failed to send verification code.', 'error');
     } finally {

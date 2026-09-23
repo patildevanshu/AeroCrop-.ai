@@ -72,7 +72,7 @@ export const AuthGate: React.FC = () => {
       const res = await sendEmailOtp({ email: cleanEmail, purpose: 'register' });
       setOtpSentForRegister(true);
       setRegCooldown(res.cooldown_seconds || 60);
-      showToast(`Verification code dispatched to ${cleanEmail}! Check your inbox.`, 'success');
+      showToast(`Verification code sent to ${cleanEmail}! Please check your Inbox and Spam/Junk folder.`, 'success');
     } catch (err: any) {
       showToast(err.message || 'Failed to send verification code.', 'error');
     } finally {
@@ -94,7 +94,7 @@ export const AuthGate: React.FC = () => {
       const res = await sendEmailOtp({ email: cleanEmail, purpose: 'login' });
       setOtpSentForLogin(true);
       setLoginCooldown(res.cooldown_seconds || 60);
-      showToast(`Login OTP sent to ${cleanEmail}!`, 'success');
+      showToast(`Login OTP sent to ${cleanEmail}! Please check your Inbox and Spam/Junk folder.`, 'success');
     } catch (err: any) {
       showToast(err.message || 'Failed to send login code.', 'error');
     } finally {

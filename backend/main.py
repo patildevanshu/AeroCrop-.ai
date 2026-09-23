@@ -42,12 +42,35 @@ from backend.controllers import (
 from backend.database.mongodb import init_mongodb, close_mongodb
 
 # ── Logging ────────────────────────────────────────────────────────────────
+from logging.handlers import RotatingFileHandler
+import os
+
+os.makedirs(config.LOGS_DIR, exist_ok=True)
+
+# Console format
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(name)s: %(message)s",
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger("aerocrop")
+
+# Persistent rotating file handler for general runtime logs
+try:
+    _runtime_file_handler = RotatingFileHandler(
+        config.APP_RUNTIME_LOG_PATH,
+        maxBytes=5 * 1024 * 1024,
+        backupCount=5,
+        encoding="utf-8",
+    )
+    _runtime_file_handler.setFormatter(
+        logging.Formatter("%(asctime)s  %(levelname)-8s  [%(name)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    )
+    _runtime_file_handler.setLevel(logging.INFO)
+    logging.getLogger().addHandler(_runtime_file_handler)
+    logger.addHandler(_runtime_file_handler)
+except Exception as _log_exc:
+    print(f"Warning: Could not initialize general runtime file handler: {_log_exc}")
 
 
 # ── Lifespan (Startup & Shutdown Lifecycle Manager) ────────────────────────
@@ -62,6 +85,8 @@ async def lifespan(app: FastAPI):
     logger.info("  MongoDB  : %s (DB: %s)", config.MONGODB_URL, config.MONGODB_DB_NAME)
     logger.info("  API Docs : http://localhost:8000/docs")
     logger.info("  Frontend : http://localhost:8000/")
+    logger.info("  Email Svc: %s (SMTP: %s:%s, User: %s)", config.EMAIL_SERVICE_URL, config.SMTP_HOST, config.SMTP_PORT, config.SMTP_USER)
+    logger.info("  Email Log: %s", config.EMAIL_RUNTIME_LOG_PATH)
     logger.info("=" * 60)
 
     # Initialize MongoDB connection, indexes, and sequences

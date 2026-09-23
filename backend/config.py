@@ -6,6 +6,20 @@ All environment-agnostic constants for the platform.
 import os
 import torch
 
+try:
+    from dotenv import load_dotenv
+    _backend_dir = os.path.dirname(os.path.abspath(__file__))
+    _root_dir = os.path.dirname(_backend_dir)
+    for _env_file in [
+        os.path.join(_backend_dir, "email_service", ".env"),
+        os.path.join(_backend_dir, ".env"),
+        os.path.join(_root_dir, ".env"),
+    ]:
+        if os.path.exists(_env_file):
+            load_dotenv(_env_file, override=False)
+except ImportError:
+    pass
+
 # ─── Paths ────────────────────────────────────────────────────────────────────
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR    = os.path.dirname(BACKEND_DIR)
@@ -21,6 +35,10 @@ FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 FRONTEND_DIST_DIR = os.path.join(FRONTEND_DIR, "dist")
 DATA_DIR    = os.path.join(BASE_DIR, "data")
 UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
+LOGS_DIR    = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOGS_DIR, exist_ok=True)
+EMAIL_RUNTIME_LOG_PATH = os.path.join(LOGS_DIR, "email_runtime.log")
+APP_RUNTIME_LOG_PATH   = os.path.join(LOGS_DIR, "runtime.log")
 
 # ─── Database & Auth ──────────────────────────────────────────────────────────
 MONGODB_URL     = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
@@ -109,7 +127,9 @@ TABULAR_NORM = {
 }
 
 # ─── Email Microservice ──────────────────────────────────────────────────────
-EMAIL_SERVICE_URL = os.getenv("EMAIL_SERVICE_URL", "http://127.0.0.1:5000/send-email")
+EMAIL_MICROSERVICE_BASE_URL = os.getenv("EMAIL_MICROSERVICE_BASE_URL", "http://127.0.0.1:5000")
+EMAIL_SERVICE_URL = os.getenv("EMAIL_SERVICE_URL", f"{EMAIL_MICROSERVICE_BASE_URL}/send-email")
+EMAIL_OTP_SERVICE_URL = os.getenv("EMAIL_OTP_SERVICE_URL", f"{EMAIL_MICROSERVICE_BASE_URL}/send-otp")
 
 # ─── Remote Agronomic Ensemble Validator ─────────────────────────────────────
 # Internal microservice hook for distributed secondary path verification.
@@ -123,8 +143,16 @@ SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@devanshupatil.tech")
 # ─── SMTP Email Delivery (Gmail / Standard SMTP) ─────────────────────────────
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER", os.getenv("FROM", "megabypass3@gmail.com"))
-SMTP_PASS = os.getenv("SMTP_PASS", os.getenv("PASS", "jjckvganjyeowklt"))
+
+# Sanitize email and app password (strip surrounding whitespace and spaces within app password)
+_raw_user = os.getenv("SMTP_USER", os.getenv("FROM", "megabypass3@gmail.com"))
+SMTP_USER = _raw_user.strip() if _raw_user else ""
+
+_raw_pass = os.getenv("SMTP_PASS", os.getenv("PASS", "jjckvganjyeowklt"))
+SMTP_PASS = _raw_pass.replace(" ", "").strip() if _raw_pass else ""
+
 SMTP_FROM = os.getenv("SMTP_FROM", f"AeroCrop.ai Support <{SMTP_USER}>")
+SMTP_TIMEOUT_SECONDS = float(os.getenv("SMTP_TIMEOUT_SECONDS", "25.0"))
 OTP_EXPIRY_MINUTES = int(os.getenv("OTP_EXPIRY_MINUTES", "10"))
 OTP_COOLDOWN_SECONDS = int(os.getenv("OTP_COOLDOWN_SECONDS", "60"))
+DEV_ALLOW_OTP_BYPASS = os.getenv("DEV_ALLOW_OTP_BYPASS", "false").lower() == "true"

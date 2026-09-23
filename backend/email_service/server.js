@@ -214,6 +214,73 @@ app.post('/send-email', async (req, res) => {
     }
 });
 
+// ── POST /send-otp ───────────────────────────────────────────────────────────
+app.post('/send-otp', async (req, res) => {
+    try {
+        const { email, code, purpose = 'register' } = req.body;
+        if (!email || !code) {
+            return res.status(400).json({ success: false, error: "Missing required fields: 'email' and 'code'." });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ success: false, error: `Invalid email address format: ${email}` });
+        }
+        if (!SENDER_EMAIL || !SENDER_PASS) {
+            return res.status(500).json({
+                success: false,
+                error: 'SMTP credentials are not configured on Node email microservice.',
+            });
+        }
+
+        const purposeTitles = {
+            register: 'Registration Verification Code / नोंदणी पडताळणी कोड',
+            login: 'Sign-In Verification Code / लॉगिन कोड',
+            reset_password: 'Password Reset Code / पासवर्ड रीसेट कोड',
+        };
+        const title = purposeTitles[purpose] || 'Verification Code / पडताळणी कोड';
+
+        const mailOptions = {
+            from: `"AeroCrop.ai Support" <${SENDER_EMAIL}>`,
+            to: email,
+            subject: `🌱 AeroCrop.ai Verification Code: ${code}`,
+            text: `AeroCrop.ai Verification Code\n\nYour code is: ${code}\nThis code is valid for 10 minutes.\nIf you did not request this, please ignore.\nSupport: support@devanshupatil.tech`,
+            html: `
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:auto;background:#13221c;border:1px solid #1f3b2e;border-radius:14px;overflow:hidden;color:#e2e8f0;padding:24px;">
+  <div style="text-align:center;padding-bottom:16px;border-bottom:1px solid #234b39;">
+    <h1 style="margin:0;font-size:24px;color:#10b981;">🌱 AeroCrop<span style="color:#6ee7b7;">.ai</span></h1>
+    <p style="margin:4px 0 0;font-size:12px;color:#94a3b8;text-transform:uppercase;">Intelligent Agricultural Advisory</p>
+  </div>
+  <div style="padding:24px 8px;text-align:center;">
+    <h2 style="font-size:18px;color:#f8fafc;margin:0 0 12px;">${title}</h2>
+    <p style="font-size:14px;color:#cbd5e1;margin:0 0 20px;">Use the 6-digit code below to complete your verification for <strong>${escapeHtml(email)}</strong>:</p>
+    <div style="background:#0d1b15;border:2px dashed #10b981;border-radius:10px;padding:18px;display:inline-block;margin:0 auto 20px;">
+      <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#34d399;font-family:monospace;">${escapeHtml(code)}</span>
+    </div>
+    <p style="font-size:12px;color:#94a3b8;margin:0;">⏱️ Valid for 10 minutes. If you cannot find this in your inbox, check your Spam or Junk folder.</p>
+  </div>
+  <div style="border-top:1px solid #1a3227;padding-top:16px;font-size:11px;color:#64748b;text-align:center;">
+    &copy; 2026 AeroCrop.ai Platform • Precision Farming & Pathology Advisory
+  </div>
+</div>`,
+            headers: {
+                'X-Mailer': 'AeroCrop.ai Microservice Engine v3',
+                'Auto-Submitted': 'auto-generated',
+            },
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`✉️ [Microservice] OTP email successfully sent to ${email} [${info.messageId}]`);
+        return res.status(200).json({
+            success: true,
+            message: `Verification code successfully sent to ${email}`,
+            messageId: info.messageId,
+            channel: 'node_microservice',
+        });
+    } catch (err) {
+        console.error('❌ [Microservice] OTP dispatch error:', err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
     console.log(`🚀 AeroCrop Trilingual Email Microservice v3 running on http://localhost:${PORT}`);

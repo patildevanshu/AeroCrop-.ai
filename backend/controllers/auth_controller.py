@@ -20,6 +20,10 @@ from database.models import User
 from services.auth_service import AuthService, get_current_user
 from services.user_service import UserService
 from services.otp_service import OtpService
+try:
+    from backend.services.email_logger import EmailAuditLogger
+except ImportError:
+    from services.email_logger import EmailAuditLogger
 import backend.config as config
 
 logger = logging.getLogger("aerocrop.controllers.auth")
@@ -27,6 +31,9 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
 # ── Schemas ──────────────────────────────────────────────────────────────────
+class TestEmailRequest(BaseModel):
+    email: str = Field(..., min_length=5, max_length=150, description="Target email address for deliverability testing")
+
 class SendOtpRequest(BaseModel):
     email: str = Field(..., min_length=5, max_length=150, description="Farmer's email address")
     purpose: str = Field("register", description="Purpose: register | login | reset_password")
@@ -122,6 +129,60 @@ async def send_otp(
         "status": "success",
         "message": msg,
         "cooldown_seconds": config.OTP_COOLDOWN_SECONDS,
+    }
+
+
+@router.get("/email-logs", summary="Get runtime email delivery logs and diagnostics")
+async def get_email_logs(
+    limit: int = 50,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Returns real-time email dispatch attempts, status, latency, and error details
+    recorded in memory, MongoDB, and logs/email_runtime.log.
+    """
+    recent = EmailAuditLogger.get_recent_logs(limit=limit)
+    db_logs = []
+    if db is not None:
+        try:
+            cursor = db.email_logs.find({}, {"_id": 0}).sort("created_at", -1).limit(limit)
+            db_logs = await cursor.to_list(length=limit)
+        except Exception as exc:
+            logger.debug("Could not query db email_logs: %s", exc)
+
+    return {
+        "status": "success",
+        "log_file": config.EMAIL_RUNTIME_LOG_PATH,
+        "smtp_server": f"{config.SMTP_HOST}:{config.SMTP_PORT}",
+        "sender_email": config.SMTP_USER,
+        "microservice_url": config.EMAIL_OTP_SERVICE_URL,
+        "recent_in_memory_events": recent,
+        "db_audit_records": db_logs,
+        "runtime_log_tail": EmailAuditLogger.get_runtime_log_tail(max_lines=50),
+    }
+
+
+@router.post("/test-email", summary="Test dispatch an email to verify deliverability")
+async def test_email(
+    req: TestEmailRequest,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """
+    Dispatches a test verification code to the specified email address
+    and returns complete connection, handshake, and deliverability diagnostics.
+    """
+    clean_email = req.email.strip().lower()
+    if not clean_email or "@" not in clean_email or "." not in clean_email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email format")
+
+    code = OtpService.generate_otp()
+    success, msg, audit = await OtpService.dispatch_otp_email(clean_email, code, "test_deliverability")
+    await EmailAuditLogger.record_to_mongodb(db, audit)
+
+    return {
+        "status": "success" if success else "failed",
+        "message": msg,
+        "audit": audit,
     }
 
 
