@@ -45,7 +45,8 @@ DATA_DIR    = os.path.join(BASE_DIR, "data")
 UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
 
 # ─── Database & Auth ──────────────────────────────────────────────────────────
-MONGODB_URL     = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+MONGODB_URL     = os.getenv("MONGODB_URL", os.getenv("MONGODB_URI", "mongodb://localhost:27017"))
+MONGODB_URI     = MONGODB_URL
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "aerocrop")
 
 # Legacy SQLite path (for fallback/migration)
