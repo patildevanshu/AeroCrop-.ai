@@ -133,7 +133,10 @@ TABULAR_NORM = {
 }
 
 # ─── Email Microservice ──────────────────────────────────────────────────────
-EMAIL_MICROSERVICE_BASE_URL = os.getenv("EMAIL_MICROSERVICE_BASE_URL", "http://127.0.0.1:5000")
+EMAIL_MICROSERVICE_BASE_URL = os.getenv(
+    "EMAIL_MICROSERVICE_BASE_URL",
+    "https://aero-email.devanshupatil.tech"
+)
 EMAIL_SERVICE_URL = os.getenv("EMAIL_SERVICE_URL", f"{EMAIL_MICROSERVICE_BASE_URL}/send-email")
 EMAIL_OTP_SERVICE_URL = os.getenv("EMAIL_OTP_SERVICE_URL", f"{EMAIL_MICROSERVICE_BASE_URL}/send-otp")
 

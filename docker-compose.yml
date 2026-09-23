@@ -21,9 +21,9 @@ services:
       - MONGODB_URL=mongodb://mongodb:27017
       - MONGODB_DB_NAME=aerocrop
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-aerocrop-maharashtra-farm-secret-key-2026}
-      - EMAIL_MICROSERVICE_BASE_URL=http://email-service:5000
-      - EMAIL_SERVICE_URL=http://email-service:5000/send-email
-      - EMAIL_OTP_SERVICE_URL=http://email-service:5000/send-otp
+      - EMAIL_MICROSERVICE_BASE_URL=${EMAIL_MICROSERVICE_BASE_URL:-http://email-service:5000}
+      - EMAIL_SERVICE_URL=${EMAIL_SERVICE_URL:-${EMAIL_MICROSERVICE_BASE_URL:-http://email-service:5000}/send-email}
+      - EMAIL_OTP_SERVICE_URL=${EMAIL_OTP_SERVICE_URL:-${EMAIL_MICROSERVICE_BASE_URL:-http://email-service:5000}/send-otp}
       - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-465}
       - SMTP_USER=${SMTP_USER:-${FROM:-${EMAIL_USER:-}}}
