@@ -7,6 +7,7 @@ from unittest.mock import patch, MagicMock, AsyncMock
 from httpx import AsyncClient, ASGITransport, Response
 from main import app
 from services.email_service import EmailService
+import services.email_service as email_service_mod
 
 
 @pytest.mark.anyio
@@ -21,7 +22,7 @@ async def test_email_service_invalid_email():
 
 @pytest.mark.anyio
 async def test_email_service_fallback_when_microservice_unreachable():
-    with patch("config.EMAIL_SERVICE_URL", "http://127.0.0.1:59999/send-email"):
+    with patch.object(email_service_mod.config, "EMAIL_SERVICE_URL", "http://127.0.0.1:59999/send-email"):
         with patch.object(
             EmailService,
             "_send_direct_smtp_sync",
@@ -58,7 +59,7 @@ async def test_email_service_read_timeout_suppresses_duplicate():
 
 @pytest.mark.anyio
 async def test_email_service_both_services_fail_gracefully():
-    with patch("config.EMAIL_SERVICE_URL", "http://127.0.0.1:59999/send-email"):
+    with patch.object(email_service_mod.config, "EMAIL_SERVICE_URL", "http://127.0.0.1:59999/send-email"):
         with patch.object(
             EmailService,
             "_send_direct_smtp_sync",

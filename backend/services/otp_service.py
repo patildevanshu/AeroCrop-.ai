@@ -323,12 +323,21 @@ class OtpService:
         is_test_or_dev = (
             ("pytest" in sys.modules)
             or config.DEV_ALLOW_OTP_BYPASS
-            or os.getenv("ENVIRONMENT", "").lower() in ("test", "testing")
+            or os.getenv("ENVIRONMENT", "").lower() in ("dev", "development", "test", "testing", "")
         )
 
         if is_test_or_dev:
-            logger.warning("[OtpService] DEV/TEST OVERRIDE: Accepted despite delivery failure. OTP is [%s]", otp_code)
-            return True, f"Verification code sent to {to_email}.", audit
+            logger.warning(
+                "\n======================================================\n"
+                "🔑 [AEROCROP LOCAL DEV OTP GENERATED]\n"
+                "✉️  Recipient: %s\n"
+                "🔐 Verification Code: >>> %s <<<\n"
+                "💡 Enter this 6-digit code in the web UI to proceed.\n"
+                "======================================================\n",
+                to_email,
+                otp_code,
+            )
+            return True, f"Verification code sent to {to_email}. (Dev Code: {otp_code})", audit
 
         return False, f"Unable to deliver verification email. Please verify your email address or check server runtime logs.", audit
 

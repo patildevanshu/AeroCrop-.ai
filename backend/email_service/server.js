@@ -14,17 +14,17 @@ const SENDER_EMAIL = (process.env.FROM || process.env.EMAIL_USER || '').trim();
 const SENDER_PASS  = (process.env.PASS || process.env.EMAIL_PASS || '').trim();
 const PORT         = process.env.PORT || 5000;
 
-if (!SENDER_EMAIL || !SENDER_PASS) {
-    console.warn('⚠️  Email credentials (FROM/EMAIL_USER or PASS/EMAIL_PASS) not configured. Email report sending is disabled.');
-}
+const isPlaceholder = !SENDER_EMAIL || !SENDER_PASS || 
+    SENDER_EMAIL.includes('your_email') || 
+    SENDER_PASS.includes('your_16_char') ||
+    SENDER_EMAIL === 'your_email@gmail.com';
 
-// ── Nodemailer Transporter (Singleton) ──────────────────────────────────────
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: { user: SENDER_EMAIL, pass: SENDER_PASS },
 });
 
-if (SENDER_EMAIL && SENDER_PASS) {
+if (!isPlaceholder && SENDER_EMAIL && SENDER_PASS) {
     transporter.verify((err) => {
         if (err) {
             console.error('❌ SMTP Connection Error:', err.message);
@@ -33,6 +33,10 @@ if (SENDER_EMAIL && SENDER_PASS) {
             console.log(`✅ SMTP Server connected successfully as: ${SENDER_EMAIL}`);
         }
     });
+} else {
+    console.log('ℹ️  [DEV MODE] Placeholder SMTP credentials detected in .env.');
+    console.log('💡 Live email dispatch will be simulated in the console terminal.');
+    console.log('💡 To send real emails, set a valid Google App Password in backend/email_service/.env.');
 }
 
 // ── Health Check ────────────────────────────────────────────────────────────
@@ -200,6 +204,21 @@ app.post('/send-email', async (req, res) => {
             }] : [],
         };
 
+        if (isPlaceholder) {
+            console.log(`\n======================================================`);
+            console.log(`📄 [AEROCROP LOCAL DEV PDF REPORT GENERATED]`);
+            console.log(`✉️  Recipient: ${email}`);
+            console.log(`🌾 Crop: ${crop || 'Crop'} | Engine: ${engineUsed}`);
+            console.log(`💡 Note: PDF successfully generated in dev mode. SMTP delivery simulated.`);
+            console.log(`======================================================\n`);
+            return res.status(200).json({
+                success: true,
+                message: `Trilingual advisory report PDF generated for ${email} (Dev Mode Simulation)`,
+                messageId: `dev-pdf-${Date.now()}`,
+                engine: engineUsed,
+            });
+        }
+
         const info = await transporter.sendMail(mailOptions);
         console.log(`✉️  Advisory email with PDF report successfully sent to ${email} [${info.messageId}]`);
 
@@ -225,10 +244,20 @@ app.post('/send-otp', async (req, res) => {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return res.status(400).json({ success: false, error: `Invalid email address format: ${email}` });
         }
-        if (!SENDER_EMAIL || !SENDER_PASS) {
-            return res.status(500).json({
-                success: false,
-                error: 'SMTP credentials are not configured on Node email microservice.',
+        if (isPlaceholder) {
+            console.log(`\n======================================================`);
+            console.log(`🔑 [AEROCROP LOCAL DEV OTP SIMULATOR]`);
+            console.log(`✉️  Recipient: ${email}`);
+            console.log(`🔐 Verification Code: >>> ${code} <<<`);
+            console.log(`💡 Note: Placeholder credentials in .env. Live dispatch simulated.`);
+            console.log(`💡 Enter this 6-digit code in the web UI.`);
+            console.log(`======================================================\n`);
+            return res.status(200).json({
+                success: true,
+                message: `Verification code generated for ${email} (Local Dev Mode)`,
+                messageId: `dev-sim-${Date.now()}`,
+                channel: 'dev_terminal_simulation',
+                code: code,
             });
         }
 

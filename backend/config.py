@@ -158,7 +158,7 @@ SMTP_FROM = os.getenv("SMTP_FROM", f"AeroCrop.ai Support <{SMTP_USER}>")
 SMTP_TIMEOUT_SECONDS = float(os.getenv("SMTP_TIMEOUT_SECONDS", "8.0"))
 OTP_EXPIRY_MINUTES = int(os.getenv("OTP_EXPIRY_MINUTES", "10"))
 OTP_COOLDOWN_SECONDS = int(os.getenv("OTP_COOLDOWN_SECONDS", "30"))
-DEV_ALLOW_OTP_BYPASS = os.getenv("DEV_ALLOW_OTP_BYPASS", "false").lower() == "true"
+DEV_ALLOW_OTP_BYPASS = os.getenv("DEV_ALLOW_OTP_BYPASS", "true" if os.getenv("ENVIRONMENT", "").lower() not in ("prod", "production") else "false").lower() == "true"
 
 # ─── Object Storage Provider (Local Filesystem / AWS S3) ──────────────────────
 STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", "local").lower()
