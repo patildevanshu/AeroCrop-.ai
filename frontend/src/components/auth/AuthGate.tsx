@@ -581,7 +581,11 @@ export const AuthGate: React.FC = () => {
                 }}
               />
               <span style={{ display: 'block', marginTop: '4px', fontSize: '0.74rem', color: '#94a3b8' }}>
-                Check your spam/junk folder if code doesn't arrive within 15 seconds.
+                {language === 'mr'
+                  ? 'कोड थेट ईमेल इनबॉक्समध्ये पाठवला आहे. (काही सेकंदात न दिसल्यास स्पॅम/जंक फोल्डरही तपासा)'
+                  : language === 'hi'
+                  ? 'कोड सीधे ईमेल इनबॉक्स में भेजा गया है। (कुछ सेकंड में न दिखने पर स्पैम/जंक फ़ोल्डर भी जांचें)'
+                  : 'Code sent directly to your inbox. (If delayed, also check Spam/Junk folder)'}
               </span>
             </div>
 

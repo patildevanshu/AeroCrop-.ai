@@ -255,6 +255,15 @@ export const AuthModal: React.FC = () => {
                   textAlign: 'center',
                 }}
               />
+              {otpSent && (
+                <span style={{ display: 'block', marginTop: '4px', fontSize: '0.74rem', color: '#94a3b8', textAlign: 'center' }}>
+                  {language === 'mr'
+                    ? 'कोड थेट ईमेलवर पाठवला आहे. (न दिसल्यास स्पॅम फोल्डरही तपासा)'
+                    : language === 'hi'
+                    ? 'कोड सीधे ईमेल पर भेजा गया है। (न दिखने पर स्पैम फ़ोल्डर भी देखें)'
+                    : 'Code sent to your email inbox. (Also check Spam folder if delayed)'}
+                </span>
+              )}
             </div>
 
             <div className="form-group">

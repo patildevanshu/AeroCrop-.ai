@@ -240,32 +240,30 @@ app.post('/send-otp', async (req, res) => {
         const title = purposeTitles[purpose] || 'Verification Code / पडताळणी कोड';
 
         const mailOptions = {
-            from: `"AeroCrop.ai Support" <${SENDER_EMAIL}>`,
+            from: `"AeroCrop" <${SENDER_EMAIL}>`,
             to: email,
-            subject: `🌱 AeroCrop.ai Verification Code: ${code}`,
-            text: `AeroCrop.ai Verification Code\n\nYour code is: ${code}\nThis code is valid for 10 minutes.\nIf you did not request this, please ignore.\nSupport: support@devanshupatil.tech`,
+            replyTo: SENDER_EMAIL,
+            subject: `${code} is your AeroCrop verification code`,
+            text: `Your AeroCrop verification code is: ${code}\n\nThis code expires in 10 minutes.\nIf you did not request this, please disregard.\n\nAeroCrop.ai — Precision Farming & Agricultural Advisory`,
             html: `
-<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:auto;background:#13221c;border:1px solid #1f3b2e;border-radius:14px;overflow:hidden;color:#e2e8f0;padding:24px;">
-  <div style="text-align:center;padding-bottom:16px;border-bottom:1px solid #234b39;">
-    <h1 style="margin:0;font-size:24px;color:#10b981;">🌱 AeroCrop<span style="color:#6ee7b7;">.ai</span></h1>
-    <p style="margin:4px 0 0;font-size:12px;color:#94a3b8;text-transform:uppercase;">Intelligent Agricultural Advisory</p>
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:480px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;color:#1e293b;padding:0;box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+  <div style="text-align:center;padding:24px 28px;background:#064e3b;">
+    <h1 style="margin:0;font-size:22px;color:#ffffff;">🌱 AeroCrop<span style="color:#34d399;">.ai</span></h1>
+    <p style="margin:4px 0 0;font-size:11px;color:#a7f3d0;text-transform:uppercase;letter-spacing:0.6px;">Precision Farming &amp; Agricultural Advisory</p>
   </div>
-  <div style="padding:24px 8px;text-align:center;">
-    <h2 style="font-size:18px;color:#f8fafc;margin:0 0 12px;">${title}</h2>
-    <p style="font-size:14px;color:#cbd5e1;margin:0 0 20px;">Use the 6-digit code below to complete your verification for <strong>${escapeHtml(email)}</strong>:</p>
-    <div style="background:#0d1b15;border:2px dashed #10b981;border-radius:10px;padding:18px;display:inline-block;margin:0 auto 20px;">
-      <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#34d399;font-family:monospace;">${escapeHtml(code)}</span>
+  <div style="padding:28px 30px;">
+    <h2 style="font-size:18px;color:#0f172a;margin:0 0 12px;">${title}</h2>
+    <p style="font-size:14px;color:#475569;margin:0 0 16px;">Use the verification code below to verify <strong>${escapeHtml(email)}</strong> on the AeroCrop platform:</p>
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:18px 20px;text-align:center;margin:18px 0;">
+      <span style="font-size:34px;font-weight:800;letter-spacing:8px;color:#065f46;font-family:Consolas,'Courier New',monospace;display:inline-block;">${escapeHtml(code)}</span>
+      <p style="margin:8px 0 0 0;font-size:12px;color:#15803d;font-weight:500;">Valid for 10 minutes &bull; Do not share this code</p>
     </div>
-    <p style="font-size:12px;color:#94a3b8;margin:0;">⏱️ Valid for 10 minutes. If you cannot find this in your inbox, check your Spam or Junk folder.</p>
+    <p style="margin:18px 0 0 0;font-size:12px;color:#64748b;line-height:1.5;">If you did not make this request, you can safely disregard this message.</p>
   </div>
-  <div style="border-top:1px solid #1a3227;padding-top:16px;font-size:11px;color:#64748b;text-align:center;">
-    &copy; 2026 AeroCrop.ai Platform • Precision Farming & Pathology Advisory
+  <div style="border-top:1px solid #e2e8f0;padding:16px 28px;font-size:11px;color:#94a3b8;text-align:center;background:#f8fafc;">
+    &copy; 2026 AeroCrop.ai &bull; Maharashtra Agricultural Advisory Platform
   </div>
 </div>`,
-            headers: {
-                'X-Mailer': 'AeroCrop.ai Microservice Engine v3',
-                'Auto-Submitted': 'auto-generated',
-            },
         };
 
         const info = await transporter.sendMail(mailOptions);
