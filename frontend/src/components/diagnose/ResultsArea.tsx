@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PredictionResult } from '../../types';
 import { useI18n } from '../../context/I18nContext';
 import { MetricCards } from './MetricCards';
 import { TreatmentCard } from './TreatmentCard';
 import { MandiCard } from './MandiCard';
+import { EmailReportModal } from './EmailReportModal';
 
 interface ResultsAreaProps {
   result: PredictionResult;
@@ -30,6 +31,8 @@ const SUPPORTED_CROPS = [
 export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
   const { language, t } = useI18n();
   const { mock_mode, low_confidence, saved_record_id, disease, weather, mandi } = result;
+
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   const isOod = Boolean(result.out_of_distribution || disease?.name?.includes('No Match'));
 
@@ -182,6 +185,79 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
             </div>
           )}
 
+          {/* Action Bar: Create Report & Send to Email Button */}
+          <div
+            className="report-email-action-bar"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '14px',
+              marginBottom: '20px',
+              background: 'linear-gradient(135deg, rgba(240, 253, 244, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%)',
+              border: '1.5px solid rgba(16, 185, 129, 0.35)',
+              borderRadius: '14px',
+              padding: '14px 20px',
+              boxShadow: '0 4px 16px rgba(16, 185, 129, 0.08)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ffffff',
+                  fontSize: '1.25rem',
+                  boxShadow: '0 4px 10px rgba(16, 185, 129, 0.25)',
+                }}
+              >
+                📄
+              </div>
+              <div>
+                <strong style={{ fontSize: '0.98rem', color: '#166534', display: 'block', fontWeight: 700 }}>
+                  {language === 'mr'
+                    ? 'सविस्तर कृषी सल्लागार अहवाल (Trilingual Advisory PDF)'
+                    : (language === 'hi' ? 'विस्तृत कृषि परामर्श रिपोर्ट (Trilingual Advisory PDF)' : 'Comprehensive Crop Advisory PDF')}
+                </strong>
+                <span style={{ fontSize: '0.82rem', color: '#475569' }}>
+                  {language === 'mr'
+                    ? 'मराठी, हिंदी व इंग्रजीमधील संपूर्ण फवारणी व खत व्यवस्थापन अहवाल'
+                    : (language === 'hi'
+                      ? 'मराठी, हिंदी एवं अंग्रेजी में संपूर्ण छिड़काव व उर्वरक प्रबंधन रिपोर्ट'
+                      : '3-Page trilingual report with chemical dosages, organic remedies, and weather window')}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 22px',
+                fontSize: '0.92rem',
+                fontWeight: 700,
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.3)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onClick={() => setIsEmailModalOpen(true)}
+            >
+              <span>📩</span>
+              <span>{t('btn_create_send_report')}</span>
+            </button>
+          </div>
+
           {/* Metric Cards Row */}
           <MetricCards result={result} />
 
@@ -194,6 +270,13 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
           {mandi && <MandiCard mandi={mandi} />}
         </>
       )}
+
+      {/* On-Demand Email Report Modal */}
+      <EmailReportModal
+        isOpen={isEmailModalOpen}
+        result={result}
+        onClose={() => setIsEmailModalOpen(false)}
+      />
     </div>
   );
 };

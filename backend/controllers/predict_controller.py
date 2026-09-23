@@ -339,29 +339,11 @@ async def predict(
         except Exception as exc:
             logger.warning("[PredictController] Could not persist diagnosis: %s", exc)
 
-    # ── 7. Queue Email Advisory PDF Dispatch if Email is Available ────────────
+    # ── 7. Email Advisory PDF Dispatch is User-Initiated ───────────────────────
+    # Automatic email dispatch on every prediction is disabled per user preference.
+    # The farmer can click "Create Report & Send to Email" on-demand whenever needed.
     target_email = email.strip() if email and email.strip() else (optional_user.email if optional_user and optional_user.email else None)
-    farmer_name = optional_user.full_name if optional_user else "Farmer"
     email_status = None
-
-    if target_email and is_valid_email(target_email) and not is_ood:
-        email_report_data = {
-            "crop": final_crop_name,
-            "district": district.title(),
-            "yield_t_ha": result["yield_t_ha"],
-            "yield_loss_pct": result.get("yield_loss_pct"),
-            "baseline_yield_t_ha": result.get("baseline_yield_t_ha"),
-            "yield_reason": result.get("yield_reason"),
-            "disease": disease_payload,
-            "weather": weather,
-        }
-        background_tasks.add_task(
-            EmailService.dispatch_report_email,
-            farmer_email=target_email,
-            report_data=email_report_data,
-            farmer_name=farmer_name,
-        )
-        email_status = "queued"
 
     # ── 8. Compose final response ─────────────────────────────────────────────
     return JSONResponse({

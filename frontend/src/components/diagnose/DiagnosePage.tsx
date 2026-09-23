@@ -137,12 +137,6 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
         showToast('Analysis completed successfully!', 'success');
       }
 
-      if (!data.out_of_distribution && (data.email_status === 'queued' || data.email_recipient)) {
-        setTimeout(() => {
-          showToast(`📧 Report is sent on email also (${data.email_recipient || farmerEmail.trim()})!`, 'success');
-        }, 800);
-      }
-
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PredictionResult } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useI18n } from '../../context/I18nContext';
 import { sendEmailReport } from '../../api/predict';
 
 interface EmailReportModalProps {
@@ -17,6 +18,7 @@ export const EmailReportModal: React.FC<EmailReportModalProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const { showToast } = useToast();
+  const { t } = useI18n();
 
   const [email, setEmail] = useState('');
   const [farmerName, setFarmerName] = useState('');
@@ -50,7 +52,7 @@ export const EmailReportModal: React.FC<EmailReportModalProps> = ({
         weather: result.weather,
       });
 
-      showToast(`📧 Report is sent on email also (${email.trim()})!`, 'success');
+      showToast(`📧 Report sent to ${email.trim()} successfully!`, 'success');
       onClose();
     } catch (err: any) {
       showToast(`Failed to send email report: ${err.message}`, 'error');
@@ -67,10 +69,10 @@ export const EmailReportModal: React.FC<EmailReportModalProps> = ({
         </button>
 
         <h2 id="email-modal-title" className="card-title">
-          📧 <span>Email Crop Advisory PDF</span>
+          📧 <span>{t('email_modal_title')}</span>
         </h2>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '4px 0 16px' }}>
-          Dispatch an agronomic prescription & PMFBY damage report directly to your inbox.
+          {t('email_modal_desc')}
         </p>
 
         <div
@@ -91,7 +93,7 @@ export const EmailReportModal: React.FC<EmailReportModalProps> = ({
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="report-farmer-name">Farmer Name</label>
+            <label htmlFor="report-farmer-name">{t('full_name', 'Farmer Name')}</label>
             <input
               id="report-farmer-name"
               type="text"
@@ -102,7 +104,7 @@ export const EmailReportModal: React.FC<EmailReportModalProps> = ({
           </div>
 
           <div className="form-group">
-            <label htmlFor="report-email">Recipient Email Address</label>
+            <label htmlFor="report-email">{t('email_recipient_label', 'Recipient Email Address')}</label>
             <input
               id="report-email"
               type="email"
@@ -132,7 +134,7 @@ export const EmailReportModal: React.FC<EmailReportModalProps> = ({
               {isSubmitting ? (
                 <span className="btn-spinner" />
               ) : (
-                <span className="btn-text">Send PDF Report</span>
+                <span className="btn-text">🚀 {t('btn_send_pdf_now', 'Send PDF Report')}</span>
               )}
             </button>
           </div>
