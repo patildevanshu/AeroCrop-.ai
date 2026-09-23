@@ -78,10 +78,10 @@ export const AnalyzingOverlay: React.FC<AnalyzingOverlayProps> = ({
         color: '#4ade80',
       },
       {
-        agency: 'ICAR',
-        icon: '🧪',
-        title: `ICAR & MPKV Rahuri Soil N-P-K Matrix`,
-        detail: `Evaluating soil macronutrient reserves vs. standard PoP crop demand baselines...`,
+        agency: 'IMD',
+        icon: '🌤️',
+        title: `Agro-Meteorological Telemetry Analysis`,
+        detail: `Evaluating microclimatic suitability (temperature, relative humidity, precipitation) vs. crop tolerance baselines...`,
         color: '#fbbf24',
       },
       {
@@ -146,9 +146,9 @@ export const AnalyzingOverlay: React.FC<AnalyzingOverlayProps> = ({
         `[${now}] [CUDA-TORCH] Input tensor normalized: shape [1, 3, 224, 224] across RGB channels`,
         `[${now}] [OPEN-METEO] Telemetry synoptic station latency: 28ms`,
         `[${now}] [RESNET-18] Layer4 bottleneck forward pass completed in 14.2ms`,
-        `[${now}] [TABULAR-MLP] Ingested 6-dim agro-climate feature vector`,
+        `[${now}] [TABULAR-MLP] Ingested 3-dim agro-meteorological feature vector`,
         `[${now}] [FUSION-CORE] Concatenated visual (512-D) + tabular (64-D) -> 128-D latent state`,
-        `[${now}] [ICAR-MPKV] Calculated nutrient balance deficit for targeted physiological stage`,
+        `[${now}] [AGRO-MET] Evaluated microclimatic disease risk & spray window criteria`,
       ];
 
       setTerminalLogs((prev) => {

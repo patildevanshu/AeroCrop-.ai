@@ -410,8 +410,6 @@ body {
 
 .form-group select option { background: var(--bg-surface); }
 
-.npk-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
@@ -569,37 +567,6 @@ body {
   border: 1px solid rgba(255,255,255,0.05);
 }
 .treatment-list li::before { content: '•'; color: var(--accent-green); font-size: 1.1rem; flex-shrink: 0; margin-top: -1px; }
-
-/* ── Fertilizer Card ──────────────────────────────────────────────────────── */
-.fert-interp {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 18px;
-  padding: 10px 14px;
-  background: rgba(34,197,94,0.06);
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(34,197,94,0.12);
-}
-
-.fert-cards { display: flex; flex-direction: column; gap: 10px; }
-
-.fert-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px;
-  background: rgba(255,255,255,0.03);
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255,255,255,0.06);
-  transition: all var(--t-base) var(--ease);
-}
-.fert-item:hover { border-color: var(--glass-border); background: rgba(255,255,255,0.05); }
-
-.fert-icon { font-size: 1.4rem; }
-.fert-name { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
-.fert-qty  { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--accent-cyan); }
-.fert-note { font-size: 0.72rem; color: var(--text-muted); }
 
 /* ── Chart Card ───────────────────────────────────────────────────────────── */
 .chart-card { margin-bottom: 0; }
@@ -912,7 +879,6 @@ body {
 @media (max-width: 600px) {
   .metrics-row { grid-template-columns: 1fr 1fr; }
   .stats-row   { grid-template-columns: 1fr 1fr; }
-  .npk-grid    { grid-template-columns: 1fr; }
   .page-header { flex-direction: column; }
   .weather-strip { order: -1; }
   .weather-radar { grid-template-columns: repeat(2, 1fr); }

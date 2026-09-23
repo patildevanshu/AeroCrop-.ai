@@ -2,7 +2,7 @@
 AeroCrop.ai — Prepare Indian Crop Yield Dataset
 
 Extracts crop_yield.xlsx from archive (5).zip in Downloads,
-processes agricultural features (sample-varying N, P, K, seasonal weather),
+processes agricultural features (agro-meteorological telemetry: temperature, humidity, rainfall),
 and outputs data/crop_yield.csv for model training.
 """
 
