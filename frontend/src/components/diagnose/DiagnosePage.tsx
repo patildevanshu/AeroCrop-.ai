@@ -114,8 +114,8 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
         setWeather(data.weather);
       }
 
-      // If not persisted to server records, save to local storage history
-      if (!data.saved_record_id) {
+      // If not persisted to server records, save to local storage history (skip if OOD / no match)
+      if (!data.saved_record_id && !data.out_of_distribution) {
         saveToLocalHistory({
           created_at: new Date().toISOString(),
           crop_type: data.crop,
@@ -127,13 +127,17 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
           is_healthy: data.disease.is_healthy,
           image_url: data.image_url,
         });
-      } else {
+      } else if (data.saved_record_id) {
         await refreshPlots();
       }
 
-      showToast('Analysis completed successfully!', 'success');
+      if (data.out_of_distribution) {
+        showToast('⚠️ Crop specimen not found in trained dataset (No Match).', 'warning');
+      } else {
+        showToast('Analysis completed successfully!', 'success');
+      }
 
-      if (data.email_status === 'queued' || data.email_recipient) {
+      if (!data.out_of_distribution && (data.email_status === 'queued' || data.email_recipient)) {
         setTimeout(() => {
           showToast(`📧 Report is sent on email also (${data.email_recipient || farmerEmail.trim()})!`, 'success');
         }, 800);

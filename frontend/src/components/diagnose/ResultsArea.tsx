@@ -9,9 +9,29 @@ interface ResultsAreaProps {
   result: PredictionResult;
 }
 
+const SUPPORTED_CROPS = [
+  { icon: '🍅', en: 'Tomato', mr: 'टोमॅटो', hi: 'टमाटर' },
+  { icon: '🥔', en: 'Potato', mr: 'बटाटा', hi: 'आलू' },
+  { icon: '🌿', en: 'Cotton', mr: 'कापूस', hi: 'कपास' },
+  { icon: '🌾', en: 'Wheat', mr: 'गहू', hi: 'गेहूं' },
+  { icon: '🎋', en: 'Sugarcane', mr: 'ऊस', hi: 'गन्ना' },
+  { icon: '🫘', en: 'Soybean', mr: 'सोयाबीन', hi: 'सोयाबीन' },
+  { icon: '🍌', en: 'Banana', mr: 'केळी', hi: 'केला' },
+  { icon: '🌽', en: 'Maize / Corn', mr: 'मका', hi: 'मक्का' },
+  { icon: '🍚', en: 'Rice / Paddy', mr: 'भात', hi: 'चावल' },
+  { icon: '🧅', en: 'Onion', mr: 'कांदा', hi: 'प्याज' },
+  { icon: '🌶️', en: 'Chili / Pepper', mr: 'मिरची', hi: 'मिर्च' },
+  { icon: '🍊', en: 'Orange', mr: 'संत्रा', hi: 'संतरा' },
+  { icon: '🍇', en: 'Grape', mr: 'द्राक्षे', hi: 'अंगूर' },
+  { icon: '🍎', en: 'Apple', mr: 'सफरचंद', hi: 'सेब' },
+  { icon: '🟡', en: 'Turmeric', mr: 'हळद', hi: 'हल्दी' },
+];
+
 export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
   const { language, t } = useI18n();
   const { mock_mode, low_confidence, saved_record_id, disease, weather, mandi } = result;
+
+  const isOod = Boolean(result.out_of_distribution || disease?.name?.includes('No Match'));
 
   const sprayWindow = weather?.spray_window;
   const sprayReason = sprayWindow
@@ -21,10 +41,17 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
     ? (sprayWindow.safe ? t('spray_safe') : (sprayWindow.status === 'warning' ? t('spray_caution') : t('spray_hold')))
     : '';
 
+  const handleRetryUpload = () => {
+    const uploadElem = document.getElementById('upload-card') || document.querySelector('.upload-card');
+    if (uploadElem) {
+      uploadElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   return (
     <div id="results-area" className="results-area" aria-live="polite" aria-label="Analysis results">
       {/* Mock Mode Banner */}
-      {mock_mode && (
+      {mock_mode && !isOod && (
         <div className="mock-banner" role="alert">
           <span aria-hidden="true">⚡</span>
           <span>{t('mock_mode_notice')}</span>
@@ -32,77 +59,14 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
       )}
 
       {/* Saved to History Badge */}
-      {saved_record_id && (
+      {saved_record_id && !isOod && (
         <div className="saved-history-banner" role="status">
           <span aria-hidden="true">💾</span>
           <span>{t('saved_records_notice')}</span>
         </div>
       )}
 
-      {/* Out of Distribution / Unrecognized Specimen Advisory */}
-      {result.out_of_distribution ? (
-        <div className="ood-advisory-card" role="alert">
-          <div className="ood-icon-box" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-          </div>
-          <div className="ood-body">
-            <div className="ood-badge-row">
-              <span className="ood-pill warning">
-                <span aria-hidden="true">⚠️</span>
-                <span>{language === 'mr' ? 'पडताळणी सूचना' : (language === 'hi' ? 'सत्यापन सूचना' : 'Validation Notice')}</span>
-              </span>
-              <span className="ood-pill internal">
-                <span aria-hidden="true">⚡</span>
-                <span>{language === 'mr' ? 'अंतर्गत मॉडेल सक्रिय' : (language === 'hi' ? 'आंतरिक मॉडल सक्रिय' : 'Internal Model Active')}</span>
-              </span>
-            </div>
-
-            <h3 className="ood-title">
-              {language === 'mr'
-                ? 'वनस्पती किंवा रोग कदाचित डेटासेटमध्ये उपस्थित नसू शकतो'
-                : (language === 'hi'
-                  ? 'यह पौधा या रोग संभवतः डेटासेट में मौजूद नहीं हो सकता है'
-                  : 'Specimen May Not Be in Trained Dataset')}
-            </h3>
-
-            <p className="ood-desc">
-              {language === 'mr'
-                ? 'आमच्या दुय्यम पडताळणीनुसार ही वनस्पती किंवा रोग आमच्या 134-रोग डेटासेटमध्ये उपस्थित नसू शकतो (याची कोणतीही खात्री नाही). आपल्या मार्गदर्शनासाठी खालील निदान आमच्या अंतर्गत न्यूरल मॉडेलच्या सर्वोत्तम संभाव्य अंदाजावर आधारित आहे.'
-                : (language === 'hi'
-                  ? 'सत्यापन के अनुसार यह पौधा या रोग हमारे 134-रोग डेटासेट में मौजूद नहीं हो सकता है (इसकी कोई गारंटी नहीं है)। आपकी सहायता के लिए नीचे दिया गया निदान हमारे आंतरिक न्यूरल मॉडल के सर्वोत्तम संभव अनुमान पर आधारित है।'
-                  : 'Our secondary validator indicates this plant or disease specimen may not be present in our 134-class dataset (this is not guaranteed). To guide you, the diagnosis below is provided by our internal model as its closest agronomic estimate.')}
-            </p>
-
-            <div className="ood-tip-bar">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4" />
-                <path d="M12 8h.01" />
-              </svg>
-              <span>
-                {language === 'mr'
-                  ? 'शेतकरी सल्ला: अचूक निदानासाठी, चांगल्या सूर्यप्रकाशात एकाच पानाचा स्वच्छ आणि स्पष्ट फोटो काढा.'
-                  : (language === 'hi'
-                    ? 'किसान सलाह: सटीक परिणाम के लिए, प्राकृतिक रोशनी में एक पत्ती का स्पष्ट और केंद्रित फोटो लें।'
-                    : 'Farmer Tip: For highest diagnostic confidence, capture a sharp photo focused directly on leaf lesions in natural daylight.')}
-              </span>
-            </div>
-          </div>
-        </div>
-      ) : (
-        low_confidence && (
-          <div className="low-conf-banner" role="alert">
-            <span aria-hidden="true">⚠️</span>
-            <span>{t('low_confidence_notice')}</span>
-          </div>
-        )
-      )}
-
-      {/* Smart Spraying Window Weather Advisory Banner */}
+      {/* Smart Spraying Window Weather Advisory Banner (Always relevant for farmer's district) */}
       {sprayWindow && (
         <div
           className={`spray-window-banner ${sprayWindow.status}`}
@@ -138,17 +102,100 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
         </div>
       )}
 
-      {/* Metric Cards Row */}
-      <MetricCards result={result} />
+      {/* Out of Distribution / Unrecognized Specimen: Dedicated No Match Display */}
+      {isOod ? (
+        <div className="ood-no-match-card" role="alert">
+          <div className="ood-header-row">
+            <div className="ood-header-icon" aria-hidden="true">
+              🔍❌
+            </div>
+            <div className="ood-header-content">
+              <div className="ood-badge-row">
+                <span className="ood-pill warning">
+                  <span aria-hidden="true">⚠️</span>
+                  <span>{t('ood_no_match_badge')}</span>
+                </span>
+                <span className="ood-pill internal">
+                  <span aria-hidden="true">🔬</span>
+                  <span>
+                    {language === 'mr'
+                      ? '१३४-रोग डेटासेट तपासणी'
+                      : (language === 'hi' ? '134-रोग डेटासेट जांच' : '134-Class Dataset Screened')}
+                  </span>
+                </span>
+              </div>
 
-      {/* Treatment Row */}
-      <div style={{ marginBottom: '20px' }}>
-        <TreatmentCard disease={disease} />
-      </div>
+              <h3 className="ood-main-title">{t('ood_no_match_title')}</h3>
+              <p className="ood-main-desc">{t('ood_no_match_desc')}</p>
+            </div>
+          </div>
 
-      {/* Mandi Intelligence Card */}
-      {mandi && <MandiCard mandi={mandi} />}
+          {/* Supported Crops Badges */}
+          <div className="ood-supported-section">
+            <div className="ood-section-title">
+              <span aria-hidden="true">🌾</span>
+              <span>{t('ood_supported_crops_heading')}</span>
+            </div>
+            <div className="ood-crops-grid">
+              {SUPPORTED_CROPS.map((c, idx) => (
+                <div key={idx} className="ood-crop-chip">
+                  <span aria-hidden="true">{c.icon}</span>
+                  <span>
+                    {language === 'mr' ? `${c.mr} (${c.en})` : (language === 'hi' ? `${c.hi} (${c.en})` : c.en)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Guidance / Tips Box */}
+          <div className="ood-tips-section">
+            <div className="ood-section-title">
+              <span aria-hidden="true">💡</span>
+              <span>{t('ood_how_to_capture_heading')}</span>
+            </div>
+            <ul className="ood-tips-list">
+              <li>{t('ood_tip_1')}</li>
+              <li>{t('ood_tip_2')}</li>
+            </ul>
+          </div>
+
+          {/* Try Again Action Button */}
+          <div className="ood-actions">
+            <button
+              type="button"
+              className="btn-ood-retry"
+              onClick={handleRetryUpload}
+            >
+              <span aria-hidden="true">🔄</span>
+              <span>{t('ood_try_again_btn')}</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Low Confidence Notice for supported crops with blurry/unclear leaves */}
+          {low_confidence && (
+            <div className="low-conf-banner" role="alert">
+              <span aria-hidden="true">⚠️</span>
+              <span>{t('low_confidence_notice')}</span>
+            </div>
+          )}
+
+          {/* Metric Cards Row */}
+          <MetricCards result={result} />
+
+          {/* Treatment Row */}
+          <div style={{ marginBottom: '20px' }}>
+            <TreatmentCard disease={disease} />
+          </div>
+
+          {/* Mandi Intelligence Card */}
+          {mandi && <MandiCard mandi={mandi} />}
+        </>
+      )}
     </div>
   );
 };
+
 

@@ -192,64 +192,88 @@ async def predict(
     # ── 4. Disease knowledge lookup & Automatic Crop Resolution ──────────────
     disease_idx  = result["disease_class"]
     disease_info = DiseaseService.get_by_index(disease_idx)
+    is_ood = bool(result.get("out_of_distribution"))
 
-    # Automatically detect crop from visual disease taxonomy or user selection
-    if crop and crop.lower() != "auto":
-        detected_crop_raw = crop.strip().capitalize()
+    if is_ood:
+        final_crop_name = "Unsupported Crop / No Match"
+        effective_crop_key = "unsupported"
+        disease_payload = {
+            "class_index":  -1,
+            "name":         "No Match Found (Specimen Not in Dataset)",
+            "crop":         "Unsupported Crop",
+            "is_healthy":   False,
+            "severity":     "N/A",
+            "description":  result.get("ood_reason") or "Uploaded plant or foliage specimen does not match any crop in our 134-disease agricultural dataset.",
+            "chemical_treatment": [],
+            "organic_treatment": [],
+            "chemical_cost": "₹0 / Acre",
+            "organic_cost":  "₹0 / Acre",
+            "confidence":   round(result.get("confidence", 0.0) * 100, 2),
+            "probabilities": [],
+            "warning":      result.get("ood_reason"),
+        }
+        mandi_payload = None
+        result["yield_t_ha"] = 0.0
+        result["yield_category"] = "unsupported"
+        result["yield_category_label"] = "N/A"
     else:
-        detected_crop_raw = disease_info.crop if disease_info else "Tomato"
-    
-    # Standardize crop key for mandi lookups & agronomic validation
-    det_lower = detected_crop_raw.lower().strip()
-    norm_key = normalize_crop_name(det_lower)
-    if norm_key in config.SUPPORTED_CROPS:
-        effective_crop_key = norm_key
-    elif det_lower in config.SUPPORTED_CROPS:
-        effective_crop_key = det_lower
-    else:
-        effective_crop_key = "tomato"
-
-    final_crop_name = detected_crop_raw
-
-    # Final agronomic calibration and clamping against the resolved crop
-    bounds = AGRONOMIC_YIELD_BOUNDS.get(effective_crop_key)
-    if bounds:
-        min_y, max_y = bounds["min"], bounds["max"]
-        curr_y = float(result.get("yield_t_ha", bounds["typical"]))
-        if curr_y > max_y * 1.25 or curr_y < min_y * 0.65:
-            result["yield_t_ha"] = round(min(max_y, max(min_y, bounds["typical"])), 2)
+        # Automatically detect crop from visual disease taxonomy or user selection
+        if crop and crop.lower() != "auto":
+            detected_crop_raw = crop.strip().capitalize()
         else:
-            result["yield_t_ha"] = round(min(max_y, max(min_y, curr_y)), 2)
-        result["yield_category"] = bounds["category"]
-        result["yield_category_label"] = bounds["category_label"]
-    else:
-        result.setdefault("yield_category", "general_crop")
-        result.setdefault("yield_category_label", "Crop Yield")
+            detected_crop_raw = disease_info.crop if disease_info else "Tomato"
+        
+        # Standardize crop key for mandi lookups & agronomic validation
+        det_lower = detected_crop_raw.lower().strip()
+        norm_key = normalize_crop_name(det_lower)
+        if norm_key in config.SUPPORTED_CROPS:
+            effective_crop_key = norm_key
+        elif det_lower in config.SUPPORTED_CROPS:
+            effective_crop_key = det_lower
+        else:
+            effective_crop_key = "tomato"
 
-    disease_payload = {
-        "class_index":  disease_idx,
-        "name":         disease_info.name         if disease_info else f"Class {disease_idx}",
-        "crop":         final_crop_name,
-        "is_healthy":   disease_info.is_healthy   if disease_info else False,
-        "severity":     disease_info.severity     if disease_info else "Unknown",
-        "description":  disease_info.description  if disease_info else "",
-        "chemical_treatment": disease_info.chemical_treatment if disease_info else [],
-        "organic_treatment":  disease_info.organic_treatment  if disease_info else [],
-        "chemical_cost": disease_info.chemical_cost_display if disease_info else "₹0 / Acre",
-        "organic_cost":  disease_info.organic_cost_display  if disease_info else "₹0 / Acre",
-        "confidence":   round(result["confidence"] * 100, 2),
-        "probabilities": result["probabilities"],
-        "warning":      result.get("ood_reason") if result.get("out_of_distribution") else None,
-    }
+        final_crop_name = detected_crop_raw
 
-    # ── 5. Mandi price intelligence & revenue forecast for the AUTO-DETECTED crop
-    mandi_payload = MandiService.get_market_rate(district, crop=effective_crop_key, yield_t_ha=result["yield_t_ha"])
+        # Final agronomic calibration and clamping against the resolved crop
+        bounds = AGRONOMIC_YIELD_BOUNDS.get(effective_crop_key)
+        if bounds:
+            min_y, max_y = bounds["min"], bounds["max"]
+            curr_y = float(result.get("yield_t_ha", bounds["typical"]))
+            if curr_y > max_y * 1.25 or curr_y < min_y * 0.65:
+                result["yield_t_ha"] = round(min(max_y, max(min_y, bounds["typical"])), 2)
+            else:
+                result["yield_t_ha"] = round(min(max_y, max(min_y, curr_y)), 2)
+            result["yield_category"] = bounds["category"]
+            result["yield_category_label"] = bounds["category_label"]
+        else:
+            result.setdefault("yield_category", "general_crop")
+            result.setdefault("yield_category_label", "Crop Yield")
+
+        disease_payload = {
+            "class_index":  disease_idx,
+            "name":         disease_info.name         if disease_info else f"Class {disease_idx}",
+            "crop":         final_crop_name,
+            "is_healthy":   disease_info.is_healthy   if disease_info else False,
+            "severity":     disease_info.severity     if disease_info else "Unknown",
+            "description":  disease_info.description  if disease_info else "",
+            "chemical_treatment": disease_info.chemical_treatment if disease_info else [],
+            "organic_treatment":  disease_info.organic_treatment  if disease_info else [],
+            "chemical_cost": disease_info.chemical_cost_display if disease_info else "₹0 / Acre",
+            "organic_cost":  disease_info.organic_cost_display  if disease_info else "₹0 / Acre",
+            "confidence":   round(result["confidence"] * 100, 2),
+            "probabilities": result["probabilities"],
+            "warning":      result.get("ood_reason") if result.get("out_of_distribution") else None,
+        }
+
+        # ── 5. Mandi price intelligence & revenue forecast for the AUTO-DETECTED crop
+        mandi_payload = MandiService.get_market_rate(district, crop=effective_crop_key, yield_t_ha=result["yield_t_ha"])
 
     # ── 6. Persist to database if authenticated ──────────────────────────────
     saved_record_id = None
     saved_image_url = None
 
-    if optional_user:
+    if optional_user and not is_ood:
         # Authorization check: verify plot belongs to current user
         valid_plot_id = None
         if plot_id:
@@ -320,7 +344,7 @@ async def predict(
     farmer_name = optional_user.full_name if optional_user else "Farmer"
     email_status = None
 
-    if target_email and is_valid_email(target_email):
+    if target_email and is_valid_email(target_email) and not is_ood:
         email_report_data = {
             "crop": final_crop_name,
             "district": district.title(),
