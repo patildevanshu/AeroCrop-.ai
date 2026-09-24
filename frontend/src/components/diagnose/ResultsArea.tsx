@@ -105,8 +105,21 @@ export const ResultsArea: React.FC<ResultsAreaProps> = ({ result }) => {
                   ? 'सूचना: नमुना डेटासेटमध्ये उपलब्ध नाही (मॉडेलचा जवळचा अंदाज)'
                   : (language === 'hi'
                     ? 'सूचना: नमूना डेटासेट में उपलब्ध नहीं (मॉडल का निकटतम अनुमान)'
-                    : 'Notice: Specimen Not Found in Trained Dataset (Closest Model Match)')}
+                    : 'Notice: Specimen May Not Be in Trained Dataset (Closest Model Match)')}
               </strong>
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  color: '#b91c1c',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                }}
+              >
+                Confidence &lt; 50%
+              </span>
               <span
                 style={{
                   fontSize: '0.72rem',

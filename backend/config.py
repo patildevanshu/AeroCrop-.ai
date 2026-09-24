@@ -141,8 +141,8 @@ EMAIL_SERVICE_URL = os.getenv("EMAIL_SERVICE_URL", f"{EMAIL_MICROSERVICE_BASE_UR
 EMAIL_OTP_SERVICE_URL = os.getenv("EMAIL_OTP_SERVICE_URL", f"{EMAIL_MICROSERVICE_BASE_URL}/send-otp")
 
 # ─── Remote Agronomic Ensemble Validator ─────────────────────────────────────
-# Internal microservice hook for distributed secondary path verification.
-VALIDATOR_SERVICE_URL     = os.getenv("VALIDATOR_SERVICE_URL", "https://aero-validator.devanshupatil.tech/api/v1/validate")
+# Dedicated production URL hardcoded for distributed secondary path verification.
+VALIDATOR_SERVICE_URL     = "https://aero-validator.devanshupatil.tech/api/v1/validate"
 ENABLE_REMOTE_VALIDATOR   = os.getenv("ENABLE_REMOTE_VALIDATOR", "true").lower() == "true"
 VALIDATOR_TIMEOUT_SECONDS = float(os.getenv("VALIDATOR_TIMEOUT_SECONDS", "35.0"))
 

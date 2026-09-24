@@ -124,7 +124,7 @@ export const DiagnosePage: React.FC<DiagnosePageProps> = ({ initialPlotId = '', 
       }
 
       if (data.out_of_distribution) {
-        showToast('⚠️ Specimen may not be in dataset (<40% conf). Showing closest model estimate.', 'warning');
+        showToast('⚠️ Specimen may not be in dataset (<50% conf). Showing closest model estimate.', 'warning');
       } else {
         showToast('Analysis completed successfully!', 'success');
       }

@@ -155,14 +155,14 @@ async def predict(
             result["out_of_distribution"] = True
             result["ood_reason"] = reason_text
 
-            # Enforce confidence below 40% (<0.40) as required when crop is not in dataset
+            # Enforce explicit confidence strictly below 50% (<0.50) as required when crop is not in dataset
             val_conf = verified.get("confidence")
-            if val_conf is not None and 0.05 <= float(val_conf) < 0.40:
+            if val_conf is not None and 0.05 <= float(val_conf) < 0.50:
                 result["confidence"] = float(val_conf)
             else:
-                # Scale internal model confidence into 28% - 37% range (strictly < 40%)
+                # Scale internal model confidence into 28% - 44% range (strictly < 50%)
                 raw_c = float(result.get("confidence", 0.5))
-                result["confidence"] = round(0.28 + (min(max(raw_c, 0.0), 1.0) * 0.09), 4)
+                result["confidence"] = round(0.28 + (min(max(raw_c, 0.0), 1.0) * 0.14), 4)
 
             # Keep model yield intelligence aligned with closest estimate
             val_yield = verified.get("yield")
@@ -219,10 +219,24 @@ async def predict(
     except Exception as exc:
         logger.debug("[PredictController] Ensemble cross-verification bypassed: %s", exc)
 
-    # ── 3c. Local OOD heuristic fallback ──────────────────────────────────────
-    # When the validator microservice (port 5005) is offline, `out_of_distribution`
+    # ── 3c. Unsupported crop or Local OOD heuristic fallback ──────────────────
+    # Check if the requested crop is not in the supported 134-disease dataset
+    if prelim_crop != "auto" and not result.get("out_of_distribution"):
+        clean_crop = normalize_crop_name(prelim_crop.lower())
+        if clean_crop not in config.SUPPORTED_CROPS and prelim_crop.lower() not in config.SUPPORTED_CROPS:
+            logger.info("[PredictController] Explicit crop '%s' is not in supported dataset.", prelim_crop)
+            result["out_of_distribution"] = True
+            result["low_confidence"] = True
+            result["ood_reason"] = (
+                f"The selected crop '{prelim_crop.capitalize()}' may not be present in our 134-disease agricultural dataset (this is not guaranteed). "
+                "The diagnosis below is based on our internal model's closest estimate."
+            )
+            raw_c = float(result.get("confidence", 0.35))
+            result["confidence"] = round(0.28 + (min(max(raw_c, 0.0), 1.0) * 0.14), 4)
+
+    # When the validator microservice is offline or bypassed, `out_of_distribution`
     # is never set, and unsupported crops (e.g. mango) get classified as a random
-    # disease from the 134-class taxonomy.  This local fallback catches those:
+    # disease from the 134-class taxonomy. This local fallback catches those:
     #   • crop was auto-detected (user did not explicitly pick a crop)
     #   • model confidence is very low (< 45%), signalling the input doesn't
     #     map cleanly to any trained class.
@@ -239,15 +253,25 @@ async def predict(
         result["out_of_distribution"] = True
         result["low_confidence"] = True
         result["ood_reason"] = (
-            "The uploaded plant specimen could not be confidently matched to any "
-            "crop or disease in our 134-class agricultural dataset. "
-            "Please upload a clear photograph of a supported crop leaf."
+            "This plant or disease specimen may not be present in our dataset (this is not guaranteed). "
+            "The diagnosis below is based on our internal model's closest estimate."
         )
+        raw_c = float(result.get("confidence", 0.35))
+        result["confidence"] = round(0.28 + (min(max(raw_c, 0.0), 1.0) * 0.14), 4)
 
     # ── 4. Disease knowledge lookup & Automatic Crop Resolution ──────────────
     disease_idx  = result["disease_class"]
     disease_info = DiseaseService.get_by_index(disease_idx)
     is_ood = bool(result.get("out_of_distribution"))
+
+    # Explicit guarantee: if specimen is out of distribution, confidence must be strictly below 50% (<0.50)
+    if is_ood:
+        curr_c = float(result.get("confidence", 0.35))
+        if curr_c >= 0.50:
+            result["confidence"] = 0.38
+        else:
+            result["confidence"] = round(min(curr_c, 0.48), 4)
+        result["low_confidence"] = True
 
     # Automatically detect crop from visual disease taxonomy or user selection
     if crop and crop.lower() != "auto":

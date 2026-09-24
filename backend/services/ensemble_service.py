@@ -74,7 +74,7 @@ class EnsembleService:
         if time.time() < _offline_until:
             return None
 
-        endpoint = getattr(config, "VALIDATOR_SERVICE_URL", "https://aero-validator.devanshupatil.tech/api/v1/validate")
+        endpoint = getattr(config, "VALIDATOR_SERVICE_URL", None) or "https://aero-validator.devanshupatil.tech/api/v1/validate"
         timeout_sec = getattr(config, "VALIDATOR_TIMEOUT_SECONDS", 35.0)
 
         form_data = {

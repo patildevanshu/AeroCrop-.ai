@@ -48,7 +48,7 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ result }) => {
           <p className="metric-label">{t('confidence')}</p>
           <p
             className="metric-value"
-            style={disease.confidence < 40 ? { color: '#d97706' } : undefined}
+            style={(disease.confidence < 50 || result.out_of_distribution) ? { color: '#d97706' } : undefined}
           >
             {disease.confidence.toFixed(1)}%
           </p>
@@ -57,7 +57,7 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ result }) => {
               className="confidence-fill"
               style={{
                 width: `${Math.min(disease.confidence, 100)}%`,
-                background: disease.confidence < 40 ? 'linear-gradient(90deg, #f59e0b, #ef4444)' : undefined,
+                background: (disease.confidence < 50 || result.out_of_distribution) ? 'linear-gradient(90deg, #f59e0b, #ef4444)' : undefined,
               }}
             />
           </div>
@@ -65,13 +65,13 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ result }) => {
             className="metric-sub"
             style={{
               fontSize: '0.72rem',
-              color: disease.confidence < 40 ? '#b45309' : 'var(--text-secondary)',
+              color: (disease.confidence < 50 || result.out_of_distribution) ? '#b45309' : 'var(--text-secondary)',
               marginTop: '4px',
-              fontWeight: disease.confidence < 40 ? 600 : 400,
+              fontWeight: (disease.confidence < 50 || result.out_of_distribution) ? 600 : 400,
             }}
           >
-            {disease.confidence < 40
-              ? '⚠️ Low certainty (<40%): Specimen may not be in dataset'
+            {(disease.confidence < 50 || result.out_of_distribution)
+              ? '⚠️ Low certainty (<50%): Specimen may not be in dataset'
               : t('confidence_desc', 'Certainty score for detected disease')}
           </p>
         </div>
