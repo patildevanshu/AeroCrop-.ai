@@ -212,14 +212,14 @@ app.post('/send-email', async (req, res) => {
         ${pdfBuffer ? '📎 संपूर्ण सविस्तर अहवाल PDF स्वरूपात सोबत जोडला आहे:' : '📋 अहवाल सविस्तर तपशील:'}
       </p>
       <ul style="margin:6px 0 0 18px;padding:0;font-size:12px;color:#14532d">
-        <li><strong>विभाग १ : मराठी अहवाल</strong> — रासायनिक व सेंद्रिय फवारणी, खतांचे डोस, हवामान व विमा पडताळणी</li>
+        <li><strong>विभाग १ : मराठी अहवाल</strong> — रासायनिक व सेंद्रिय फवारणी, हवामान व विमा पडताळणी</li>
         <li><strong>Section 2 : English Report</strong> — Comprehensive scientific advisory & dosage calculations</li>
-        <li><strong>खंड ३ : हिंदी रिपोर्ट</strong> — पूर्ण उपचार सिफारिशें, संतुलित उर्वरक मात्रा एवं मौसम परामर्श</li>
+        <li><strong>खंड ३ : हिंदी रिपोर्ट</strong> — पूर्ण उपचार सिफारिशें एवं मौसम परामर्श</li>
       </ul>
     </div>
 
     <p style="font-size:11.5px;color:#64748b;margin-top:24px;border-top:1px solid #f1f5f9;padding-top:12px">
-      हा अहवाल ICAR आणि महात्मा फुले कृषी विद्यापीठ (MPKV) मानकांवर आधारित आहे. तांत्रिक व कृषी मदतीसाठी संपर्क: <a href="mailto:support@devanshupatil.tech" style="color:#16a34a;text-decoration:none;font-weight:bold">support@devanshupatil.tech</a>
+      हा अहवाल अचूक कृषी व संगणकीय रोग निदान मानकांवर आधारित आहे. तांत्रिक व कृषी मदतीसाठी संपर्क: <a href="mailto:support@devanshupatil.tech" style="color:#16a34a;text-decoration:none;font-weight:bold">support@devanshupatil.tech</a>
     </p>
   </div>
 </div>`,

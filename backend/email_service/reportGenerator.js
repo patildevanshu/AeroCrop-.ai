@@ -759,7 +759,7 @@ function buildHTML(data) {
       </div>
     </div>
     <div class="header-badges">
-      <div class="accreditation-pill">ICAR & MPKV Standard Aligned</div>
+      <div class="accreditation-pill">Precision Agriculture Aligned</div>
       <div class="meta-tag-pill">
         <div><strong>संदर्भ:</strong> ${refId}</div>
         <div><strong>तारीख:</strong> ${dateFormatted} | ${timeFormatted}</div>
@@ -768,7 +768,7 @@ function buildHTML(data) {
   </div>
 
   <div class="lang-title-bar bar-mr">
-    <span>विभाग १ : सविस्तर पीक आरोग्य व खत व्यवस्थापन अहवाल (मराठी)</span>
+    <span>विभाग १ : सविस्तर पीक आरोग्य व रोग निदान अहवाल (मराठी)</span>
     <span class="lang-tag">महाराष्ट्र शासन कृषी मार्गदर्शक</span>
   </div>
 
@@ -825,7 +825,7 @@ function buildHTML(data) {
     <div class="diag-metrics">
       <div><strong>रोगकारक घटक:</strong> ${pathology.mr.pathogen}</div>
       <div><strong>काढणी पूर्व अंतर (PHI):</strong> ${pathology.mr.phi}</div>
-      <div><strong>मातीतील पोषण:</strong> ICAR सानुकूल शिफारस</div>
+      <div><strong>निदान तंत्रज्ञान:</strong> Deep Neural Vision</div>
     </div>
     <div class="diag-desc">
       <strong>रोगाची लक्षणे व शास्त्रीय वर्णन:</strong> ${pathology.mr.description}
@@ -893,7 +893,7 @@ function buildHTML(data) {
   </div>
 
   <div class="doc-footer">
-    <span>AeroCrop.ai • भारतीय कृषी संशोधन परिषद (ICAR) मार्गदर्शक तत्त्वांवर आधारित संगणकीय अहवाल</span>
+    <span>AeroCrop.ai • अचूक कृषी व बहु-माध्यमी पीक आरोग्य निदान संगणकीय अहवाल</span>
     <span>पृष्ठ १ / ३ (मराठी)</span>
   </div>
 </div>
@@ -907,11 +907,11 @@ function buildHTML(data) {
       <div class="brand-logo-icon">🌱</div>
       <div>
         <div class="brand-title">AeroCrop<span>.ai</span></div>
-        <div class="brand-subtitle">सटीक कृषि एवं बहु-मॉडल फसल रोग निदान मंच • भारतीय कृषि अनुसंधान परिषद (ICAR) मानक</div>
+        <div class="brand-subtitle">सटीक कृषि एवं बहु-मॉडल फसल रोग निदान मंच • उच्च परिशुद्धता मानक</div>
       </div>
     </div>
     <div class="header-badges">
-      <div class="accreditation-pill">ICAR & MPKV Standard Aligned</div>
+      <div class="accreditation-pill">Precision Agriculture Aligned</div>
       <div class="meta-tag-pill">
         <div><strong>संदर्भ सं:</strong> ${refId}</div>
         <div><strong>दिनांक:</strong> ${dateFormatted} | ${timeFormatted}</div>
@@ -920,7 +920,7 @@ function buildHTML(data) {
   </div>
 
   <div class="lang-title-bar bar-hi">
-    <span>खंड २ : विस्तृत फसल स्वास्थ्य एवं उर्वरक प्रबंधन रिपोर्ट (हिंदी)</span>
+    <span>खंड २ : विस्तृत फसल स्वास्थ्य एवं रोग निदान रिपोर्ट (हिंदी)</span>
     <span class="lang-tag">राष्ट्रीय कृषि परामर्श मानक</span>
   </div>
 
@@ -977,7 +977,7 @@ function buildHTML(data) {
     <div class="diag-metrics">
       <div><strong>रोगजनक कारक:</strong> ${pathology.hi.pathogen}</div>
       <div><strong>तुड़ाई पूर्व अंतराल (PHI):</strong> ${pathology.hi.phi}</div>
-      <div><strong>मृदा पोषण संतुलन:</strong> ICAR वैज्ञानिक मानक</div>
+      <div><strong>निदान तकनीक:</strong> Deep Neural Vision</div>
     </div>
     <div class="diag-desc">
       <strong>रोग के लक्षण एवं नैदानिक विवरण:</strong> ${pathology.hi.description}
@@ -1045,7 +1045,7 @@ function buildHTML(data) {
   </div>
 
   <div class="doc-footer">
-    <span>AeroCrop.ai • भारतीय कृषि अनुसंधान परिषद (ICAR) दिशा-निर्देशों पर आधारित डिजिटल रिपोर्ट</span>
+    <span>AeroCrop.ai • सटीक कृषि एवं बहु-आयामी पादप रोग निदान डिजिटल रिपोर्ट</span>
     <span>पृष्ठ २ / ३ (हिंदी)</span>
   </div>
 </div>
@@ -1063,7 +1063,7 @@ function buildHTML(data) {
       </div>
     </div>
     <div class="header-badges">
-      <div class="accreditation-pill">ICAR & MPKV Standard Aligned</div>
+      <div class="accreditation-pill">Precision Agriculture Aligned</div>
       <div class="meta-tag-pill">
         <div><strong>REF NO:</strong> ${refId}</div>
         <div><strong>TIMESTAMP:</strong> ${dateFormatted} | ${timeFormatted}</div>
@@ -1129,7 +1129,7 @@ function buildHTML(data) {
     <div class="diag-metrics">
       <div><strong>Pathogen Vector:</strong> ${pathology.en.pathogen}</div>
       <div><strong>Pre-Harvest Interval (PHI):</strong> ${pathology.en.phi}</div>
-      <div><strong>Nutrient Baseline:</strong> ICAR Precision Standard</div>
+      <div><strong>Diagnostics:</strong> Deep Neural Vision</div>
     </div>
     <div class="diag-desc">
       <strong>Clinical Diagnostic Finding:</strong> ${pathology.en.description}

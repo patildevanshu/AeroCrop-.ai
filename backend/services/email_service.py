@@ -259,7 +259,7 @@ class EmailService:
                       🌱 AeroCrop<span style="color:#6ee7b7;">.ai</span>
                     </div>
                     <div style="font-size:12px;color:#a7f3d0;margin-top:3px;letter-spacing:0.3px;">
-                      Precision Agriculture Advisory & Pathology Diagnostic System • ICAR / MPKV Standards
+                      Precision Agriculture Advisory & Pathology Diagnostic System
                     </div>
                   </td>
                   <td align="right" style="vertical-align:top;">
@@ -372,7 +372,7 @@ class EmailService:
 
               <!-- Notice -->
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:12px;color:#1e40af;line-height:1.45;">
-                ℹ️ <strong>टीप:</strong> हा सल्ला भारतीय कृषी संशोधन परिषद (ICAR) व महात्मा फुले कृषी विद्यापीठ (MPKV) यांच्या पीक संरक्षण मार्गदर्शक तत्त्वांनुसार स्वयंचलित विश्लेषित केला आहे.
+                ℹ️ <strong>टीप:</strong> हा सल्ला अचूक कृषी व संगणकीय रोग निदान मानकांवर आधारित स्वयंचलित विश्लेषित केला आहे.
               </div>
 
             </td>

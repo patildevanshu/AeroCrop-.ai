@@ -54,6 +54,7 @@ function generateNativePDF(data) {
             const localized = getLocalizedPathology(disease, cropObj);
             const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
             const refId = 'AC-' + Date.now().toString().slice(-8);
+            const loc = [farmerVillage, district].filter(Boolean).join(', ') || district || 'Maharashtra';
 
             const temp = weather?.temperature || 28.0;
             const hum = weather?.humidity || 65.0;
@@ -67,7 +68,7 @@ function generateNativePDF(data) {
                 {
                     lang: 'mr',
                     pageTitle: 'विभाग १ : मराठी अहवाल (Comprehensive Marathi Advisory)',
-                    subtitle: 'अचूक शेती आणि बहु-माध्यमी पीक आरोग्य निदान • ICAR व MPKV मानके',
+                    subtitle: 'अचूक शेती आणि बहु-माध्यमी पीक आरोग्य निदान • कृषी विज्ञान केंद्र (KVK) मानके',
                     farmerLabel: 'शेतकऱ्याचे नाव',
                     villageLabel: 'गाव व जिल्हा',
                     cropLabel: 'तपासलेले पीक',
@@ -90,7 +91,7 @@ function generateNativePDF(data) {
                 {
                     lang: 'hi',
                     pageTitle: 'खंड २ : हिंदी रिपोर्ट (Comprehensive Hindi Advisory)',
-                    subtitle: 'सटीक कृषि एवं बहु-आयामी फसल स्वास्थ्य निदान • ICAR मानक सिफारिशें',
+                    subtitle: 'सटीक कृषि एवं बहु-आयामी फसल स्वास्थ्य निदान • कृषि विज्ञान केंद्र (KVK) मानक',
                     farmerLabel: 'किसान का नाम',
                     villageLabel: 'गाँव एवं ज़िला',
                     cropLabel: 'निरीक्षित फसल',
@@ -265,7 +266,7 @@ function generateNativePDF(data) {
 
                 // Footer
                 doc.fillColor('#94a3b8').fontSize(7).text(
-                    `AeroCrop.ai • ICAR & MPKV Norms  |  Contact: support@devanshupatil.tech  |  ${cfg.pageFoot}`,
+                    `AeroCrop.ai • Precision Agriculture Advisory  |  Contact: support@devanshupatil.tech  |  ${cfg.pageFoot}`,
                     32,
                     doc.page.height - 24,
                     { align: 'center', width: cw }
