@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { fetchFarmerHistory, getLocalHistory, clearLocalHistory, deleteHistoryRecord } from '../../api/history';
 import { HistoryRecord } from '../../types';
 import { DiagnosisDetailModal } from './DiagnosisDetailModal';
+import { formatAgronomicYield } from '../../utils/yield';
 
 export const RecentHistoryCard: React.FC = () => {
   const { t } = useI18n();
@@ -156,7 +157,7 @@ export const RecentHistoryCard: React.FC = () => {
             const districtName = (r.district || 'Maharashtra').toUpperCase();
             const confVal = r.confidence != null ? Number(r.confidence).toFixed(1) : '--';
             const yieldVal = r.predicted_yield_t_ha != null
-              ? `${(Number(r.predicted_yield_t_ha) * 4.047).toFixed(1)} Quintal / Acre`
+              ? formatAgronomicYield(r.crop_type, Number(r.predicted_yield_t_ha), r).primary
               : '--';
 
             return (

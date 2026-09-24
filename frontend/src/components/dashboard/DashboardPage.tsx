@@ -94,7 +94,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onQuickDiagnose })
           <div className="stat-body">
             <p className="stat-value">
               {isAuthenticated && analytics && analytics.avg_yield_t_ha > 0
-                ? `${(analytics.avg_yield_t_ha * 4.047).toFixed(1)} Quintal / Acre`
+                ? `${(analytics.avg_yield_t_ha * 4.047).toFixed(1)} Q/Ac`
                 : '36'}
             </p>
             <p className="stat-label">

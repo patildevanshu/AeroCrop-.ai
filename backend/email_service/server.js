@@ -195,11 +195,16 @@ app.post('/send-email', async (req, res) => {
         <td style="padding:10px 14px;font-weight:700;color:#64748b;border-bottom:1px solid #e2e8f0">रोगाची तीव्रता / Severity</td>
         <td style="padding:10px 14px;font-weight:700;border-bottom:1px solid #e2e8f0">${safeSeverity}</td>
       </tr>
-      ${yield_t_ha ? `
-      <tr>
-        <td style="padding:10px 14px;font-weight:700;color:#64748b">अपेक्षित उत्पादन / Yield</td>
-        <td style="padding:10px 14px;font-weight:700">${yield_t_ha} टन/हे (~${(yield_t_ha*4.047).toFixed(1)} क्विंटल/एकर)</td>
-      </tr>` : ''}
+      ${yield_t_ha ? (() => {
+        const isBiomass = /sugarcane|banana|tomato|potato|orange|onion|grape|apple/i.test(crop || '');
+        const yieldText = isBiomass
+          ? `${(yield_t_ha * 0.4047).toFixed(1)} टन/एकर (≈ ${(yield_t_ha * 4.047).toFixed(0)} क्विंटल/एकर · ${yield_t_ha} t/ha)`
+          : `${(yield_t_ha * 4.047).toFixed(1)} क्विंटल/एकर (≈ ${yield_t_ha} टन/हे)`;
+        return `<tr>
+          <td style="padding:10px 14px;font-weight:700;color:#64748b">अपेक्षित उत्पादन / Yield</td>
+          <td style="padding:10px 14px;font-weight:700">${yieldText}</td>
+        </tr>`;
+      })() : ''}
     </table>
 
     <div style="background:#f0fdf4;border-left:5px solid #16a34a;padding:14px 16px;border-radius:6px;margin:18px 0">

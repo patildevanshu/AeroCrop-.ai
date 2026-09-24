@@ -1,4 +1,5 @@
 import { PredictionResult, User } from '../../types';
+import { formatAgronomicYield } from '../../utils/yield';
 
 export function printAdvisoryReport(
   result: PredictionResult,
@@ -6,6 +7,7 @@ export function printAdvisoryReport(
   isPmfbyReport: boolean = false
 ): void {
   const { disease, crop, district, yield_t_ha, weather, mock_mode, image_url } = result;
+  const yieldInfo = formatAgronomicYield(crop, yield_t_ha, result);
   const now = new Date().toLocaleString('en-IN');
   const farmerName = user ? user.full_name : 'Registered Farmer';
   const farmerPhone = user?.phone_number || 'N/A';
@@ -69,7 +71,7 @@ export function printAdvisoryReport(
     <tr><th>AI Confidence Level</th><td>${disease.confidence.toFixed(1)}%</td></tr>
     <tr><th>Severity Rating</th><td><span class="badge ${disease.severity === 'Critical' || disease.severity === 'High' ? 'badge-danger' : ''}">${disease.severity}</span></td></tr>
     <tr><th>Pathological Description</th><td>${disease.description}</td></tr>
-    <tr><th>Expected Harvest Yield</th><td><strong>${(yield_t_ha * 4.047).toFixed(1)} Quintal / Acre</strong></td></tr>
+    <tr><th>Expected Harvest Yield</th><td><strong>${yieldInfo.primary}</strong> <span style="font-size:0.85em;color:#475569">(${yieldInfo.secondary})</span> &bull; <span style="font-size:0.82em;color:#15803d;font-weight:600">Benchmark: ${yieldInfo.benchmark}</span></td></tr>
   </table>
 
   <h2>💊 Agronomic Prescription &amp; Containment Protocol</h2>

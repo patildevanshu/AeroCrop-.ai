@@ -121,6 +121,10 @@ export interface PredictionResult {
   yield_loss_pct?: number | null;
   baseline_yield_t_ha?: number | null;
   yield_reason?: string | null;
+  commercial_unit?: string;
+  commercial_yield?: number;
+  commercial_baseline?: number;
+  benchmark_range?: string;
   weather: WeatherData;
   mandi?: MandiRateInfo;
   email_status?: 'queued' | 'sent' | null;
@@ -136,6 +140,9 @@ export interface HistoryRecord {
   disease_name: string;
   confidence: number;
   predicted_yield_t_ha: number;
+  commercial_unit?: string;
+  commercial_yield?: number;
+  benchmark_range?: string;
   severity: string;
   is_healthy: boolean;
   image_url?: string | null;
@@ -207,6 +214,11 @@ export interface DiagnosisDetail {
   image_url: string | null;
   disease: DiseaseInfo;
   yield_t_ha: number;
+  commercial_unit?: string;
+  commercial_yield?: number;
+  commercial_baseline?: number;
+  benchmark_range?: string;
+  yield_loss_pct?: number | null;
   weather: WeatherData;
   low_confidence: boolean;
   mock_mode: boolean;

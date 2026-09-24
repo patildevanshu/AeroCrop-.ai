@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useI18n } from '../../context/I18nContext';
 import { sendEmailReport } from '../../api/predict';
+import { formatAgronomicYield } from '../../utils/yield';
 
 interface EmailReportModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export const EmailReportModal: React.FC<EmailReportModalProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const { showToast } = useToast();
+  const yieldInfo = formatAgronomicYield(result.crop, result.yield_t_ha, result);
   const { t } = useI18n();
 
   const [email, setEmail] = useState('');
@@ -88,7 +90,7 @@ export const EmailReportModal: React.FC<EmailReportModalProps> = ({
         >
           <div>🌱 <strong>Crop:</strong> {result.crop.toUpperCase()} · 📍 {result.district.toUpperCase()}</div>
           <div>🦠 <strong>Diagnosis:</strong> {result.disease.name} ({result.disease.severity})</div>
-          <div>🌾 <strong>Yield Forecast:</strong> {(result.yield_t_ha * 4.047).toFixed(1)} Quintal / Acre</div>
+          <div>🌾 <strong>Yield Forecast:</strong> {yieldInfo.primary} <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>({yieldInfo.secondary})</span></div>
         </div>
 
         <form onSubmit={handleSubmit}>

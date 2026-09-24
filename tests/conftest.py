@@ -18,6 +18,10 @@ for p in [str(PROJECT_ROOT), str(BACKEND_DIR)]:
         sys.path.insert(0, p)
 
 from backend.database.mongodb import init_mongodb as init_db, close_mongodb
+import backend.config as config
+
+# Disable external remote validator during automated unit tests to prevent network I/O on dummy test images
+config.ENABLE_REMOTE_VALIDATOR = False
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -9,11 +9,13 @@ with zero user interruption.
 """
 
 from __future__ import annotations
+import io
 import logging
 import time
 from typing import Any, Optional
 
 import httpx
+from PIL import Image
 
 import backend.config as config
 
@@ -21,6 +23,24 @@ logger = logging.getLogger(__name__)
 
 # Lightweight circuit breaker: if validator is offline, skip pinging for 15s
 _offline_until: float = 0.0
+
+
+def _prepare_image_for_validator(raw_bytes: bytes) -> bytes:
+    """
+    Downsamples large specimen imagery (e.g. 12MP smartphone photos) to a max
+    768x768 JPEG (~50-80KB). This prevents network upload bottlenecks and timeouts
+    when connecting to the remote microservice over HTTPS.
+    """
+    try:
+        with Image.open(io.BytesIO(raw_bytes)) as img:
+            img = img.convert("RGB")
+            if max(img.size) > 768:
+                img.thumbnail((768, 768), Image.Resampling.LANCZOS)
+            out_buf = io.BytesIO()
+            img.save(out_buf, format="JPEG", quality=82, optimize=True)
+            return out_buf.getvalue()
+    except Exception:
+        return raw_bytes
 
 
 class EnsembleService:
@@ -54,7 +74,7 @@ class EnsembleService:
         if time.time() < _offline_until:
             return None
 
-        endpoint = getattr(config, "VALIDATOR_SERVICE_URL", "http://127.0.0.1:5005/api/v1/validate")
+        endpoint = getattr(config, "VALIDATOR_SERVICE_URL", "https://aero-validator.devanshupatil.tech/api/v1/validate")
         timeout_sec = getattr(config, "VALIDATOR_TIMEOUT_SECONDS", 35.0)
 
         form_data = {
@@ -67,8 +87,9 @@ class EnsembleService:
             "local_confidence": str(round(local_confidence, 4)),
         }
 
+        upload_bytes = _prepare_image_for_validator(image_bytes)
         files = {
-            "image": ("specimen.jpg", image_bytes, "image/jpeg"),
+            "image": ("specimen.jpg", upload_bytes, "image/jpeg"),
         }
 
         # Fast connect timeout (2.5s) so offline state is caught quickly, but ample read timeout for vision model

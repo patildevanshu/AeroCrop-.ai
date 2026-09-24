@@ -159,9 +159,14 @@ function generateNativePDF(data) {
                 doc.text(`${cfg.farmerLabel}: ${farmerName}`, 42, y + 8);
                 setBody(8);
                 doc.fillColor('#475569');
-                const loc = [farmerVillage, district].filter(Boolean).join(', ') || district;
                 doc.text(`${cfg.villageLabel}: ${loc}  |  Phone: ${farmerPhone || '+91 98220 12345'}`, 42, y + 22);
-                const yieldStr = yield_t_ha ? `${yield_t_ha} t/ha (~${(yield_t_ha*4.047).toFixed(1)} q/acre)` : 'Standard';
+                const isBiomass = /sugarcane|banana|tomato|potato|orange|onion|grape|apple/i.test(crop || '');
+                const yieldStr = yield_t_ha
+                    ? (isBiomass
+                        ? `${(yield_t_ha * 0.4047).toFixed(1)} Tonnes/Ac (~${(yield_t_ha * 4.047).toFixed(0)} Q/Ac)`
+                        : `${(yield_t_ha * 4.047).toFixed(1)} Quintal/Ac (~${yield_t_ha} t/ha)`)
+                    : 'Standard Regional Baseline';
+                doc.text(`Expected Harvest Yield: ${yieldStr}`, 42, y + 35);
                 y += 58;
 
                 // ── AI Confidence Bar ──────────────────────────────────────────

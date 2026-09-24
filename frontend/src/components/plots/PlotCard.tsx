@@ -1,6 +1,7 @@
 import React from 'react';
 import { FarmPlot } from '../../types';
 import { useI18n } from '../../context/I18nContext';
+import { formatAgronomicYield } from '../../utils/yield';
 
 interface PlotCardProps {
   plot: FarmPlot;
@@ -85,15 +86,18 @@ export const PlotCard: React.FC<PlotCardProps> = ({ plot, onQuickDiagnose, onEdi
           <div className="plot-recent-progression mt-2">
             <span className="plot-progression-title">Progression ({plot.recent_analyses.length} analyses):</span>
             <div className="plot-progression-chips">
-              {plot.recent_analyses.map((a, idx) => (
-                <span
-                  key={a.id || idx}
-                  className={`plot-mini-chip ${a.is_healthy ? 'chip-healthy' : 'chip-disease'}`}
-                  title={`${a.disease_name} (${a.confidence}% conf, ${(a.predicted_yield_t_ha * 4.047).toFixed(1)} Quintal / Acre)`}
-                >
-                  #{idx + 1} {a.is_healthy ? '✅' : '🦠'} {(a.predicted_yield_t_ha * 4.047).toFixed(1)} Q/Ac
-                </span>
-              ))}
+              {plot.recent_analyses.map((a, idx) => {
+                const yInfo = formatAgronomicYield(plot.crop_type, a.predicted_yield_t_ha);
+                return (
+                  <span
+                    key={a.id || idx}
+                    className={`plot-mini-chip ${a.is_healthy ? 'chip-healthy' : 'chip-disease'}`}
+                    title={`${a.disease_name} (${a.confidence}% conf, ${yInfo.primary})`}
+                  >
+                    #{idx + 1} {a.is_healthy ? '✅' : '🦠'} {yInfo.primaryValue} {yInfo.unitShort}
+                  </span>
+                );
+              })}
             </div>
           </div>
         )}

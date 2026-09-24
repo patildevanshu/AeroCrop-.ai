@@ -95,6 +95,10 @@ class HistoryService:
             "quintals_per_ha": round(yield_val * 10.0, 2),
             "quintals_per_acre": round(yield_val * 4.047, 2),
         }
+        if system_telemetry:
+            for k in ("commercial_unit", "commercial_yield", "commercial_baseline", "benchmark_range", "yield_loss_pct", "baseline_yield_t_ha", "yield_reason"):
+                if system_telemetry.get(k) is not None:
+                    yield_data[k] = system_telemetry[k]
 
         # 3. Weather payload construction
         full_weather = {
@@ -202,6 +206,9 @@ class HistoryService:
                 "severity": d_doc.get("severity", r.get("severity", "None")),
                 "is_healthy": d_doc.get("is_healthy", r.get("is_healthy", False)),
                 "predicted_yield_t_ha": y_doc.get("predicted_yield_t_ha", r.get("predicted_yield_t_ha", 0.0)),
+                "commercial_unit": y_doc.get("commercial_unit") or t_doc.get("commercial_unit"),
+                "commercial_yield": y_doc.get("commercial_yield") or t_doc.get("commercial_yield"),
+                "benchmark_range": y_doc.get("benchmark_range") or t_doc.get("benchmark_range"),
                 "weather": {
                     "temperature": w_doc.get("temperature", r.get("weather_temp", 0.0)),
                     "humidity": w_doc.get("humidity", r.get("weather_hum", 0.0)),
@@ -269,6 +276,11 @@ class HistoryService:
             "image_url": record.get("image_url"),
             "disease": disease_detail,
             "yield_t_ha": y_doc.get("predicted_yield_t_ha", record.get("predicted_yield_t_ha", 0.0)),
+            "commercial_unit": y_doc.get("commercial_unit") or t_doc.get("commercial_unit"),
+            "commercial_yield": y_doc.get("commercial_yield") or t_doc.get("commercial_yield"),
+            "commercial_baseline": y_doc.get("commercial_baseline") or t_doc.get("commercial_baseline"),
+            "benchmark_range": y_doc.get("benchmark_range") or t_doc.get("benchmark_range"),
+            "yield_loss_pct": y_doc.get("yield_loss_pct") or t_doc.get("yield_loss_pct"),
             "yield": y_doc,
             "weather": w_doc or {
                 "temperature": record.get("weather_temp", 0.0),

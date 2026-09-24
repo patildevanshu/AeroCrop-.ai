@@ -3,6 +3,7 @@ import { useI18n } from '../../context/I18nContext';
 import { useAuth } from '../../context/AuthContext';
 import { fetchCropProgress } from '../../api/history';
 import { CropProgressPlot, AnalysisProgressItem } from '../../types';
+import { formatAgronomicYield } from '../../utils/yield';
 
 interface CropProgressCardProps {
   onQuickDiagnose?: (plotId?: number | null) => void;
@@ -288,9 +289,10 @@ export const CropProgressCard: React.FC<CropProgressCardProps> = ({ onQuickDiagn
                         <div className="analyses-timeline">
                           {cropPlot.analyses.map((analysis: AnalysisProgressItem, index: number) => {
                             const prevAnalysis = index > 0 ? cropPlot.analyses[index - 1] : null;
-                            const yieldQuintal = +(analysis.predicted_yield_t_ha * 4.047).toFixed(1);
+                            const yieldInfo = formatAgronomicYield(cropPlot.crop_type, analysis.predicted_yield_t_ha);
+                            const mult = yieldInfo.isBiomassCrop ? 0.4047 : 4.047;
                             const yieldDiff = prevAnalysis
-                              ? +((analysis.predicted_yield_t_ha - prevAnalysis.predicted_yield_t_ha) * 4.047).toFixed(1)
+                              ? +((analysis.predicted_yield_t_ha - prevAnalysis.predicted_yield_t_ha) * mult).toFixed(1)
                               : null;
 
                             return (
@@ -318,7 +320,7 @@ export const CropProgressCard: React.FC<CropProgressCardProps> = ({ onQuickDiagn
                                       🎯 Confidence: <strong>{analysis.confidence}%</strong>
                                     </span>
                                     <span className="timeline-chip">
-                                      🌾 Yield: <strong>{yieldQuintal} Quintal / Acre</strong>
+                                      🌾 Yield: <strong>{yieldInfo.primary}</strong>
                                       {yieldDiff !== null && (
                                         <span
                                           className={`yield-diff ${

@@ -173,6 +173,12 @@ async def predict(
                     result["yield_loss_pct"] = val_yield.get("yield_loss_pct")
                     result["baseline_yield_t_ha"] = val_yield.get("baseline_yield_t_ha")
                     result["yield_reason"] = val_yield.get("yield_reason")
+                    if val_yield.get("commercial_unit"):
+                        result["commercial_unit"] = val_yield.get("commercial_unit")
+                        result["commercial_yield"] = val_yield.get("commercial_yield")
+                        result["commercial_baseline"] = val_yield.get("commercial_baseline")
+                        result["benchmark_range"] = val_yield.get("benchmark_range")
+                        result["yield_category_label"] = val_yield.get("crop_category_label")
         elif verified and verified.get("verified") and "class_idx" in verified:
             v_idx = int(verified["class_idx"])
             v_info = DiseaseService.get_by_index(v_idx)
@@ -200,6 +206,12 @@ async def predict(
                     result["yield_loss_pct"] = val_yield.get("yield_loss_pct")
                     result["baseline_yield_t_ha"] = val_yield.get("baseline_yield_t_ha")
                     result["yield_reason"] = val_yield.get("yield_reason")
+                    if val_yield.get("commercial_unit"):
+                        result["commercial_unit"] = val_yield.get("commercial_unit")
+                        result["commercial_yield"] = val_yield.get("commercial_yield")
+                        result["commercial_baseline"] = val_yield.get("commercial_baseline")
+                        result["benchmark_range"] = val_yield.get("benchmark_range")
+                        result["yield_category_label"] = val_yield.get("crop_category_label")
                     logger.info(
                         "[PredictController] Yield updated via validator: %.2f t/ha (loss: %s%%)",
                         result["yield_t_ha"], result.get("yield_loss_pct")
@@ -266,9 +278,26 @@ async def predict(
             result["yield_t_ha"] = round(min(max_y, max(min_y, curr_y)), 2)
         result["yield_category"] = bounds["category"]
         result["yield_category_label"] = bounds["category_label"]
+
+        # Ensure commercial unit & ICAR benchmark range are set
+        comm_unit = bounds.get("commercial_unit", "Quintal / Acre")
+        comm_mult = bounds.get("to_commercial_mult", 4.047)
+        comm_base = round(bounds["typical"] * comm_mult, 1)
+        comm_yield = round(result["yield_t_ha"] * comm_mult, 1)
+        bench = bounds.get("benchmark_range", f"{comm_base} {comm_unit}")
+
+        result.setdefault("commercial_unit", comm_unit)
+        result.setdefault("commercial_yield", comm_yield)
+        result.setdefault("commercial_baseline", comm_base)
+        result.setdefault("benchmark_range", bench)
+        result.setdefault("baseline_yield_t_ha", bounds["typical"])
     else:
         result.setdefault("yield_category", "general_crop")
         result.setdefault("yield_category_label", "Crop Yield")
+        result.setdefault("commercial_unit", "Quintal / Acre")
+        result.setdefault("commercial_yield", round(result["yield_t_ha"] * 4.047, 1))
+        result.setdefault("commercial_baseline", round(result["yield_t_ha"] * 4.047, 1))
+        result.setdefault("benchmark_range", f"{round(result['yield_t_ha'] * 4.047, 1)} Quintal / Acre")
 
     disease_payload = {
         "class_index":  disease_idx,
@@ -292,10 +321,10 @@ async def predict(
     # ── 6. Persist to database if authenticated ──────────────────────────────
     saved_record_id = None
     saved_image_url = None
+    valid_plot_id = None
 
     if optional_user and not is_ood:
         # Authorization check: verify plot belongs to current user
-        valid_plot_id = None
         if plot_id:
             owned_plot = await db.farm_plots.find_one({"id": plot_id, "user_id": optional_user.id})
             if owned_plot:
@@ -352,6 +381,10 @@ async def predict(
                     "yield_loss_pct": result.get("yield_loss_pct"),
                     "baseline_yield_t_ha": result.get("baseline_yield_t_ha"),
                     "yield_reason": result.get("yield_reason"),
+                    "commercial_unit": result.get("commercial_unit"),
+                    "commercial_yield": result.get("commercial_yield"),
+                    "commercial_baseline": result.get("commercial_baseline"),
+                    "benchmark_range": result.get("benchmark_range"),
                 },
             )
             saved_record_id = saved_record.id
@@ -387,6 +420,10 @@ async def predict(
         "yield_loss_pct":      result.get("yield_loss_pct"),
         "baseline_yield_t_ha": result.get("baseline_yield_t_ha"),
         "yield_reason":        result.get("yield_reason"),
+        "commercial_unit":     result.get("commercial_unit", "Quintal / Acre"),
+        "commercial_yield":    result.get("commercial_yield"),
+        "commercial_baseline": result.get("commercial_baseline"),
+        "benchmark_range":     result.get("benchmark_range"),
         "mandi":               mandi_payload,
         "email_status":        email_status,
         "email_recipient":     target_email,

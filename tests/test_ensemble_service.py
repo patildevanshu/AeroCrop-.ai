@@ -20,16 +20,28 @@ import asyncio
 
 def test_ensemble_offline_fallback():
     """Verify that when validator microservice is offline, verify() returns None silently."""
-    image_bytes = make_test_image()
-    res = asyncio.run(EnsembleService.verify(
-        image_bytes=image_bytes,
-        district="Pune",
-        weather={"temperature": 28.0, "humidity": 65.0, "rainfall": 0.0},
-        local_crop="Tomato",
-        local_class_idx=29,
-        local_confidence=0.75,
-    ))
-    assert res is None
+    import backend.config as config
+    import backend.services.ensemble_service as es
+    es._offline_until = 0.0
+    original_url = getattr(config, "VALIDATOR_SERVICE_URL", "")
+    original_enabled = getattr(config, "ENABLE_REMOTE_VALIDATOR", True)
+    try:
+        config.ENABLE_REMOTE_VALIDATOR = True
+        config.VALIDATOR_SERVICE_URL = "http://127.0.0.1:59999/api/v1/validate"
+        image_bytes = make_test_image()
+        res = asyncio.run(EnsembleService.verify(
+            image_bytes=image_bytes,
+            district="Pune",
+            weather={"temperature": 28.0, "humidity": 65.0, "rainfall": 0.0},
+            local_crop="Tomato",
+            local_class_idx=29,
+            local_confidence=0.75,
+        ))
+        assert res is None
+    finally:
+        config.VALIDATOR_SERVICE_URL = original_url
+        config.ENABLE_REMOTE_VALIDATOR = original_enabled
+        es._offline_until = 0.0
 
 
 def test_ensemble_disabled():

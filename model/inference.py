@@ -107,112 +107,159 @@ def normalize_crop_name(name: str | None) -> str:
 
 # ─── ICAR & Maharashtra Agriculture Commissionerate Calibrated Bounds ─────────
 # Yield is expressed in metric tonnes per hectare (t/ha).
-# 1 t/ha = 4.047 Quintals / Acre (1000 kg / ha = 10 Q / 2.471 Acres)
+# Yield conversions:
+# 1 t/ha = 0.4047 Tonnes / Acre (Biomass / Horticultural crops: Sugarcane, Banana, Tomato, Potato, Orange)
+# 1 t/ha = 4.047 Quintals / Acre (Field / Grains / Fiber crops: Cotton, Soybean, Wheat, Rice, Maize, Turmeric)
 AGRONOMIC_YIELD_BOUNDS: dict[str, dict[str, Any]] = {
     "cotton": {
-        "min": 0.6,
-        "max": 2.8,
+        "min": 0.8,
+        "max": 2.6,
         "category": "dry_fiber",
-        "category_label": "Dry Fiber & Lint (कापूस)",
-        "typical": 1.6,  # ~6.5 Quintals/Acre
+        "category_label": "Seed Cotton & Lint (कापूस वेचणी)",
+        "typical": 1.6,
+        "commercial_unit": "Quintal / Acre",
+        "to_commercial_mult": 4.047,
+        "benchmark_range": "5 – 8 Quintal / Acre",
     },
     "soybean": {
-        "min": 0.6,
-        "max": 2.5,
+        "min": 0.8,
+        "max": 2.4,
         "category": "oilseed",
-        "category_label": "Oilseed / Grain (सोयाबीन)",
-        "typical": 1.4,  # ~5.7 Quintals/Acre
+        "category_label": "Oilseed Grain (सोयाबीन)",
+        "typical": 1.5,
+        "commercial_unit": "Quintal / Acre",
+        "to_commercial_mult": 4.047,
+        "benchmark_range": "5 – 7.5 Quintal / Acre",
     },
     "wheat": {
-        "min": 1.0,
-        "max": 4.5,
+        "min": 1.5,
+        "max": 4.2,
         "category": "grain",
-        "category_label": "Cereal Grain (गहू)",
-        "typical": 2.6,  # ~10.5 Quintals/Acre
+        "category_label": "Cereal Grain (गहू उत्पादन)",
+        "typical": 2.6,
+        "commercial_unit": "Quintal / Acre",
+        "to_commercial_mult": 4.047,
+        "benchmark_range": "9 – 13 Quintal / Acre",
     },
     "rice": {
-        "min": 1.2,
-        "max": 5.5,
+        "min": 1.8,
+        "max": 4.8,
         "category": "grain",
         "category_label": "Paddy Grain (भात / धान)",
-        "typical": 3.2,  # ~13.0 Quintals/Acre
+        "typical": 3.2,
+        "commercial_unit": "Quintal / Acre",
+        "to_commercial_mult": 4.047,
+        "benchmark_range": "10 – 15 Quintal / Acre",
     },
     "maize": {
-        "min": 1.2,
-        "max": 6.0,
+        "min": 2.0,
+        "max": 5.5,
         "category": "grain",
-        "category_label": "Coarse Grain (मका)",
-        "typical": 3.5,  # ~14.2 Quintals/Acre
+        "category_label": "Coarse Grain (मका धान्य)",
+        "typical": 3.6,
+        "commercial_unit": "Quintal / Acre",
+        "to_commercial_mult": 4.047,
+        "benchmark_range": "12 – 18 Quintal / Acre",
     },
     "turmeric": {
-        "min": 1.0,
-        "max": 5.0,
+        "min": 1.2,
+        "max": 4.0,
         "category": "rhizome",
-        "category_label": "Cured Dry Rhizome (हळद)",
-        "typical": 2.5,  # ~10.1 Quintals/Acre
+        "category_label": "Cured Dry Rhizome (वाळलेली हळद)",
+        "typical": 2.5,
+        "commercial_unit": "Quintal / Acre",
+        "to_commercial_mult": 4.047,
+        "benchmark_range": "8 – 12 Quintal / Acre",
     },
     "potato": {
-        "min": 5.0,
-        "max": 25.0,
+        "min": 10.0,
+        "max": 26.0,
         "category": "tuber",
-        "category_label": "Fresh Tuber (बटाटा)",
-        "typical": 14.0,  # ~56.7 Quintals/Acre
+        "category_label": "Fresh Tuber (बटाटा काढणी)",
+        "typical": 18.0,
+        "commercial_unit": "Tonnes / Acre",
+        "to_commercial_mult": 0.4047,
+        "benchmark_range": "6 – 9 Tonnes / Acre",
     },
     "tomato": {
-        "min": 12.0,
-        "max": 42.0,
+        "min": 14.0,
+        "max": 38.0,
         "category": "fresh_fruit",
-        "category_label": "Fresh Vegetable Biomass (टोमॅटो)",
-        "typical": 28.0,  # ~113.3 Quintals/Acre
+        "category_label": "Fresh Vegetable (टोमॅटो तोडणी)",
+        "typical": 24.0,
+        "commercial_unit": "Tonnes / Acre",
+        "to_commercial_mult": 0.4047,
+        "benchmark_range": "8 – 12 Tonnes / Acre",
     },
     "orange": {
-        "min": 8.0,
-        "max": 25.0,
+        "min": 6.0,
+        "max": 18.0,
         "category": "fresh_fruit",
-        "category_label": "Fresh Tree Fruit (संत्रे)",
-        "typical": 18.0,  # ~72.8 Quintals/Acre
+        "category_label": "Fresh Tree Fruit (संत्रे तोडणी)",
+        "typical": 12.0,
+        "commercial_unit": "Tonnes / Acre",
+        "to_commercial_mult": 0.4047,
+        "benchmark_range": "4 – 6.5 Tonnes / Acre",
     },
     "banana": {
-        "min": 15.0,
+        "min": 20.0,
         "max": 55.0,
         "category": "fresh_fruit",
-        "category_label": "Fresh Fruit Bunches (केळी)",
-        "typical": 35.0,  # ~141.6 Quintals/Acre
+        "category_label": "Fresh Fruit Bunches (केळी घबाड)",
+        "typical": 35.0,
+        "commercial_unit": "Tonnes / Acre",
+        "to_commercial_mult": 0.4047,
+        "benchmark_range": "12 – 18 Tonnes / Acre",
     },
     "sugarcane": {
-        "min": 40.0,
-        "max": 110.0,
+        "min": 45.0,
+        "max": 105.0,
         "category": "stalk_biomass",
-        "category_label": "Fresh Stalk Biomass (ऊस)",
-        "typical": 75.0,  # ~303.5 Quintals/Acre
+        "category_label": "Fresh Stalk Biomass (ऊस वजन)",
+        "typical": 75.0,
+        "commercial_unit": "Tonnes / Acre",
+        "to_commercial_mult": 0.4047,
+        "benchmark_range": "28 – 36 Tonnes / Acre",
     },
     "onion": {
-        "min": 6.0,
-        "max": 30.0,
+        "min": 8.0,
+        "max": 25.0,
         "category": "tuber",
         "category_label": "Fresh Bulb (कांदा)",
-        "typical": 16.0,  # ~64.8 Quintals/Acre
+        "typical": 16.0,
+        "commercial_unit": "Tonnes / Acre",
+        "to_commercial_mult": 0.4047,
+        "benchmark_range": "5 – 8 Tonnes / Acre",
     },
     "pepper": {
         "min": 1.0,
-        "max": 8.0,
+        "max": 5.0,
         "category": "fresh_fruit",
-        "category_label": "Fresh Pepper / Chili (मिरची)",
-        "typical": 3.5,  # ~14.2 Quintals/Acre
+        "category_label": "Fresh Chili (मिरची)",
+        "typical": 2.5,
+        "commercial_unit": "Quintal / Acre",
+        "to_commercial_mult": 4.047,
+        "benchmark_range": "8 – 14 Quintal / Acre",
     },
     "apple": {
-        "min": 8.0,
-        "max": 25.0,
+        "min": 6.0,
+        "max": 18.0,
         "category": "fresh_fruit",
         "category_label": "Fresh Tree Fruit (सफरचंद)",
-        "typical": 18.0,
+        "typical": 12.0,
+        "commercial_unit": "Tonnes / Acre",
+        "to_commercial_mult": 0.4047,
+        "benchmark_range": "4 – 7 Tonnes / Acre",
     },
     "grape": {
         "min": 8.0,
-        "max": 26.0,
+        "max": 22.0,
         "category": "fresh_fruit",
         "category_label": "Fresh Table Grapes (द्राक्षे)",
-        "typical": 18.0,
+        "typical": 14.0,
+        "commercial_unit": "Tonnes / Acre",
+        "to_commercial_mult": 0.4047,
+        "benchmark_range": "5 – 8 Tonnes / Acre",
     },
 }
 
@@ -413,18 +460,35 @@ class InferenceService:
 
             category_info = bounds["category"]
             category_label = bounds["category_label"]
+            comm_unit = bounds.get("commercial_unit", "Quintal / Acre")
+            comm_mult = bounds.get("to_commercial_mult", 4.047)
+            comm_base = round(typical_y * comm_mult, 1)
+            comm_yield = round(yield_val * comm_mult, 1)
+            bench = bounds.get("benchmark_range", f"{comm_base} {comm_unit}")
+            baseline_val = typical_y
         else:
             yield_val = max(0.5, min(yield_val, 35.0))
             category_info = "general_crop"
             category_label = "Crop Yield"
+            comm_unit = "Quintal / Acre"
+            comm_mult = 4.047
+            comm_base = round(yield_val * comm_mult, 1)
+            comm_yield = round(yield_val * comm_mult, 1)
+            bench = f"{comm_base} {comm_unit}"
+            baseline_val = round(yield_val, 2)
 
         return {
             "disease_class":        cls_idx,
             "probabilities":        probs,
             "confidence":           conf,
             "yield_t_ha":           round(yield_val, 2),
+            "baseline_yield_t_ha":  baseline_val,
             "yield_category":       category_info,
             "yield_category_label": category_label,
+            "commercial_unit":      comm_unit,
+            "commercial_yield":     comm_yield,
+            "commercial_baseline":  comm_base,
+            "benchmark_range":      bench,
             "mock":                 False,
             "low_confidence":       conf < 0.40,
         }
@@ -476,24 +540,38 @@ class InferenceService:
             max_y = bounds["max"]
             cat = bounds["category"]
             cat_label = bounds["category_label"]
+            comm_unit = bounds.get("commercial_unit", "Quintal / Acre")
+            comm_mult = bounds.get("to_commercial_mult", 4.047)
+            comm_base = round(base * comm_mult, 1)
+            bench = bounds.get("benchmark_range", f"{comm_base} {comm_unit}")
         else:
             base = 2.5
             min_y = 0.6
             max_y = 6.0
             cat = "general_crop"
             cat_label = "Crop Yield"
+            comm_unit = "Quintal / Acre"
+            comm_mult = 4.047
+            comm_base = round(base * comm_mult, 1)
+            bench = f"{comm_base} {comm_unit}"
 
         weather_pen = 1.0 - abs(temperature - 28) * 0.01 - max(0, rainfall - 15) * 0.005 - max(0, abs(humidity - 65) - 20) * 0.003
         weather_pen = max(0.65, min(1.15, weather_pen))
         yield_val = round(min(max_y, max(min_y, base * weather_pen)), 2)
+        comm_yield = round(yield_val * comm_mult, 1)
 
         return {
             "disease_class":        seed_val,
             "probabilities":        probs,
             "confidence":           round(conf, 4),
             "yield_t_ha":           yield_val,
+            "baseline_yield_t_ha":  base,
             "yield_category":       cat,
             "yield_category_label": cat_label,
+            "commercial_unit":      comm_unit,
+            "commercial_yield":     comm_yield,
+            "commercial_baseline":  comm_base,
+            "benchmark_range":      bench,
             "mock":                 True,
             "low_confidence":       conf < 0.35,
         }

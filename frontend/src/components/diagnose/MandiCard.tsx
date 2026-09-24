@@ -1,6 +1,7 @@
 import React from 'react';
 import { MandiRateInfo } from '../../types';
 import { useI18n } from '../../context/I18nContext';
+import { formatAgronomicYield } from '../../utils/yield';
 
 interface MandiCardProps {
   mandi: MandiRateInfo;
@@ -12,6 +13,10 @@ export const MandiCard: React.FC<MandiCardProps> = ({ mandi }) => {
   const displayName = language === 'mr' ? mandi.name_mr : (language === 'hi' ? mandi.name_hi : mandi.commodity_name);
   const trendColor = mandi.trend === 'bullish' ? '#10b981' : (mandi.trend === 'bearish' ? '#ef4444' : '#6b7280');
   const trendArrow = mandi.trend === 'bullish' ? '▲' : (mandi.trend === 'bearish' ? '▼' : '▬');
+
+  const yieldInfo = mandi.revenue_projection
+    ? formatAgronomicYield(mandi.crop, mandi.revenue_projection.yield_t_ha)
+    : null;
 
   return (
     <div className="card glass mandi-card" style={{ marginTop: '1.25rem' }}>
@@ -94,7 +99,7 @@ export const MandiCard: React.FC<MandiCardProps> = ({ mandi }) => {
             </div>
           </div>
           <div style={{ textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            <span>{t('est_harvest')} {mandi.revenue_projection.yield_quintals_per_acre} Quintal / Acre</span>
+            <span>{t('est_harvest')} {yieldInfo ? yieldInfo.primary : `${mandi.revenue_projection.yield_quintals_per_acre} Quintal / Acre`}</span>
           </div>
         </div>
       )}

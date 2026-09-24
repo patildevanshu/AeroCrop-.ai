@@ -4,6 +4,7 @@ import { fetchHistoryDetail } from '../../api/history';
 import { printAdvisoryReport } from '../diagnose/PrintReport';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { formatAgronomicYield } from '../../utils/yield';
 
 interface DiagnosisDetailModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const DiagnosisDetailModal: React.FC<DiagnosisDetailModalProps> = ({
   const { showToast } = useToast();
   const [detail, setDetail] = useState<DiagnosisDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const yieldInfo = detail ? formatAgronomicYield(detail.crop, detail.yield_t_ha, detail) : null;
 
   useEffect(() => {
     if (!isOpen) {
@@ -110,7 +112,7 @@ export const DiagnosisDetailModal: React.FC<DiagnosisDetailModalProps> = ({
 📍 *District*: ${detail.district}${detail.plot_name ? ` (Plot: ${detail.plot_name})` : ''}
 🦠 *Diagnosis*: ${detail.disease.name} (${detail.disease.confidence}% confidence)
 ⚠️ *Severity*: ${detail.disease.severity}
-🌾 *Predicted Yield*: ${(detail.yield_t_ha * 4.047).toFixed(1)} Quintal / Acre
+🌾 *Predicted Yield*: ${yieldInfo ? `${yieldInfo.primary} (${yieldInfo.secondary})` : `${(detail.yield_t_ha * 4.047).toFixed(1)} Quintal / Acre`}
 💊 *Chemical*: ${(detail.disease.chemical_treatment || []).slice(0, 2).join(', ') || 'None needed'} (Est. ${detail.disease.chemical_cost || (detail.disease.is_healthy ? '₹0 / Acre' : '₹550 – ₹900 / Acre')})
 🌿 *Organic*: ${(detail.disease.organic_treatment || []).slice(0, 2).join(', ') || 'None needed'} (Est. ${detail.disease.organic_cost || (detail.disease.is_healthy ? '₹0 / Acre' : '₹200 – ₹450 / Acre')})
 
@@ -216,8 +218,13 @@ Generated via AeroCrop.ai Precision Agriculture Platform`;
               <div className="glass" style={{ padding: '10px 14px', borderRadius: '10px', textAlign: 'center' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Yield Forecast</div>
                 <div style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--accent-blue, #2563eb)' }}>
-                  {(detail.yield_t_ha * 4.047).toFixed(1)} Quintal / Acre
+                  {yieldInfo ? yieldInfo.primary : `${(detail.yield_t_ha * 4.047).toFixed(1)} Quintal / Acre`}
                 </div>
+                {yieldInfo && (
+                  <div style={{ fontSize: '0.70rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    {yieldInfo.secondary}
+                  </div>
+                )}
               </div>
               {detail.weather && (
                 <div className="glass" style={{ padding: '10px 14px', borderRadius: '10px', textAlign: 'center' }}>
